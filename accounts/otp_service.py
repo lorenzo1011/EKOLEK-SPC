@@ -26,13 +26,14 @@ SMS_API_URL = 'https://www.iprogsms.com/api/v1/sms_messages'
 # OTP RATE LIMITING CONFIGURATION
 # ========================================
 # Industry standards for OTP rate limiting:
-# - Send limit: 3 requests per hour (prevents spam/abuse)
+# - Failed login limit: 3 failed attempts (prevents brute force)
 # - Verification attempts: 5 attempts per OTP
 # - Cooldown period: 15 minutes after exceeding limits
 # - Max OTP validity: 5 minutes
+# - Successful login resets the counter
 
-OTP_SEND_LIMIT = 3  # Max OTP sends per hour
-OTP_SEND_WINDOW_MINUTES = 60  # Time window for send limit
+OTP_FAILED_LOGIN_LIMIT = 3  # Max failed login attempts before lockout
+OTP_FAILED_LOGIN_WINDOW_MINUTES = 60  # Time window for failed login tracking
 OTP_MAX_VERIFY_ATTEMPTS = 5  # Max verification attempts per OTP
 OTP_COOLDOWN_MINUTES = 15  # Lockout period after exceeding limits
 OTP_EXPIRY_MINUTES = 5  # OTP validity period
@@ -40,72 +41,54 @@ OTP_EXPIRY_MINUTES = 5  # OTP validity period
 
 def _check_send_rate_limit(phone_number):
     """
-    Check if phone number has exceeded OTP send rate limit.
+    Check if phone number has exceeded failed login attempt limit.
+    Only blocks OTP sending after multiple FAILED login attempts.
+    Successful logins do NOT count towards this limit.
     
     Returns:
         dict: {'allowed': bool, 'error': str, 'retry_after': int}
     """
-    send_count_key = f'otp_send_count_{phone_number}'
-    cooldown_key = f'otp_cooldown_{phone_number}'
+    failed_login_key = f'otp_failed_login_count_{phone_number}'
+    cooldown_key = f'otp_failed_login_cooldown_{phone_number}'
     
-    # Check if in cooldown period
+    # Check if in cooldown period (locked due to too many failed attempts)
     cooldown_until = cache.get(cooldown_key)
     if cooldown_until:
         cooldown_time = datetime.fromisoformat(cooldown_until)
         if datetime.now() < cooldown_time:
             remaining_seconds = int((cooldown_time - datetime.now()).total_seconds())
             remaining_minutes = remaining_seconds // 60
-            logger.warning(f"[RATE LIMIT] Phone {phone_number} is in cooldown period. {remaining_minutes}min remaining")
+            logger.warning(f"[RATE LIMIT] Phone {phone_number} is locked due to failed login attempts. {remaining_minutes}min remaining")
             return {
                 'allowed': False,
-                'error': f'Too many OTP requests. Please wait {remaining_minutes} minutes before trying again.',
+                'error': f'Too many failed login attempts. Please wait {remaining_minutes} minutes before trying again.',
                 'retry_after': remaining_seconds
             }
         else:
             # Cooldown expired, remove it
             cache.delete(cooldown_key)
+            cache.delete(failed_login_key)
     
-    # Get current send count
-    send_data = cache.get(send_count_key)
-    if send_data:
-        send_info = json.loads(send_data)
-        count = send_info.get('count', 0)
-        first_send = datetime.fromisoformat(send_info.get('first_send'))
+    # Check current failed login count
+    failed_data = cache.get(failed_login_key)
+    if failed_data:
+        failed_info = json.loads(failed_data)
+        count = failed_info.get('count', 0)
         
-        # Check if we're still within the time window
-        time_elapsed = datetime.now() - first_send
-        if time_elapsed < timedelta(minutes=OTP_SEND_WINDOW_MINUTES):
-            if count >= OTP_SEND_LIMIT:
-                # Exceeded limit - set cooldown
-                cooldown_until = datetime.now() + timedelta(minutes=OTP_COOLDOWN_MINUTES)
-                cache.set(cooldown_key, cooldown_until.isoformat(), timeout=OTP_COOLDOWN_MINUTES * 60)
-                
-                logger.warning(f"[RATE LIMIT] Phone {phone_number} exceeded send limit ({count}/{OTP_SEND_LIMIT}). Cooldown for {OTP_COOLDOWN_MINUTES}min")
-                return {
-                    'allowed': False,
-                    'error': f'Too many OTP requests. You have reached the limit of {OTP_SEND_LIMIT} requests per hour. Please wait {OTP_COOLDOWN_MINUTES} minutes.',
-                    'retry_after': OTP_COOLDOWN_MINUTES * 60
-                }
-            else:
-                # Within limit, increment counter
-                send_info['count'] = count + 1
-                send_info['last_send'] = datetime.now().isoformat()
-                remaining_time = OTP_SEND_WINDOW_MINUTES * 60 - int(time_elapsed.total_seconds())
-                cache.set(send_count_key, json.dumps(send_info), timeout=remaining_time)
-                logger.info(f"[RATE LIMIT] Phone {phone_number} OTP send count: {count + 1}/{OTP_SEND_LIMIT}")
-                return {'allowed': True}
-        else:
-            # Time window expired, reset counter
-            cache.delete(send_count_key)
+        if count >= OTP_FAILED_LOGIN_LIMIT:
+            # Exceeded limit - set cooldown
+            cooldown_until = datetime.now() + timedelta(minutes=OTP_COOLDOWN_MINUTES)
+            cache.set(cooldown_key, cooldown_until.isoformat(), timeout=OTP_COOLDOWN_MINUTES * 60)
+            
+            logger.warning(f"[RATE LIMIT] Phone {phone_number} exceeded failed login limit ({count}/{OTP_FAILED_LOGIN_LIMIT}). Locked for {OTP_COOLDOWN_MINUTES}min")
+            return {
+                'allowed': False,
+                'error': f'Too many failed login attempts. Please wait {OTP_COOLDOWN_MINUTES} minutes before trying again.',
+                'retry_after': OTP_COOLDOWN_MINUTES * 60
+            }
     
-    # First send or counter expired, initialize
-    send_info = {
-        'count': 1,
-        'first_send': datetime.now().isoformat(),
-        'last_send': datetime.now().isoformat()
-    }
-    cache.set(send_count_key, json.dumps(send_info), timeout=OTP_SEND_WINDOW_MINUTES * 60)
-    logger.info(f"[RATE LIMIT] Phone {phone_number} OTP send count: 1/{OTP_SEND_LIMIT}")
+    # Allowed to send OTP
+    logger.info(f"[RATE LIMIT] Phone {phone_number} allowed to request OTP")
     return {'allowed': True}
 
 
@@ -187,6 +170,43 @@ def _clear_verify_attempts(phone_number):
     logger.info(f"[RATE LIMIT] Phone {phone_number} verification attempts cleared after successful verification")
 
 
+def _increment_failed_login_attempts(phone_number):
+    """Increment failed login attempt counter (called when OTP verification fails)"""
+    failed_login_key = f'otp_failed_login_count_{phone_number}'
+    failed_data = cache.get(failed_login_key)
+    
+    if failed_data:
+        failed_info = json.loads(failed_data)
+        failed_info['count'] = failed_info.get('count', 0) + 1
+        failed_info['last_attempt'] = datetime.now().isoformat()
+    else:
+        failed_info = {
+            'count': 1,
+            'first_attempt': datetime.now().isoformat(),
+            'last_attempt': datetime.now().isoformat()
+        }
+    
+    # Store for the time window duration
+    cache.set(failed_login_key, json.dumps(failed_info), timeout=OTP_FAILED_LOGIN_WINDOW_MINUTES * 60)
+    logger.info(f"[RATE LIMIT] Phone {phone_number} failed login attempts: {failed_info['count']}/{OTP_FAILED_LOGIN_LIMIT}")
+
+
+def clear_failed_login_attempts(phone_number):
+    """
+    Clear failed login attempt counter on successful login.
+    This function should be called from login views after successful authentication.
+    
+    Args:
+        phone_number: The phone number to clear attempts for
+    """
+    failed_login_key = f'otp_failed_login_count_{phone_number}'
+    cooldown_key = f'otp_failed_login_cooldown_{phone_number}'
+    
+    cache.delete(failed_login_key)
+    cache.delete(cooldown_key)
+    logger.info(f"[RATE LIMIT] Phone {phone_number} failed login attempts cleared after successful login")
+
+
 
 def _generate_otp(length=6):
     """Generate a random numeric OTP code"""
@@ -249,6 +269,7 @@ def _verify_stored_otp(phone_number, otp_code):
     if not stored_json:
         print(f"[REDIS] OTP not found in cache for {phone_number}")
         _increment_verify_attempts(phone_number)
+        _increment_failed_login_attempts(phone_number)
         return {'success': False, 'error': 'OTP not found or expired. Please request a new OTP.', 'error_type': 'otp_not_found'}
     
     stored_data = json.loads(stored_json)
@@ -259,6 +280,7 @@ def _verify_stored_otp(phone_number, otp_code):
         cache.delete(cache_key)
         print(f"[REDIS] OTP expired for {phone_number}")
         _increment_verify_attempts(phone_number)
+        _increment_failed_login_attempts(phone_number)
         return {'success': False, 'error': 'OTP has expired. Please request a new OTP.', 'error_type': 'otp_expired'}
     
     # Check OTP-specific attempts (legacy support - now using global rate limit)
@@ -274,6 +296,10 @@ def _verify_stored_otp(phone_number, otp_code):
         # Clear verification attempt counter
         _clear_verify_attempts(phone_number)
         
+        # IMPORTANT: Clear failed login attempts on successful OTP verification
+        # This ensures successful logins reset the counter
+        clear_failed_login_attempts(phone_number)
+        
         # Track this as recently verified (cache for 2 minutes)
         verified_data = {
             'verified_at': datetime.now().isoformat(),
@@ -282,12 +308,16 @@ def _verify_stored_otp(phone_number, otp_code):
         cache.set(verified_key, json.dumps(verified_data), timeout=120)  # 2 minutes
         
         print(f"[REDIS] ✅ OTP verified successfully for {phone_number}")
+        print(f"[REDIS] ✅ Failed login attempts cleared - counter reset to 0")
         return {'success': True, 'status': 'success', 'message': 'OTP verified successfully'}
     else:
         # Increment both OTP-specific attempts AND global verification attempts
         stored_data['attempts'] += 1
         cache.set(cache_key, json.dumps(stored_data), timeout=300)  # Keep same 5min TTL
         _increment_verify_attempts(phone_number)
+        
+        # Increment failed login attempts (this will trigger lockout after 3 failures)
+        _increment_failed_login_attempts(phone_number)
         
         attempts_left = rate_limit.get('attempts_left', OTP_MAX_VERIFY_ATTEMPTS) - 1
         print(f"[REDIS] ❌ Invalid OTP for {phone_number}. Attempts remaining: {attempts_left}/{OTP_MAX_VERIFY_ATTEMPTS}")
@@ -442,12 +472,14 @@ def _post_json(url, payload, timeout=10):
 
 def send_otp(phone_number, message=None):
     """
-    Send OTP using iProg Tech SMS API with rate limiting
+    Send OTP using iProg Tech SMS API with intelligent rate limiting
     
-    Rate Limiting (Industry Standards):
-    - Maximum 3 OTP sends per hour
-    - 15-minute cooldown after exceeding limit
-    - Prevents spam and reduces costs
+    Rate Limiting (Security Features):
+    - Only blocks after 3 FAILED login attempts
+    - Successful logins do NOT count towards limit
+    - 15-minute cooldown after exceeding failed attempts
+    - Successful OTP verification resets the counter to 0
+    - Prevents brute force attacks while allowing legitimate users
     
     API Documentation: https://www.iprogsms.com/api/v1/sms_messages
     
