@@ -483,6 +483,12 @@ def send_otp(phone_number, message=None):
     
     API Documentation: https://www.iprogsms.com/api/v1/sms_messages
     
+    API Update (January 14, 2026):
+    - Sender Name: 'iprogOTP' for OTP messages (daily limit active)
+    - Fallback: 'iprogtech' (when daily limit exceeded)
+    - Network Support: Globe/TM (Smart/TNT not supported by these sender names)
+    - Automatic fallback ensures uninterrupted service
+    
     Required Parameters:
     - api_token: Your API TOKEN
     - phone_number: Recipient's phone number (639XXXXXXXXX format)
@@ -586,7 +592,7 @@ def send_otp(phone_number, message=None):
         'phone_number': phone_formatted,
         'message': otp_message,
         'sms_provider': SMS_PROVIDER,  # Multi-network provider
-        'sender_name': 'Ka Prets'  # Temporary sender name for all networks (Dec 23, 2025)
+        'sender_name': 'iprogOTP'  # API Update Jan 14, 2026: OTP sender name (Globe/TM), fallback: 'iprogtech'
     }
 
     print(f"\n[REQUEST] Endpoint: {SMS_API_URL}")

@@ -15,6 +15,17 @@ logger = logging.getLogger(__name__)
 class SMSService:
     """
     Production-ready SMS service for sending notifications via iProg Tech SMS API
+    
+    API Update (January 14, 2026):
+    - Daily Limit System: Fair distribution of SMS capacity throughout the month
+    - Sender Names (daily limit active):
+      * iprogSMS - for regular messages
+      * iprogOTP - for OTP verification messages
+      * iprogRemind - for reminder messages
+    - Automatic Fallback: When daily limit is reached, switches to fallback provider
+    - Fallback Sender Name: 'iprogtech' (ensures uninterrupted service)
+    - Network Support: Globe/TM (Smart/TNT not supported by these sender names)
+    - Unused daily quota carries over to next day (within same month)
     """
     
     def __init__(self):
@@ -101,12 +112,16 @@ class SMSService:
         
         try:
             # Prepare request data with multi-network provider support
+            # API Update (January 14, 2026): Daily limit system with automatic fallback
+            # - Daily limit sender names: iprogSMS (regular), iprogOTP (OTP), iprogRemind (reminders)
+            # - Fallback sender name: iprogtech (when daily limit exceeded)
+            # - Network support: Globe/TM (Smart/TNT not supported by these sender names)
             payload = {
                 'api_token': self.api_token,
                 'phone_number': formatted_phone,
                 'message': message,
-                'sms_provider': self.sms_provider,  # Multi-network provider for all networks
-                'sender_name': 'Ka Prets'  # Temporary sender name for all networks (Dec 23, 2025)
+                'sms_provider': self.sms_provider,  # Multi-network provider
+                'sender_name': 'iprogSMS'  # Regular messages sender name (fallback: 'iprogtech')
             }
             
             # Log the request (without exposing full token)
