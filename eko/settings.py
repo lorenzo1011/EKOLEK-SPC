@@ -303,7 +303,46 @@ OTP_RESEND_COOLDOWN_SECONDS = config('OTP_RESEND_COOLDOWN_SECONDS', default=60, 
 # OTP Verification Feature Flag
 # Set to False to temporarily disable OTP verification for login/registration
 # Can be easily re-enabled by setting to True
-OTP_VERIFICATION_ENABLED = config('OTP_VERIFICATION_ENABLED', default=True, cast=bool)
+# 
+# IMPORTANT: For Railway deployment, set environment variable:
+#   OTP_VERIFICATION_ENABLED = False (as string "False" or boolean false)
+#
+# This checks multiple sources with proper fallback:
+# 1. Railway environment variable (os.environ)
+# 2. .env file via decouple (local development)
+# 3. Defaults to True (OTP enabled) if not set
+
+def get_otp_enabled():
+    """
+    Robust OTP configuration that works with Railway and local .env
+    Accepts: 'False', 'false', '0', 'no', False (boolean), 0 (int) as disabled
+    """
+    # Try Railway environment variable first (os.environ)
+    env_value = os.environ.get('OTP_VERIFICATION_ENABLED', None)
+    if env_value is not None:
+        # Handle string values from Railway
+        if isinstance(env_value, str):
+            return env_value.lower() not in ('false', '0', 'no', 'off', '')
+        # Handle boolean values
+        return bool(env_value)
+    
+    # Fallback to decouple config (for .env file in local development)
+    try:
+        return config('OTP_VERIFICATION_ENABLED', default=True, cast=bool)
+    except:
+        # Final fallback - OTP enabled by default
+        return True
+
+OTP_VERIFICATION_ENABLED = get_otp_enabled()
+
+# Log OTP configuration on startup
+import logging
+logger = logging.getLogger(__name__)
+logger.info(f"🔐 OTP Configuration: OTP_VERIFICATION_ENABLED = {OTP_VERIFICATION_ENABLED}")
+if not OTP_VERIFICATION_ENABLED:
+    logger.warning("⚠️  OTP VERIFICATION IS DISABLED - Mobile login will skip OTP step")
+else:
+    logger.info("✅ OTP VERIFICATION IS ENABLED - Mobile login requires OTP")
 
 
 # ==============================================================================
