@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from django.http import HttpResponse, JsonResponse
 from django.db import transaction
@@ -80,7 +81,7 @@ def test_questions_no_auth(request):
         })
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication])
+@authentication_classes([JWTAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def questions_view(request):
     """Get questions with points included - for quiz game"""
@@ -121,7 +122,7 @@ def questions_view(request):
 
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication])
+@authentication_classes([JWTAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def get_game_data(request):
     """Get waste categories and items for the game"""
@@ -165,7 +166,7 @@ def get_game_data(request):
         return Response({'success': False, 'error': str(e)}, status=500)
 
 @api_view(['POST'])
-@authentication_classes([JWTAuthentication])
+@authentication_classes([JWTAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def save_game_session(request):
     """Save completed game session"""
@@ -218,7 +219,7 @@ def save_game_session(request):
         return Response({'success': False, 'error': str(e)}, status=400)
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication])
+@authentication_classes([JWTAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def get_game_leaderboard(request):
     """Get top game scores aggregated by user"""
@@ -263,7 +264,7 @@ def get_game_leaderboard(request):
         return Response({'success': False, 'error': str(e)}, status=400)
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication])
+@authentication_classes([JWTAuthentication, TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def get_user_game_stats(request):
     """Get current user's game statistics"""
