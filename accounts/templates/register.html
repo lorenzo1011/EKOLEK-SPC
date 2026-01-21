@@ -80,13 +80,16 @@
                 <p class="error-text">{{ form.phone.errors|striptags }}</p>
               {% endif %}
             </div>
+            {% if otp_enabled %}
             <button type="button" id="sendOtpBtn" class="btn-send-otp" style="padding: 12px 20px; background: #6366f1; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; white-space: nowrap;">
               Send OTP
             </button>
+            {% endif %}
           </div>
         </div>
 
         <!-- OTP Verification Section (Hidden by default) -->
+        {% if otp_enabled %}
         <div id="otpVerificationSection" style="display: none;" class="form-group">
           <label for="id_otp_code">Enter OTP Code</label>
           <div style="display: flex; gap: 10px; align-items: flex-start;">
@@ -106,6 +109,10 @@
 
         <!-- Hidden field to track OTP verification status -->
         <input type="hidden" id="otp_verified" name="otp_verified" value="false" />
+        {% else %}
+        <!-- OTP Disabled: Auto-verify -->
+        <input type="hidden" id="otp_verified" name="otp_verified" value="true" />
+        {% endif %}
 
         <div class="form-group">
           <label for="id_email">Representative Email</label>
@@ -116,13 +123,16 @@
                 <p class="error-text">{{ form.email.errors|striptags }}</p>
               {% endif %}
             </div>
+            {% if otp_enabled %}
             <button type="button" id="sendEmailOtpBtn" class="btn-send-otp" style="padding: 12px 20px; background: #6366f1; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; white-space: nowrap;">
               Send OTP
             </button>
+            {% endif %}
           </div>
         </div>
 
         <!-- Email OTP Verification Section (Hidden by default) -->
+        {% if otp_enabled %}
         <div id="emailOtpVerificationSection" style="display: none;" class="form-group">
           <label for="id_email_otp_code">Enter Email OTP Code</label>
           <div style="display: flex; gap: 10px; align-items: flex-start;">
@@ -142,6 +152,10 @@
 
         <!-- Hidden field to track email OTP verification status -->
         <input type="hidden" id="email_otp_verified" name="email_otp_verified" value="false" />
+        {% else %}
+        <!-- OTP Disabled: Auto-verify email -->
+        <input type="hidden" id="email_otp_verified" name="email_otp_verified" value="true" />
+        {% endif %}
 
         <div class="form-group">
           <label for="id_date_of_birth">Date of Birth (Optional)</label>
@@ -374,7 +388,11 @@
           });
         </script>
 
+        {% if otp_enabled %}
         <button type="submit" class="btn-submit" id="submitBtn" disabled style="opacity: 0.5; cursor: not-allowed;">Register Family (Verify Phone & Email First)</button>
+        {% else %}
+        <button type="submit" class="btn-submit" id="submitBtn" disabled style="opacity: 0.5; cursor: not-allowed;">Register Family (Accept Terms First)</button>
+        {% endif %}
       </form>
 
 
@@ -508,6 +526,30 @@
   <script src="{% static 'js/register.js' %}?v=9.0"></script>
   <script src="{% static 'js/email_verification.js' %}?v=2.0"></script>
   <script src="{% static 'js/terms_modal.js' %}?v=3.0"></script>
+  
+  {% if not otp_enabled %}
+  <script>
+    // Auto-enable form when OTP is disabled
+    document.addEventListener('DOMContentLoaded', function() {
+      const termsCheckbox = document.getElementById('termsCheckbox');
+      const submitBtn = document.querySelector('button[type="submit"]');
+      
+      // Enable submit button when terms are accepted
+      termsCheckbox.addEventListener('change', function() {
+        submitBtn.disabled = !this.checked;
+        submitBtn.style.opacity = this.checked ? '1' : '0.5';
+        submitBtn.style.cursor = this.checked ? 'pointer' : 'not-allowed';
+      });
+      
+      // Enable submit immediately if terms already checked
+      if (termsCheckbox.checked) {
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
+        submitBtn.style.cursor = 'pointer';
+      }
+    });
+  </script>
+  {% endif %}
   
 </body>
 </html>

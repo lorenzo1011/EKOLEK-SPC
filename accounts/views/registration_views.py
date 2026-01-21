@@ -87,7 +87,8 @@ def register_family(request):
                 'form': form,
                 'barangays': barangays,
                 'registration_type': 'family',
-                'today': date.today()
+                'today': date.today(),
+                'otp_enabled': OTP_VERIFICATION_ENABLED
             })
         
         if not email_otp_verified or verified_email != form_email:
@@ -97,7 +98,8 @@ def register_family(request):
                 'form': form,
                 'barangays': barangays,
                 'registration_type': 'family',
-                'today': date.today()
+                'today': date.today(),
+                'otp_enabled': OTP_VERIFICATION_ENABLED
             })
         
         if form.is_valid():
@@ -109,7 +111,9 @@ def register_family(request):
                     'form': form,
                     'barangays': barangays,
                     'registration_type': 'family',
-                    'today': date.today()
+                    'today': date.today(),
+                    'otp_enabled': OTP_VERIFICATION_ENABLED,
+                    'otp_enabled': OTP_VERIFICATION_ENABLED
                 })
             
             # Both OTP verified, proceed with registration
@@ -157,7 +161,8 @@ def register_family(request):
         'form': form,
         'barangays': barangays,
         'registration_type': 'family',
-        'today': date.today()
+        'today': date.today(),
+        'otp_enabled': OTP_VERIFICATION_ENABLED
     })
 
 
@@ -177,7 +182,8 @@ def register_member(request):
                     return render(request, 'register_member.html', {
                         'form': form,
                         'registration_type': 'member',
-                        'today': date.today()
+                        'today': date.today(),
+                        'otp_enabled': OTP_VERIFICATION_ENABLED
                     })
                 
                 # OTP bypassed, proceed with registration
@@ -216,7 +222,8 @@ def register_member(request):
             return render(request, 'register_member.html', {
                 'form': form,
                 'registration_type': 'member',
-                'today': date.today()
+                'today': date.today(),
+                'otp_enabled': OTP_VERIFICATION_ENABLED
             })
         
         if not email_otp_verified or verified_email != form_email:
@@ -224,7 +231,8 @@ def register_member(request):
             return render(request, 'register_member.html', {
                 'form': form,
                 'registration_type': 'member',
-                'today': date.today()
+                'today': date.today(),
+                'otp_enabled': OTP_VERIFICATION_ENABLED
             })
         
         if form.is_valid():
@@ -234,7 +242,8 @@ def register_member(request):
                 return render(request, 'register_member.html', {
                     'form': form,
                     'registration_type': 'member',
-                    'today': date.today()
+                    'today': date.today(),
+                    'otp_enabled': OTP_VERIFICATION_ENABLED
                 })
             
             # Both OTP verified, proceed with registration
@@ -272,5 +281,6 @@ def register_member(request):
     return render(request, 'register_member.html', {
         'form': form,
         'registration_type': 'member',
-        'today': date.today()
+        'today': date.today(),
+        'otp_enabled': OTP_VERIFICATION_ENABLED
     })
