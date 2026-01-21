@@ -77,6 +77,22 @@
       verify_otp: '{% url "verify_otp" %}',
       resend_otp: '{% url "resend_otp" %}'
     };
+    
+    // EMERGENCY FIX: Hide any visible JavaScript text immediately
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(function() {
+        // Find and hide any text containing JavaScript code
+        const allElements = document.querySelectorAll('*');
+        allElements.forEach(function(el) {
+          if (el.textContent && el.textContent.includes('otpInputs.forEach')) {
+            el.style.display = 'none';
+            el.style.visibility = 'hidden';
+            el.style.position = 'absolute';
+            el.style.left = '-99999px';
+          }
+        });
+      }, 50);
+    });
   </script>
   <script src="{% static 'js/verify_otp.js' %}"></script>
 </body>
