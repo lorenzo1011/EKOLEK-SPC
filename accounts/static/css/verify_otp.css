@@ -81,3 +81,42 @@
 .back-link a:hover {
   text-decoration: underline;
 }
+
+/* Prevent script content from being visible */
+body {
+  overflow-x: hidden;
+}
+
+/* Ensure main content container has proper bounds */
+main {
+  min-height: calc(100vh - 200px);
+  position: relative;
+  z-index: 1;
+}
+
+/* Hide any potential script or debug content that might leak */
+script, noscript {
+  display: none !important;
+  visibility: hidden !important;
+  position: absolute !important;
+  left: -9999px !important;
+}
+
+/* Ensure proper content containment */
+.container {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Additional safeguard against content overflow */
+body > *:not(header):not(main):not(script):not(style) {
+  max-width: 100vw;
+  overflow: hidden;
+}
+
+/* Force hide any accidentally visible script content */
+body::after {
+  content: '';
+  display: block;
+  clear: both;
+}

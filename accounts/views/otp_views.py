@@ -192,7 +192,8 @@ def verify_otp_view(request):
             
             return JsonResponse({
                 'success': True, 
-                'message': 'OTP verified successfully',
+                'message': f'Welcome {user.first_name or user.username}! Redirecting...',
+                'user_name': user.first_name or user.username,
                 'redirect': True,
                 'redirect_url': '/accounts/userdashboard/'
             })

@@ -462,6 +462,7 @@ def qr_login(request):
                     'success': True,
                     'otp_bypassed': True,
                     'user_id': str(user.id),
+                    'user_name': user.first_name or user.username,
                     'search_method': search_method,
                     'redirect_url': '/userdashboard/'
                 })

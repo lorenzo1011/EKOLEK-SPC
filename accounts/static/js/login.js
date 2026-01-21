@@ -86,11 +86,12 @@
               }
               
               if (data.success) {
-                console.log('QR Login successful for user:', data.user_name);
+                console.log('QR Login successful for user:', data.user_name || data.user_id);
                 console.log('Search method used:', data.search_method);
                 
                 // Show success message and keep loading during redirect
-                showMessage(`Welcome ${data.user_name}! Redirecting...`);
+                const userName = data.user_name || 'User';
+                showMessage(`Welcome ${userName}! Redirecting...`);
                 
                 // Keep loading spinner visible during redirect
                 // Redirect after brief delay (no popup needed)
