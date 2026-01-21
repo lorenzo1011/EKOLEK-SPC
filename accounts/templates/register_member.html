@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="{% static 'css/register_member.css' %}?v=1.2" />
   
 </head>
-<body>
+<body data-otp-enabled="{% if otp_enabled %}true{% else %}false{% endif %}">
 
   <!-- Header -->
   <header>

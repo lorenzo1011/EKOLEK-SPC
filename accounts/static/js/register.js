@@ -2,6 +2,38 @@
 document.addEventListener('DOMContentLoaded', function() {
 
 // ========================================
+// CHECK IF OTP IS ENABLED
+// ========================================
+const isOtpEnabled = document.body.getAttribute('data-otp-enabled') === 'true';
+console.log('OTP Enabled:', isOtpEnabled);
+
+// ========================================
+// HANDLE TERMS CHECKBOX (when OTP is disabled)
+// ========================================
+if (!isOtpEnabled) {
+  const termsCheckbox = document.getElementById('termsCheckbox');
+  const submitBtn = document.getElementById('submitBtn');
+  
+  if (termsCheckbox && submitBtn) {
+    // Enable submit button when terms are accepted
+    termsCheckbox.addEventListener('change', function() {
+      submitBtn.disabled = !this.checked;
+      submitBtn.style.opacity = this.checked ? '1' : '0.5';
+      submitBtn.style.cursor = this.checked ? 'pointer' : 'not-allowed';
+    });
+    
+    // Enable submit immediately if terms already checked
+    if (termsCheckbox.checked) {
+      submitBtn.disabled = false;
+      submitBtn.style.opacity = '1';
+      submitBtn.style.cursor = 'pointer';
+    }
+    
+    console.log('Terms checkbox handler initialized (OTP disabled)');
+  }
+}
+
+// ========================================
 // REAL-TIME VALIDATION FOR PHONE & EMAIL
 // ========================================
 
@@ -519,6 +551,11 @@ if (signupForm) {
   }
 
   signupForm.addEventListener('submit', function(e) {
+    // Skip OTP validation if OTP is disabled
+    if (!isOtpEnabled) {
+      return true; // Allow form submission
+    }
+    
     const otpVerified = document.getElementById('otp_verified').value;
     const emailVerified = document.getElementById('email_otp_verified').value;
     
