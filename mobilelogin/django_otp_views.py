@@ -6,6 +6,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 from django.contrib.auth import authenticate
+from django.conf import settings
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.authentication import TokenAuthentication
@@ -15,6 +16,9 @@ from accounts.models import Users
 from accounts import otp_service
 
 logger = logging.getLogger(__name__)
+
+# OTP Verification Feature Flag
+OTP_VERIFICATION_ENABLED = getattr(settings, 'OTP_VERIFICATION_ENABLED', True)
 
 
 @api_view(['POST'])
@@ -57,6 +61,43 @@ def login_view(request):
             logger.error(f"No phone number for user {user.username}")
             return Response({'success': False, 'message': 'No phone number on record', 'error_code': 'NO_PHONE'}, status=500)
 
+        # If OTP verification is disabled, skip OTP and issue token directly
+        if not OTP_VERIFICATION_ENABLED:
+            logger.info(f"[OTP BYPASS] Skipping OTP for user {user.username} - issuing token directly")
+            
+            # Delete existing tokens and create new one
+            Token.objects.filter(user=user).delete()
+            token = Token.objects.create(user=user)
+            user.last_login = timezone.now()
+            user.save(update_fields=['last_login'])
+            
+            # Build user response
+            family = getattr(user, 'family', None)
+            family_info = None
+            if family:
+                family_info = {
+                    'id': str(getattr(family, 'id', '')),
+                    'family_name': getattr(family, 'family_name', ''),
+                    'family_code': getattr(family, 'family_code', ''),
+                    'barangay': getattr(getattr(family, 'barangay', None), 'name', '')
+                }
+            
+            return Response({
+                'success': True,
+                'message': 'Login successful (OTP disabled)',
+                'otp_bypassed': True,
+                'token': token.key,
+                'user_info': {
+                    'id': str(user.id),
+                    'username': user.username,
+                    'full_name': getattr(user, 'full_name', ''),
+                    'total_points': getattr(user, 'total_points', 0),
+                    'status': getattr(user, 'status', ''),
+                },
+                'family_info': family_info
+            }, status=200)
+
+        # OTP is enabled - proceed with OTP flow
         send_resp = otp_service.send_otp(phone)
         if not send_resp.get('success', False):
             logger.error(f"Failed to send OTP to {phone}: {send_resp}")
@@ -129,6 +170,44 @@ def qr_login(request):
         if not phone:
             return Response({'success': False, 'message': 'No phone number on record', 'error_code': 'NO_PHONE'}, status=500)
 
+        # If OTP verification is disabled, skip OTP and issue token directly
+        if not OTP_VERIFICATION_ENABLED:
+            logger.info(f"[OTP BYPASS] Skipping OTP for QR login user {user.username} - issuing token directly")
+            
+            # Delete existing tokens and create new one
+            Token.objects.filter(user=user).delete()
+            token = Token.objects.create(user=user)
+            user.last_login = timezone.now()
+            user.save(update_fields=['last_login'])
+            
+            # Build user response
+            family = getattr(user, 'family', None)
+            family_info = None
+            if family:
+                family_info = {
+                    'id': str(getattr(family, 'id', '')),
+                    'family_name': getattr(family, 'family_name', ''),
+                    'family_code': getattr(family, 'family_code', ''),
+                    'barangay': getattr(getattr(family, 'barangay', None), 'name', '')
+                }
+            
+            return Response({
+                'success': True,
+                'message': 'Login successful (OTP disabled)',
+                'otp_bypassed': True,
+                'via': search_method,
+                'token': token.key,
+                'user_info': {
+                    'id': str(user.id),
+                    'username': user.username,
+                    'full_name': getattr(user, 'full_name', ''),
+                    'total_points': getattr(user, 'total_points', 0),
+                    'status': getattr(user, 'status', ''),
+                },
+                'family_info': family_info
+            }, status=200)
+
+        # OTP is enabled - proceed with OTP flow
         send_resp = otp_service.send_otp(phone)
         if not send_resp.get('success', False):
             logger.error(f"Failed to send OTP for QR login to {phone}: {send_resp}")

@@ -4,6 +4,7 @@ User registration views (family and member registration)
 
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.conf import settings
 from datetime import date
 import logging
 
@@ -13,6 +14,9 @@ from accounts.models import UserConsent
 from accounts.forms import FamilyRegistrationForm, FamilyMemberRegistrationForm
 
 logger = logging.getLogger(__name__)
+
+# OTP Verification Feature Flag
+OTP_VERIFICATION_ENABLED = getattr(settings, 'OTP_VERIFICATION_ENABLED', True)
 
 
 def register(request):
@@ -25,6 +29,48 @@ def register_family(request):
     if request.method == 'POST':
         form = FamilyRegistrationForm(request.POST)
         
+        # Check if OTP verification is disabled - if so, skip OTP checks
+        if not OTP_VERIFICATION_ENABLED:
+            logger.info("[OTP BYPASS] OTP verification disabled - skipping OTP checks for family registration")
+            
+            if form.is_valid():
+                # Check terms acceptance
+                if not form.cleaned_data.get('accept_terms'):
+                    messages.error(request, "You must accept the Terms and Conditions to register.")
+                    barangays = Barangay.objects.all()
+                    return render(request, 'register.html', {
+                        'form': form,
+                        'barangays': barangays,
+                        'registration_type': 'family',
+                        'today': date.today()
+                    })
+                
+                # OTP bypassed, proceed with registration
+                family = form.save()
+                
+                # Get the representative user (the one with is_family_representative=True)
+                representative = family.members.filter(is_family_representative=True).first()
+                
+                # Create consent records for both English and Tagalog terms
+                if representative:
+                    try:
+                        english_terms = TermsAndConditions.objects.filter(language='english', is_active=True).first()
+                        tagalog_terms = TermsAndConditions.objects.filter(language='tagalog', is_active=True).first()
+                        
+                        if english_terms:
+                            UserConsent.create_consent(representative, english_terms, request)
+                        if tagalog_terms:
+                            UserConsent.create_consent(representative, tagalog_terms, request)
+                    except Exception as e:
+                        logger.error(f"Error creating user consent: {e}")
+                
+                # Set session flag for successful registration
+                request.session['registration_success'] = True
+                request.session['registration_type'] = 'family'
+                
+                return redirect('login_page')
+        
+        # OTP is enabled - check OTP verification
         # Check if OTP has been verified for both phone and email
         otp_verified = request.POST.get('otp_verified') == 'true'
         verified_phone = request.session.get('verified_phone')
@@ -120,6 +166,42 @@ def register_member(request):
     if request.method == 'POST':
         form = FamilyMemberRegistrationForm(request.POST)
         
+        # Check if OTP verification is disabled - if so, skip OTP checks
+        if not OTP_VERIFICATION_ENABLED:
+            logger.info("[OTP BYPASS] OTP verification disabled - skipping OTP checks for member registration")
+            
+            if form.is_valid():
+                # Check terms acceptance
+                if not form.cleaned_data.get('accept_terms'):
+                    messages.error(request, "You must accept the Terms and Conditions to register.")
+                    return render(request, 'register_member.html', {
+                        'form': form,
+                        'registration_type': 'member',
+                        'today': date.today()
+                    })
+                
+                # OTP bypassed, proceed with registration
+                user = form.save()
+                
+                # Create consent records for both English and Tagalog terms
+                try:
+                    english_terms = TermsAndConditions.objects.filter(language='english', is_active=True).first()
+                    tagalog_terms = TermsAndConditions.objects.filter(language='tagalog', is_active=True).first()
+                    
+                    if english_terms:
+                        UserConsent.create_consent(user, english_terms, request)
+                    if tagalog_terms:
+                        UserConsent.create_consent(user, tagalog_terms, request)
+                except Exception as e:
+                    logger.error(f"Error creating user consent: {e}")
+                
+                # Set session flag for successful registration
+                request.session['registration_success'] = True
+                request.session['registration_type'] = 'member'
+                
+                return redirect('login_page')
+        
+        # OTP is enabled - check OTP verification
         # Check if OTP has been verified for both phone and email
         otp_verified = request.POST.get('otp_verified') == 'true'
         verified_phone = request.session.get('verified_phone')

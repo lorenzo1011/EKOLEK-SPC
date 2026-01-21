@@ -13,6 +13,10 @@ from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
+# OTP Verification Feature Flag
+# When False, OTP verification is bypassed (for temporary disable)
+OTP_VERIFICATION_ENABLED = getattr(settings, 'OTP_VERIFICATION_ENABLED', True)
+
 # Import Celery task
 try:
     from accounts.tasks import send_otp_email_task
@@ -258,6 +262,19 @@ def send_otp(email, purpose='verification'):
     """
     logger.info(f"=== EMAIL OTP SERVICE: send_otp called ===")
     logger.info(f"Email: {email}, Purpose: {purpose}")
+    
+    # BYPASS MODE: If OTP verification is disabled, return success without sending
+    if not OTP_VERIFICATION_ENABLED:
+        logger.info("[OTP BYPASS] OTP verification is disabled - skipping email send")
+        return {
+            'success': True,
+            'message': 'OTP verification disabled - bypass mode active',
+            'bypass_mode': True,
+            'data': {
+                'otp_code': '000000',
+                'email': email
+            }
+        }
     
     if not email:
         logger.error("ERROR: Missing email address")
@@ -509,6 +526,16 @@ def verify_otp(email, otp_code, purpose='verification'):
     """
     logger.info(f"=== EMAIL OTP SERVICE: verify_otp called ===")
     logger.info(f"Email: {email}, OTP: {otp_code}")
+    
+    # BYPASS MODE: If OTP verification is disabled, always return success
+    if not OTP_VERIFICATION_ENABLED:
+        logger.info("[OTP BYPASS] OTP verification is disabled - auto-approving verification")
+        return {
+            'success': True,
+            'status': 'success',
+            'message': 'OTP verification disabled - bypass mode active',
+            'bypass_mode': True
+        }
     
     if not email or not otp_code:
         logger.error("ERROR: Missing email or OTP code")

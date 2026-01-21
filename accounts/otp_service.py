@@ -10,6 +10,10 @@ from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
+# OTP Verification Feature Flag
+# When False, OTP verification is bypassed (for temporary disable)
+OTP_VERIFICATION_ENABLED = getattr(settings, 'OTP_VERIFICATION_ENABLED', True)
+
 # Load API token from environment or Django settings
 # Using SMS_API_TOKEN for sending OTP via SMS API
 SMS_API_TOKEN = os.environ.get('SMS_API_TOKEN') or getattr(settings, 'SMS_API_TOKEN', None)
@@ -515,6 +519,21 @@ def send_otp(phone_number, message=None):
     print(f"{'='*60}")
     print(f"Phone number (original): {phone_number}")
     
+    # BYPASS MODE: If OTP verification is disabled, return success without sending
+    if not OTP_VERIFICATION_ENABLED:
+        logger.info("[OTP BYPASS] OTP verification is disabled - skipping SMS send")
+        print("[INFO] OTP Verification DISABLED - Bypassing SMS send")
+        print(f"{'='*60}\n")
+        return {
+            'success': True,
+            'message': 'OTP verification disabled - bypass mode active',
+            'bypass_mode': True,
+            'data': {
+                'otp_code': '000000',
+                'phone_number': phone_number
+            }
+        }
+    
     if not phone_number:
         print("[ERROR] Missing phone number")
         return {'success': False, 'error': 'Missing phone number'}
@@ -652,6 +671,18 @@ def verify_otp(phone_number, otp_code):
     print(f"{'='*60}")
     print(f"Phone number (original): {phone_number}")
     print(f"OTP code: {otp_code}")
+    
+    # BYPASS MODE: If OTP verification is disabled, always return success
+    if not OTP_VERIFICATION_ENABLED:
+        logger.info("[OTP BYPASS] OTP verification is disabled - auto-approving verification")
+        print("[INFO] OTP Verification DISABLED - Auto-approving")
+        print(f"{'='*60}\n")
+        return {
+            'success': True,
+            'status': 'success',
+            'message': 'OTP verification disabled - bypass mode active',
+            'bypass_mode': True
+        }
     
     if not phone_number or not otp_code:
         print("[ERROR] Missing phone number or OTP")

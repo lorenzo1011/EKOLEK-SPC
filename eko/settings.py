@@ -300,6 +300,11 @@ OTP_EXPIRY_MINUTES = config('OTP_EXPIRY_MINUTES', default=5, cast=int)
 OTP_MAX_ATTEMPTS = config('OTP_MAX_ATTEMPTS', default=3, cast=int)
 OTP_RESEND_COOLDOWN_SECONDS = config('OTP_RESEND_COOLDOWN_SECONDS', default=60, cast=int)
 
+# OTP Verification Feature Flag
+# Set to False to temporarily disable OTP verification for login/registration
+# Can be easily re-enabled by setting to True
+OTP_VERIFICATION_ENABLED = config('OTP_VERIFICATION_ENABLED', default=True, cast=bool)
+
 
 # ==============================================================================
 # CORS CONFIGURATION

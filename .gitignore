@@ -30,6 +30,15 @@ google-drive-token.json
 *.pfx
 secret_key.txt
 secrets.json
+railway_credentials.json
+
+# Test files with credentials (DO NOT COMMIT)
+test_credentials.py
+test_google_drive.py
+test_django_storage_oauth.py
+test_oauth_drive.py
+test_storage_direct.py
+set_google_credentials.py
 
 # Media files (user uploads)
 media/

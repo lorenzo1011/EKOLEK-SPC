@@ -6,6 +6,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.contrib.auth import login
 from django.http import JsonResponse
+from django.conf import settings
 import logging
 
 from accounts.models import Users, Family
@@ -15,6 +16,9 @@ from accounts import otp_service
 from accounts import email_otp_service
 
 logger = logging.getLogger(__name__)
+
+# OTP Verification Feature Flag
+OTP_VERIFICATION_ENABLED = getattr(settings, 'OTP_VERIFICATION_ENABLED', True)
 
 
 # ========== SMS OTP ENDPOINTS ==========
