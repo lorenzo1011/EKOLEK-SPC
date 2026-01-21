@@ -337,6 +337,7 @@ else:
 
 # Essential CORS settings for mobile app
 CORS_ALLOW_CREDENTIALS = True
+CORS_ALLOW_ALL_ORIGINS = True  # ⚠️ CRITICAL FOR MOBILE APP - Allow all origins for mobile development
 
 CORS_ALLOW_HEADERS = [
     'accept',
@@ -368,11 +369,12 @@ CORS_ALLOW_METHODS = [
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',  # For JWT tokens (OTP enabled)
+        'rest_framework.authentication.TokenAuthentication',  # For DRF tokens (OTP disabled)
         'eko.authentication.CsrfExemptSessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        # Mobile API endpoints under /api/ require JWT authentication
+        # Mobile API endpoints under /api/ require authentication (JWT or Token)
         # Admin endpoints under /game/ and /cenro/ use custom session auth (bypass DRF)
         'rest_framework.permissions.IsAuthenticated',
     ],
