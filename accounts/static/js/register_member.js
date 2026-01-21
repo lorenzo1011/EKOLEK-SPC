@@ -11,7 +11,7 @@ console.log('OTP Enabled:', isOtpEnabled);
 // HANDLE TERMS CHECKBOX (when OTP is disabled)
 // ========================================
 if (!isOtpEnabled) {
-  const termsCheckbox = document.getElementById('termsCheckbox');
+  const termsCheckbox = document.getElementById('id_accept_terms');
   const submitBtn = document.getElementById('submitBtn');
   
   if (termsCheckbox && submitBtn) {
