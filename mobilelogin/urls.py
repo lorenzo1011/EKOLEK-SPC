@@ -1,6 +1,7 @@
 from django.urls import path
 from django.conf import settings
 from . import auth_views
+from . import django_otp_views  # OTP bypass support
 from . import user_views
 from . import debug_views
 from . import schedule_views
@@ -9,10 +10,10 @@ from . import biometric_views
 from . import notification_views
 
 urlpatterns = [
-    # Authentication endpoints with OTP
-    path('api/login/', auth_views.login_view, name='api_login'),          # mobile login -> sends OTP
-    path('api/qr-login/', auth_views.qr_login, name='api_qr_login'),      # QR login -> sends OTP
-    path('api/login/verify-otp/', auth_views.login_verify_otp, name='api_login_verify_otp'),  # verify OTP and get token
+    # Authentication endpoints with OTP bypass support
+    path('api/login/', django_otp_views.login_view, name='api_login'),          # mobile login -> OTP or bypass
+    path('api/qr-login/', django_otp_views.qr_login, name='api_qr_login'),      # QR login -> OTP or bypass
+    path('api/login/verify-otp/', django_otp_views.login_verify_otp, name='api_login_verify_otp'),  # verify OTP and get token
     path('api/logout/', auth_views.logout_view, name='logout'),
     path('logout/', auth_views.logout_view, name='api_logout_web'),  # Browser-friendly logout
     path('api/refresh-token/', auth_views.refresh_token_view, name='refresh_token'),

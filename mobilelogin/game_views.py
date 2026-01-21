@@ -6,6 +6,7 @@ Provides endpoints for Flutter app to fetch game cooldown configurations
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.response import Response
 from rest_framework import status
 from game.models import GameConfiguration
@@ -15,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication])
+@authentication_classes([JWTAuthentication, TokenAuthentication])  # Support both JWT and DRF Token
 @permission_classes([IsAuthenticated])
 def get_game_configurations(request):
     """
@@ -110,7 +111,7 @@ def get_game_configurations(request):
 
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication])
+@authentication_classes([JWTAuthentication, TokenAuthentication])  # Support both JWT and DRF Token
 @permission_classes([IsAuthenticated])
 def get_game_cooldown(request, game_type):
     """
@@ -178,7 +179,7 @@ def get_game_cooldown(request, game_type):
 
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication])
+@authentication_classes([JWTAuthentication, TokenAuthentication])  # Support both JWT and DRF Token
 @permission_classes([IsAuthenticated])
 def get_quiz_cooldown(request):
     """
@@ -189,7 +190,7 @@ def get_quiz_cooldown(request):
 
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication])
+@authentication_classes([JWTAuthentication, TokenAuthentication])  # Support both JWT and DRF Token
 @permission_classes([IsAuthenticated])
 def get_dragdrop_cooldown(request):
     """

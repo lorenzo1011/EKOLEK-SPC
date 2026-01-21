@@ -1,7 +1,7 @@
 """
 Biometric authentication views for mobile API
 Handles device registration, biometric login, and device management
-Uses JWT authentication and secure challenge-response protocol
+Uses JWT or DRF Token authentication and secure challenge-response protocol
 """
 import json
 import logging
@@ -14,6 +14,7 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.authentication import TokenAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 from accounts.models import Users
 from .models import BiometricDevice, BiometricLoginAttempt
@@ -59,7 +60,7 @@ def validate_device_data(data):
 
 
 @api_view(['POST'])
-@authentication_classes([JWTAuthentication])
+@authentication_classes([JWTAuthentication, TokenAuthentication])  # Support both JWT and DRF Token
 @permission_classes([IsAuthenticated])
 def register_biometric_device(request):
     """
@@ -518,7 +519,7 @@ def biometric_login_verify(request):
 
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication])
+@authentication_classes([JWTAuthentication, TokenAuthentication])  # Support both JWT and DRF Token
 @permission_classes([IsAuthenticated])
 def list_biometric_devices(request):
     """
@@ -565,7 +566,7 @@ def list_biometric_devices(request):
 
 
 @api_view(['DELETE'])
-@authentication_classes([JWTAuthentication])
+@authentication_classes([JWTAuthentication, TokenAuthentication])  # Support both JWT and DRF Token
 @permission_classes([IsAuthenticated])
 def revoke_biometric_device(request, device_id):
     """
@@ -605,7 +606,7 @@ def revoke_biometric_device(request, device_id):
 
 
 @api_view(['POST'])
-@authentication_classes([JWTAuthentication])
+@authentication_classes([JWTAuthentication, TokenAuthentication])  # Support both JWT and DRF Token
 @permission_classes([IsAuthenticated])
 def trust_biometric_device(request, device_id):
     """
@@ -645,7 +646,7 @@ def trust_biometric_device(request, device_id):
 
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication])
+@authentication_classes([JWTAuthentication, TokenAuthentication])  # Support both JWT and DRF Token
 @permission_classes([IsAuthenticated])
 def biometric_login_history(request):
     """

@@ -6,6 +6,7 @@ import logging
 from django.utils import timezone
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
@@ -87,7 +88,7 @@ def api_test(request):
 
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication])
+@authentication_classes([JWTAuthentication, TokenAuthentication])  # Support both JWT and DRF Token
 @permission_classes([IsAuthenticated])
 def debug_user_info(request):
     """Enhanced debug endpoint to check user authentication and data"""
@@ -180,7 +181,7 @@ def debug_user_info(request):
 
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication])
+@authentication_classes([JWTAuthentication, TokenAuthentication])  # Support both JWT and DRF Token
 @permission_classes([IsAuthenticated])
 def debug_simple_points(request):
     """Simple debug endpoint for points testing"""
@@ -230,7 +231,7 @@ def debug_simple_points(request):
 
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication])
+@authentication_classes([JWTAuthentication, TokenAuthentication])  # Support both JWT and DRF Token
 @permission_classes([IsAuthenticated])
 def debug_basic_auth(request):
     """Very basic authentication test - minimal functionality"""
