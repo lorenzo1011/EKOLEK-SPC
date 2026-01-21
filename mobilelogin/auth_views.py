@@ -17,6 +17,8 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.authtoken.models import Token
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 
@@ -225,13 +227,14 @@ def login_verify_otp(request):
 
 
 @api_view(['POST', 'GET'])  # Allow both POST and GET for browser compatibility
-@authentication_classes([JWTAuthentication])
+@authentication_classes([JWTAuthentication, TokenAuthentication])  # Support both JWT and DRF Token
 @permission_classes([])  # Allow unauthenticated requests (authentication is optional)
 def logout_view(request):
     """
-    Enhanced logout endpoint that handles JWT token blacklisting
+    Enhanced logout endpoint that handles both JWT and DRF Token authentication
     IMPORTANT: Authentication is optional - works both authenticated and unauthenticated
-    - If authenticated: blacklists the refresh token
+    - If JWT authenticated: blacklists the refresh token
+    - If Token authenticated: deletes the DRF token
     - If unauthenticated: returns success (client-side token cleanup)
     """
     # Check if this is a browser request that should redirect
@@ -256,7 +259,31 @@ def logout_view(request):
                 'note': 'No server-side session to clear'
             }, status=200)
         
-        # Blacklist the refresh token to invalidate it (for authenticated users)
+        # Check if this is a DRF Token authentication (OTP disabled mode)
+        if isinstance(request.auth, Token):
+            # Delete the DRF token
+            try:
+                request.auth.delete()
+                logger.info(f"DRF Token deleted for user {request.user.username}")
+                
+                if is_browser_request:
+                    from django.shortcuts import redirect
+                    return redirect('login_page')
+                
+                return Response({
+                    'success': True,
+                    'message': 'Logged out successfully',
+                    'redirect_url': '/accounts/login/',
+                }, status=200)
+            except Exception as e:
+                logger.error(f"Error deleting DRF token: {str(e)}")
+                return Response({
+                    'success': False,
+                    'message': 'Error during logout',
+                    'error_code': 'LOGOUT_ERROR'
+                }, status=500)
+        
+        # Blacklist the refresh token to invalidate it (for JWT authenticated users)
         refresh_token = request.data.get('refresh_token') or request.GET.get('refresh_token')
         
         if refresh_token:
@@ -411,11 +438,12 @@ def refresh_token_view(request):
 
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication])
+@authentication_classes([JWTAuthentication, TokenAuthentication])  # Support both JWT and DRF Token
 @permission_classes([IsAuthenticated])
 def validate_token_view(request):
     """
-    Validate if current JWT access token is still valid and return user info
+    Validate if current JWT or DRF Token is still valid and return user info
+    Works with both JWT (OTP enabled) and Token (OTP disabled) authentication
     """
     try:
         user = request.user
@@ -428,10 +456,13 @@ def validate_token_view(request):
                 'error_code': 'ACCESS_REVOKED'
             }, status=403)
         
+        # Determine token type
+        token_type = 'Bearer' if not isinstance(request.auth, Token) else 'Token'
+        
         return Response({
             'success': True,
-            'message': 'JWT token is valid',
-            'token_type': 'Bearer',
+            'message': f'{token_type} is valid',
+            'token_type': token_type,
             'user_info': {
                 'id': str(user.id),
                 'username': user.username,
