@@ -156,7 +156,7 @@ def login_page(request):
                 
                 # OTP is enabled - send OTP to user's phone
                 phone = user.phone
-                send_resp = otp_service.send_otp(phone)
+                send_resp = otp_service.send_otp(phone, purpose='login')
                 if send_resp.get('success', True):
                     request.session['pending_login_user_id'] = str(user.id)
                     request.session['pending_phone'] = phone
@@ -256,7 +256,7 @@ def code_login(request):
                 
                 # Send OTP instead of immediate login
                 phone = user.phone
-                send_resp = otp_service.send_otp(phone)
+                send_resp = otp_service.send_otp(phone, purpose='login')
                 if send_resp.get('success', True):
                     request.session['pending_login_user_id'] = str(user.id)
                     request.session['pending_phone'] = phone
@@ -467,7 +467,7 @@ def qr_login(request):
                 })
             
             # OTP is enabled - proceed with OTP flow
-            send_resp = otp_service.send_otp(phone)
+            send_resp = otp_service.send_otp(phone, purpose='login')
             if not send_resp.get('success', True):
                 logger.error(f"Web QR Login: Failed to send OTP to {phone}: {send_resp.get('error')}")
                 return JsonResponse({'error': 'Failed to send OTP'}, status=500)

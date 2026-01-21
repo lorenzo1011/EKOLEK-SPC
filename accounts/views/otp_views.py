@@ -62,7 +62,7 @@ def send_otp_view(request):
                     'error': 'This phone number is already registered. Please use a different number or login if you already have an account.'
                 }, status=400)
 
-        resp = otp_service.send_otp(phone)
+        resp = otp_service.send_otp(phone, purpose='registration')
         
         if resp.get('success'):
             # Store phone in session for verification
@@ -82,7 +82,7 @@ def resend_otp_view(request):
         if not phone:
             return JsonResponse({'success': False, 'error': 'Phone number missing'}, status=400)
         
-        resp = otp_service.send_otp(phone)
+        resp = otp_service.send_otp(phone, purpose='registration')
         if resp.get('success', True):
             return JsonResponse({'success': True, 'message': 'OTP resent successfully'})
         else:
@@ -131,7 +131,7 @@ def verify_otp_view(request):
                 return JsonResponse({'success': False, 'error': 'User not found'}, status=400)
 
         # Verify OTP
-        resp = otp_service.verify_otp(phone, otp)
+        resp = otp_service.verify_otp(phone, otp, purpose='registration')
         if not resp.get('success', False):
             err = resp.get('error', 'Invalid OTP code')
             error_type = resp.get('error_type', 'unknown')
@@ -233,7 +233,7 @@ def send_email_otp_view(request):
                     'error': 'This email address is already registered. Please use a different email or login if you already have an account.'
                 }, status=400)
 
-        resp = email_otp_service.send_otp(email)
+        resp = email_otp_service.send_otp(email, purpose='registration')
         
         if resp.get('success', True):
             # Store email in session for verification
@@ -253,7 +253,7 @@ def resend_email_otp_view(request):
         if not email:
             return JsonResponse({'success': False, 'error': 'Email address missing'}, status=400)
         
-        resp = email_otp_service.send_otp(email)
+        resp = email_otp_service.send_otp(email, purpose='registration')
         if resp.get('success', True):
             return JsonResponse({'success': True, 'message': 'OTP resent to your email'})
         else:
@@ -273,7 +273,7 @@ def verify_email_otp_view(request):
             return JsonResponse({'success': False, 'error': 'Missing OTP or email address'}, status=400)
 
         # Verify OTP
-        resp = email_otp_service.verify_otp(email, otp)
+        resp = email_otp_service.verify_otp(email, otp, purpose='registration')
         if not resp.get('success', False):
             err = resp.get('error', 'Invalid OTP code')
             return JsonResponse({'success': False, 'error': str(err)}, status=400)

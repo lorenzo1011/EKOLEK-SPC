@@ -474,7 +474,7 @@ def _post_json(url, payload, timeout=10):
         return {'success': False, 'error': 'An unexpected error occurred. Please try again.', 'error_type': 'unknown_error'}
 
 
-def send_otp(phone_number, message=None):
+def send_otp(phone_number, message=None, purpose='login'):
     """
     Send OTP using iProg Tech SMS API with intelligent rate limiting
     
@@ -500,6 +500,7 @@ def send_otp(phone_number, message=None):
     
     Optional Parameters:
     - sms_provider: SMS Provider (0, 1, or 2) | default: 2 for multi-network
+    - purpose: Purpose of OTP ('login', 'registration', 'password_reset')
     
     Returns dict with API response:
     {
@@ -518,15 +519,16 @@ def send_otp(phone_number, message=None):
     print(f"=== iProg Tech SMS API for OTP ===")
     print(f"{'='*60}")
     print(f"Phone number (original): {phone_number}")
+    print(f"Purpose: {purpose}")
     
-    # BYPASS MODE: If OTP verification is disabled, return success without sending
-    if not OTP_VERIFICATION_ENABLED:
-        logger.info("[OTP BYPASS] OTP verification is disabled - skipping SMS send")
-        print("[INFO] OTP Verification DISABLED - Bypassing SMS send")
+    # BYPASS MODE: Only bypass for login/registration, NOT for password_reset
+    if not OTP_VERIFICATION_ENABLED and purpose in ['login', 'registration']:
+        logger.info(f"[OTP BYPASS] OTP verification disabled for {purpose} - skipping SMS send")
+        print(f"[INFO] OTP Verification DISABLED for {purpose} - Bypassing SMS send")
         print(f"{'='*60}\n")
         return {
             'success': True,
-            'message': 'OTP verification disabled - bypass mode active',
+            'message': f'OTP verification disabled for {purpose} - bypass mode active',
             'bypass_mode': True,
             'data': {
                 'otp_code': '000000',
@@ -651,7 +653,7 @@ def send_otp(phone_number, message=None):
 
 
 
-def verify_otp(phone_number, otp_code):
+def verify_otp(phone_number, otp_code, purpose='login'):
     """
     Verify OTP using local storage (no API call needed)
     
@@ -659,6 +661,11 @@ def verify_otp(phone_number, otp_code):
     The OTP is stored in memory when sent and verified here.
     
     Phone format: Must match the format used in send_otp (639XXXXXXXXX)
+    
+    Parameters:
+    - phone_number: Phone number to verify
+    - otp_code: OTP code to verify
+    - purpose: Purpose of verification ('login', 'registration', 'password_reset')
     
     Returns dict with verification result:
     {
@@ -671,16 +678,17 @@ def verify_otp(phone_number, otp_code):
     print(f"{'='*60}")
     print(f"Phone number (original): {phone_number}")
     print(f"OTP code: {otp_code}")
+    print(f"Purpose: {purpose}")
     
-    # BYPASS MODE: If OTP verification is disabled, always return success
-    if not OTP_VERIFICATION_ENABLED:
-        logger.info("[OTP BYPASS] OTP verification is disabled - auto-approving verification")
-        print("[INFO] OTP Verification DISABLED - Auto-approving")
+    # BYPASS MODE: Only bypass for login/registration, NOT for password_reset
+    if not OTP_VERIFICATION_ENABLED and purpose in ['login', 'registration']:
+        logger.info(f"[OTP BYPASS] OTP verification disabled for {purpose} - auto-approving")
+        print(f"[INFO] OTP Verification DISABLED for {purpose} - Auto-approving")
         print(f"{'='*60}\n")
         return {
             'success': True,
             'status': 'success',
-            'message': 'OTP verification disabled - bypass mode active',
+            'message': f'OTP verification disabled for {purpose} - bypass mode active',
             'bypass_mode': True
         }
     

@@ -98,7 +98,7 @@ def login_view(request):
             }, status=200)
 
         # OTP is enabled - proceed with OTP flow
-        send_resp = otp_service.send_otp(phone)
+        send_resp = otp_service.send_otp(phone, purpose='login')
         if not send_resp.get('success', False):
             logger.error(f"Failed to send OTP to {phone}: {send_resp}")
             return Response({'success': False, 'message': 'Failed to send OTP', 'error_code': 'OTP_SEND_FAILED'}, status=500)
@@ -208,7 +208,7 @@ def qr_login(request):
             }, status=200)
 
         # OTP is enabled - proceed with OTP flow
-        send_resp = otp_service.send_otp(phone)
+        send_resp = otp_service.send_otp(phone, purpose='login')
         if not send_resp.get('success', False):
             logger.error(f"Failed to send OTP for QR login to {phone}: {send_resp}")
             return Response({'success': False, 'message': 'Failed to send OTP', 'error_code': 'OTP_SEND_FAILED'}, status=500)
@@ -243,7 +243,7 @@ def login_verify_otp(request):
         if not phone:
             return Response({'success': False, 'message': 'No phone number on record', 'error_code': 'NO_PHONE'}, status=500)
 
-        verify_resp = otp_service.verify_otp(phone, otp)
+        verify_resp = otp_service.verify_otp(phone, otp, purpose='login')
         if not verify_resp.get('success', False):
             error_type = verify_resp.get('error_type', 'unknown')
             error_message = verify_resp.get('error', 'OTP verification failed')

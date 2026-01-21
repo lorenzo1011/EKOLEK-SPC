@@ -263,12 +263,12 @@ def send_otp(email, purpose='verification'):
     logger.info(f"=== EMAIL OTP SERVICE: send_otp called ===")
     logger.info(f"Email: {email}, Purpose: {purpose}")
     
-    # BYPASS MODE: If OTP verification is disabled, return success without sending
-    if not OTP_VERIFICATION_ENABLED:
-        logger.info("[OTP BYPASS] OTP verification is disabled - skipping email send")
+    # BYPASS MODE: Only bypass for login/registration, NOT for password_reset
+    if not OTP_VERIFICATION_ENABLED and purpose != 'password_reset':
+        logger.info(f"[OTP BYPASS] OTP verification disabled for {purpose} - skipping email send")
         return {
             'success': True,
-            'message': 'OTP verification disabled - bypass mode active',
+            'message': f'OTP verification disabled for {purpose} - bypass mode active',
             'bypass_mode': True,
             'data': {
                 'otp_code': '000000',
@@ -527,13 +527,13 @@ def verify_otp(email, otp_code, purpose='verification'):
     logger.info(f"=== EMAIL OTP SERVICE: verify_otp called ===")
     logger.info(f"Email: {email}, OTP: {otp_code}")
     
-    # BYPASS MODE: If OTP verification is disabled, always return success
-    if not OTP_VERIFICATION_ENABLED:
-        logger.info("[OTP BYPASS] OTP verification is disabled - auto-approving verification")
+    # BYPASS MODE: Only bypass for login/registration, NOT for password_reset
+    if not OTP_VERIFICATION_ENABLED and purpose != 'password_reset':
+        logger.info(f"[OTP BYPASS] OTP verification disabled for {purpose} - auto-approving")
         return {
             'success': True,
             'status': 'success',
-            'message': 'OTP verification disabled - bypass mode active',
+            'message': f'OTP verification disabled for {purpose} - bypass mode active',
             'bypass_mode': True
         }
     

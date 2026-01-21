@@ -127,7 +127,7 @@ def forgot_password(request):
             
             # Send SMS OTP
             logger.info(f"Attempting to send SMS OTP to {user.phone}")
-            resp = otp_service.send_otp(user.phone, message='Your E-KOLEK password reset code is :otp. Valid for 5 minutes.')
+            resp = otp_service.send_otp(user.phone, message='Your E-KOLEK password reset code is :otp. Valid for 5 minutes.', purpose='password_reset')
             
             if resp.get('success', False):
                 # Store password reset session data
@@ -185,7 +185,7 @@ def forgot_password_verify(request):
         if method == 'email':
             resp = email_otp_service.verify_otp(contact, otp_code, purpose='password_reset')
         else:
-            resp = otp_service.verify_otp(contact, otp_code)
+            resp = otp_service.verify_otp(contact, otp_code, purpose='password_reset')
         
         if resp.get('success', False):
             # OTP verified successfully
@@ -224,7 +224,7 @@ def forgot_password_resend(request):
     if method == 'email':
         resp = email_otp_service.send_otp(contact, purpose='password_reset')
     else:
-        resp = otp_service.send_otp(contact, message='Your E-KOLEK password reset code is :otp. Valid for 5 minutes.')
+        resp = otp_service.send_otp(contact, message='Your E-KOLEK password reset code is :otp. Valid for 5 minutes.', purpose='password_reset')
     
     if resp.get('success', True):
         logger.info(f"Password reset OTP resent via {method} to {contact}")
