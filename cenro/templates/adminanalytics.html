@@ -249,52 +249,53 @@
                   <span style="display: flex; align-items: center; gap: 8px;">
                     <i class='bx bx-calendar-alt' style="font-size: 1.2rem;"></i>
                     <span id="selectedYearText">
-                      {% if filters.year_filter == 'current' %}Current Year (2025)
-                      {% elif filters.year_filter == '2024' %}Year 2024
-                      {% elif filters.year_filter == '2023' %}Year 2023
-                      {% elif filters.year_filter == '2022' %}Year 2022
-                      {% elif filters.year_filter == 'all' %}All Time
-                      {% else %}Current Year (2025){% endif %}
+                      {% if filters.year_filter == 'current' or not filters.year_filter %}
+                        Current Year ({{ current_year }})
+                      {% elif filters.year_filter == 'all' %}
+                        All Time
+                      {% elif filters.year_filter|add:"0" %}
+                        Year {{ filters.year_filter }}
+                      {% else %}
+                        Current Year ({{ current_year }})
+                      {% endif %}
                     </span>
                   </span>
                   <i class='bx bx-chevron-down' id="yearDropdownIcon" style="font-size: 1.3rem; transition: transform 0.3s;"></i>
                 </button>
                 
                 <div class="year-selector-dropdown" id="yearDropdown">
-                  <div class="year-option {% if filters.year_filter == 'current' or not filters.year_filter %}selected{% endif %}" onclick="selectYear('current', 'Current Year (2025)')">
+                  <!-- Current Year Option -->
+                  <div class="year-option {% if filters.year_filter == 'current' or not filters.year_filter %}selected{% endif %}" onclick="selectYear('current', 'Current Year ({{ current_year }})')">
                     <span class="year-option-icon"><i class='bx bx-calendar-check'></i></span>
                     <div>
-                      <div style="font-weight: 600;">Current Year (2025)</div>
-                      <div style="font-size: 0.75rem; color: #6b7280;">January - December 2025</div>
+                      <div style="font-weight: 600;">Current Year ({{ current_year }})</div>
+                      <div style="font-size: 0.75rem; color: #6b7280;">January - December {{ current_year }}</div>
                     </div>
                   </div>
                   
-                  <div class="year-option {% if filters.year_filter == '2024' %}selected{% endif %}" onclick="selectYear('2024', 'Year 2024')">
-                    <span class="year-option-icon"><i class='bx bx-calendar'></i></span>
-                    <div>
-                      <div style="font-weight: 600;">Year 2024</div>
-                      <div style="font-size: 0.75rem; color: #6b7280;">Full year data</div>
-                    </div>
-                  </div>
+                  <!-- Dynamic Years with Data -->
+                  {% for year in available_years %}
+                    {% if year != current_year %}
+                      <div class="year-option {% if filters.year_filter|add:"0" == year %}selected{% endif %}" onclick="selectYear('{{ year }}', 'Year {{ year }}')">
+                        <span class="year-option-icon"><i class='bx bx-calendar'></i></span>
+                        <div>
+                          <div style="font-weight: 600;">Year {{ year }}</div>
+                          <div style="font-size: 0.75rem; color: #6b7280;">Full year data</div>
+                        </div>
+                      </div>
+                    {% endif %}
+                  {% endfor %}
                   
-                  <div class="year-option {% if filters.year_filter == '2023' %}selected{% endif %}" onclick="selectYear('2023', 'Year 2023')">
-                    <span class="year-option-icon"><i class='bx bx-calendar'></i></span>
-                    <div>
-                      <div style="font-weight: 600;">Year 2023</div>
-                      <div style="font-size: 0.75rem; color: #6b7280;">Full year data</div>
+                  <!-- Show message if no historical data exists -->
+                  {% if available_years|length == 0 or available_years|length == 1 and current_year in available_years %}
+                    <div style="padding: 12px 16px; color: #6b7280; font-size: 0.85rem; text-align: center; font-style: italic;">
+                      <i class='bx bx-info-circle'></i> No historical data available yet
                     </div>
-                  </div>
-                  
-                  <div class="year-option {% if filters.year_filter == '2022' %}selected{% endif %}" onclick="selectYear('2022', 'Year 2022')">
-                    <span class="year-option-icon"><i class='bx bx-calendar'></i></span>
-                    <div>
-                      <div style="font-weight: 600;">Year 2022</div>
-                      <div style="font-size: 0.75rem; color: #6b7280;">Full year data</div>
-                    </div>
-                  </div>
+                  {% endif %}
                   
                   <div style="height: 1px; background: #e5e7eb; margin: 8px 0;"></div>
                   
+                  <!-- All Time Option -->
                   <div class="year-option {% if filters.year_filter == 'all' %}selected{% endif %}" onclick="selectYear('all', 'All Time')">
                     <span class="year-option-icon"><i class='bx bx-globe'></i></span>
                     <div>
@@ -979,12 +980,14 @@
             </label>
             <select name="compare_year1" id="compareYear1" class="comparison-year-select" required>
               <option value="">Select first year</option>
-              <option value="2025">2025 (Current)</option>
-              <option value="2024">2024</option>
-              <option value="2023">2023</option>
-              <option value="2022">2022</option>
-              <option value="2021">2021</option>
-              <option value="2020">2020</option>
+              {% for year in available_years %}
+                <option value="{{ year }}" {% if year == current_year %}(Current){% endif %}>
+                  {{ year }}{% if year == current_year %} (Current){% endif %}
+                </option>
+              {% endfor %}
+              {% if not available_years %}
+                <option value="{{ current_year }}">{{ current_year }} (Current)</option>
+              {% endif %}
             </select>
           </div>
           
@@ -994,12 +997,14 @@
             </label>
             <select name="compare_year2" id="compareYear2" class="comparison-year-select" required>
               <option value="">Select second year</option>
-              <option value="2025">2025 (Current)</option>
-              <option value="2024">2024</option>
-              <option value="2023">2023</option>
-              <option value="2022">2022</option>
-              <option value="2021">2021</option>
-              <option value="2020">2020</option>
+              {% for year in available_years %}
+                <option value="{{ year }}" {% if year == current_year %}(Current){% endif %}>
+                  {{ year }}{% if year == current_year %} (Current){% endif %}
+                </option>
+              {% endfor %}
+              {% if not available_years %}
+                <option value="{{ current_year }}">{{ current_year }} (Current)</option>
+              {% endif %}
             </select>
           </div>
         </div>

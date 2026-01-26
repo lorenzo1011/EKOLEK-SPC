@@ -189,6 +189,13 @@ def waste_analytics_dashboard(request):
         'user', 'waste_type', 'barangay', 'processed_by'
     ).all()
     
+    # Get available years from actual transaction data
+    available_years = list(
+        WasteTransaction.objects.dates('transaction_date', 'year', order='DESC')
+        .values_list('transaction_date__year', flat=True)
+        .distinct()
+    )
+    
     # Handle year-based filtering
     current_year = timezone.now().year
     year_comparison = None
@@ -214,9 +221,21 @@ def waste_analytics_dashboard(request):
         # Don't filter transactions for compare mode - show all data
         start_date = None
         end_date = None
-    elif year_filter in ['2024', '2023', '2022', '2021', '2020']:
-        start_date = f'{year_filter}-01-01'
-        end_date = f'{year_filter}-12-31'
+    elif year_filter == 'all':
+        # Show all time data
+        start_date = None
+        end_date = None
+    elif year_filter and year_filter.isdigit():
+        # Handle any numeric year dynamically
+        year = int(year_filter)
+        if year in available_years:
+            start_date = f'{year}-01-01'
+            end_date = f'{year}-12-31'
+        else:
+            # Year not available, fallback to current year
+            start_date = f'{current_year}-01-01'
+            end_date = f'{current_year}-12-31'
+            year_filter = 'current'
     
     # Apply filters
     if start_date:
@@ -440,6 +459,8 @@ def waste_analytics_dashboard(request):
         'monthly_tracking_data': json.dumps(monthly_tracking_data),
         'monthly_insights': monthly_insights,
         'year_comparison': year_comparison,  # NEW: Year-over-year comparison data
+        'available_years': available_years,  # NEW: Dynamic list of years with data
+        'current_year': current_year,  # NEW: Current year for template logic
         'filters': {
             'start_date': start_date,
             'end_date': end_date,
