@@ -31,8 +31,9 @@ from django.core.paginator import Paginator
 @admin_required
 @permission_required('can_manage_rewards')
 def adminrewards(request):
-    rewards = Reward.objects.all()
+    rewards = Reward.objects.all().prefetch_related('available_barangays')
     categories = RewardCategory.objects.filter(is_active=True)
+    barangays = Barangay.objects.all().order_by('name')
     
     # Get recent history for the dashboard
     recent_history = RewardHistory.objects.select_related('reward', 'admin_user', 'user').order_by('-timestamp')[:20]
@@ -40,6 +41,7 @@ def adminrewards(request):
     return render(request, 'adminrewards.html', {
         'rewards': rewards,
         'categories': categories,
+        'barangays': barangays,
         'recent_history': recent_history,
         'timestamp': int(time.time()),
     })
@@ -128,6 +130,7 @@ def add_reward(request):
             stock = request.POST.get('stock')
             description = request.POST.get('description')
             image = request.FILES.get('image')
+            barangay_ids = request.POST.getlist('barangays')  # Get selected barangays
 
             # Log received data for debugging
             import logging
@@ -137,6 +140,7 @@ def add_reward(request):
             logger.info(f"Category ID: {category_id}")
             logger.info(f"Points: {points_required}")
             logger.info(f"Stock: {stock}")
+            logger.info(f"Barangays: {barangay_ids}")
             logger.info(f"Has image: {bool(image)}")
             if image:
                 logger.info(f"Image filename: {image.name}")
@@ -148,6 +152,7 @@ def add_reward(request):
             else:
                 logger.info(f"ADD REWARD - Name: {name}, No image")
 
+            # Note: barangays is optional (empty = global reward)
             if not all([name, category_id, points_required, stock, description, image]):
                 missing_fields = []
                 if not name: missing_fields.append('name')
@@ -182,6 +187,15 @@ def add_reward(request):
                 description=description,
                 image=image  # Django handles storage backend automatically
             )
+            
+            # Set barangay availability (empty = global reward)
+            if barangay_ids:
+                from accounts.models import Barangay
+                barangays = Barangay.objects.filter(id__in=barangay_ids)
+                reward.available_barangays.set(barangays)
+                logger.info(f"✅ Reward assigned to {barangays.count()} barangay(s)")
+            else:
+                logger.info(f"✅ Reward created as GLOBAL (available to all barangays)")
             
             logger.info(f"✅ Reward created successfully: {reward.id}")
             logger.info(f"Reward created! ID: {reward.id}")
@@ -259,6 +273,30 @@ def edit_reward(request):
             reward.points_required = new_points
             
             reward.description = request.POST.get('description')
+            
+            # Handle barangay availability update
+            barangay_ids = request.POST.getlist('barangays')
+            from accounts.models import Barangay
+            
+            # Get old barangays for change tracking
+            old_barangays = set(reward.available_barangays.values_list('name', flat=True))
+            
+            if barangay_ids:
+                barangays = Barangay.objects.filter(id__in=barangay_ids)
+                reward.available_barangays.set(barangays)
+                new_barangays = set(barangays.values_list('name', flat=True))
+            else:
+                reward.available_barangays.clear()
+                new_barangays = set()
+            
+            # Track barangay changes
+            if old_barangays or new_barangays:
+                if not old_barangays and new_barangays:
+                    changes.append(f"Availability changed from Global to: {', '.join(sorted(new_barangays))}")
+                elif old_barangays and not new_barangays:
+                    changes.append(f"Availability changed from {', '.join(sorted(old_barangays))} to Global")
+                elif old_barangays != new_barangays:
+                    changes.append(f"Barangays: {', '.join(sorted(old_barangays))} → {', '.join(sorted(new_barangays))}")
             
             # Handle image update - Django will automatically use configured storage
             if request.FILES.get('image'):

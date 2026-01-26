@@ -646,4 +646,25 @@
     }
 }
 
+/* Barangay Badge Styles */
+.barangay-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.barangay-badge-global {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+}
+
+.barangay-badge-specific {
+    background: #eff6ff;
+    color: #1e40af;
+    border: 1px solid #bfdbfe;
+}
    

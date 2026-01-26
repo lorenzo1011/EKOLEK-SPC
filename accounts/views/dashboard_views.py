@@ -67,7 +67,12 @@ def userdashboard(request):
     # Sort schedules: today first, tomorrow second, then rest
     enhanced_schedules.sort(key=lambda x: (not x.is_today, not x.is_tomorrow, x.day, x.start_time))
     
-    rewards = Reward.objects.filter(is_active=True)
+    # ============================================================
+    # PER-BARANGAY REWARDS FILTERING
+    # Only show rewards available to user's barangay
+    # Global rewards (no barangays assigned) are shown to all users
+    # ============================================================
+    rewards = Reward.get_available_for_user(user, include_inactive=False)
     
     # Get all notifications for the user (limited to 20 most recent)
     notifications = Notification.objects.filter(user=request.user).order_by('-created_at')[:20]

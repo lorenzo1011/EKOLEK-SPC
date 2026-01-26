@@ -221,6 +221,7 @@
 						<th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">Category</th>
 						<th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">Points</th>
 						<th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">Stock</th>
+						<th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">Available To</th>
 						<th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; max-width: 200px;">Description</th>
 						<th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">Image URL</th>
 						<th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">Actions</th>
@@ -234,6 +235,13 @@
 						<td style="padding: 12px; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">{{ reward.category }}</td>
 						<td style="padding: 12px; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">{{ reward.points_required|smart_points }}</td>
 						<td style="padding: 12px; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">{{ reward.stock }}</td>
+						<td style="padding: 12px; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">
+							{% if reward.is_global_reward %}
+								<span class="barangay-badge barangay-badge-global">{{ reward.get_barangay_names }}</span>
+							{% else %}
+								<span class="barangay-badge barangay-badge-specific">{{ reward.get_barangay_names }}</span>
+							{% endif %}
+						</td>
 						<td style="padding: 12px; border-bottom: 1px solid #e5e7eb; max-width: 200px; word-wrap: break-word;">{{ reward.description }}</td>
 						<td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
 					{% if reward.image %}
@@ -245,15 +253,14 @@
 					{% endif %}
 					</td>
 						<td class="reward-actions" style="padding: 12px; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">
-						<button class="reward-action-btn"
-						onclick="openEditRewardModal(
-							'{{ reward.id }}',
-							'{{ reward.name|escapejs }}',
-							'{{ reward.category.id }}',  
-							'{{ reward.points_required }}',
-							'{{ reward.description|escapejs }}',
-							'{{ reward.image_url|escapejs }}'
-						)">✎</button>
+						<button class="reward-action-btn edit-reward-btn"
+							data-reward-id="{{ reward.id }}"
+							data-reward-name="{{ reward.name|escapejs }}"
+							data-reward-category="{{ reward.category.id }}"
+							data-reward-points="{{ reward.points_required }}"
+							data-reward-description="{{ reward.description|escapejs }}"
+							data-reward-image="{{ reward.image_url|escapejs }}"
+							data-reward-barangays="{% for brgy in reward.available_barangays.all %}{{ brgy.id }}{% if not forloop.last %},{% endif %}{% endfor %}">✎</button>
 						<button class="reward-action-btn" onclick="openDeleteRewardModal('{{ reward.id }}')">🗑</button>
 						</td>
 					</tr>
@@ -382,6 +389,28 @@
 				<small id="addRewardProgressText" style="display: none; color: #6b7280; margin-top: 4px;">Uploading to Google Drive...</small>
 			</div>
 
+			<div style="margin-bottom: 20px;">
+				<label style="display: block; margin-bottom: 10px; font-weight: 700; color: #1f2937; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;">
+					<i class='bx bx-buildings' style="color: #667eea; font-size: 1.1rem;"></i> Available To Barangays
+					<span style="font-weight: 400; color: #6b7280; font-size: 0.85rem;">(Leave empty for global)</span>
+				</label>
+				<div style="max-height: 180px; overflow-y: auto; border: 2px solid #e5e7eb; border-radius: 10px; padding: 12px; background: #f9fafb;">
+					<label style="display: flex; align-items: center; padding: 8px; cursor: pointer; transition: background 0.2s; border-radius: 6px; margin-bottom: 8px; background: #eff6ff;" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'">
+						<input type="checkbox" id="selectAllBarangaysAdd" onclick="toggleAllBarangays(this, 'Add')" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
+						<span style="font-weight: 600; color: #1f2937;">🌍 Select All (Global Reward)</span>
+					</label>
+					{% for barangay in barangays %}
+					<label style="display: flex; align-items: center; padding: 8px; cursor: pointer; transition: background 0.2s; border-radius: 6px;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+						<input type="checkbox" name="barangays" value="{{ barangay.id }}" class="barangay-checkbox-add" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
+						<span style="color: #374151;">{{ barangay.name }}</span>
+					</label>
+					{% endfor %}
+				</div>
+				<p style="margin-top: 8px; font-size: 0.85rem; color: #6b7280;">
+					💡 <strong>Tip:</strong> Leave all unchecked to make this reward available globally to all barangays.
+				</p>
+			</div>
+
 			<div style="margin-bottom: 25px;">
 				<label style="display: block; margin-bottom: 10px; font-weight: 700; color: #1f2937; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;">
 					<i class='bx bx-package' style="color: #667eea; font-size: 1.1rem;"></i> Initial Stock
@@ -454,6 +483,28 @@
           <i class='bx bx-message-detail' style="color: #667eea; font-size: 1.1rem;"></i> Description
         </label>
         <textarea id="editRewardDescription" name="description" rows="3" required style="width: 100%; padding: 14px 18px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 0.95rem; color: #374151; transition: all 0.3s ease; resize: vertical;"></textarea>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <label style="display: block; margin-bottom: 10px; font-weight: 700; color: #1f2937; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;">
+          <i class='bx bx-buildings' style="color: #667eea; font-size: 1.1rem;"></i> Available To Barangays
+          <span style="font-weight: 400; color: #6b7280; font-size: 0.85rem;">(Leave empty for global)</span>
+        </label>
+        <div style="max-height: 180px; overflow-y: auto; border: 2px solid #e5e7eb; border-radius: 10px; padding: 12px; background: #f9fafb;">
+          <label style="display: flex; align-items: center; padding: 8px; cursor: pointer; transition: background 0.2s; border-radius: 6px; margin-bottom: 8px; background: #eff6ff;" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'">
+            <input type="checkbox" id="selectAllBarangaysEdit" onclick="toggleAllBarangays(this, 'Edit')" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
+            <span style="font-weight: 600; color: #1f2937;">🌍 Select All (Global Reward)</span>
+          </label>
+          {% for barangay in barangays %}
+          <label style="display: flex; align-items: center; padding: 8px; cursor: pointer; transition: background 0.2s; border-radius: 6px;" onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background='transparent'">
+            <input type="checkbox" name="barangays" value="{{ barangay.id }}" class="barangay-checkbox-edit" style="margin-right: 10px; width: 18px; height: 18px; cursor: pointer;">
+            <span style="color: #374151;">{{ barangay.name }}</span>
+          </label>
+          {% endfor %}
+        </div>
+        <p style="margin-top: 8px; font-size: 0.85rem; color: #6b7280;">
+          💡 <strong>Tip:</strong> Leave all unchecked to make this reward available globally to all barangays.
+        </p>
       </div>
 
       <div style="margin-bottom: 20px;">
@@ -705,6 +756,64 @@
 	<script src="{% static 'js/admin_notifications.js' %}"></script>
 
 <script>
+// Barangay selection toggle functions
+function toggleAllBarangays(checkbox, modal) {
+  const checkboxes = document.querySelectorAll(`.barangay-checkbox-${modal.toLowerCase()}`);
+  checkboxes.forEach(cb => {
+    cb.checked = checkbox.checked;
+  });
+}
+
+// Add event listener for edit buttons using data attributes
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.edit-reward-btn').forEach(button => {
+    button.addEventListener('click', function() {
+      const id = this.dataset.rewardId;
+      const name = this.dataset.rewardName;
+      const categoryId = this.dataset.rewardCategory;
+      const points = this.dataset.rewardPoints;
+      const description = this.dataset.rewardDescription;
+      const imageUrl = this.dataset.rewardImage;
+      const barangayIds = this.dataset.rewardBarangays ? this.dataset.rewardBarangays.split(',').filter(Boolean) : [];
+      
+      openEditRewardModal(id, name, categoryId, points, description, imageUrl, barangayIds);
+    });
+  });
+});
+
+// Update openEditRewardModal to handle barangay selection
+window.originalOpenEditRewardModal = window.openEditRewardModal;
+window.openEditRewardModal = function(id, name, categoryId, points, description, imageUrl, barangayIds) {
+  // Call original function
+  if (window.originalOpenEditRewardModal) {
+    window.originalOpenEditRewardModal(id, name, categoryId, points, description, imageUrl);
+  } else {
+    // Fallback implementation
+    document.getElementById('editRewardId').value = id;
+    document.getElementById('editRewardName').value = name;
+    document.getElementById('editRewardCategory').value = categoryId;
+    document.getElementById('editRewardPoints').value = points;
+    document.getElementById('editRewardDescription').value = description;
+    document.getElementById('editRewardModal').style.display = 'flex';
+  }
+  
+  // Clear all barangay checkboxes first
+  document.querySelectorAll('.barangay-checkbox-edit').forEach(cb => cb.checked = false);
+  
+  // Check the barangays that this reward is assigned to
+  if (barangayIds && Array.isArray(barangayIds)) {
+    barangayIds.forEach(id => {
+      const checkbox = document.querySelector(`.barangay-checkbox-edit[value="${id}"]`);
+      if (checkbox) checkbox.checked = true;
+    });
+  }
+  
+  // Update "Select All" checkbox state
+  const allCheckboxes = document.querySelectorAll('.barangay-checkbox-edit');
+  const checkedCheckboxes = document.querySelectorAll('.barangay-checkbox-edit:checked');
+  document.getElementById('selectAllBarangaysEdit').checked = allCheckboxes.length === checkedCheckboxes.length;
+};
+
 // Search functionality for Rewards table
 document.getElementById('rewardsSearchInput').addEventListener('input', function(e) {
   const searchTerm = e.target.value.toLowerCase();

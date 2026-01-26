@@ -529,6 +529,16 @@ class Reward(models.Model):
     stock = models.IntegerField()
     description = models.TextField(null=True, blank=True)
     
+    # Per-Barangay Rewards System
+    # If empty/blank: reward is GLOBAL (available to all barangays)
+    # If populated: reward is available ONLY to selected barangays
+    available_barangays = models.ManyToManyField(
+        Barangay,
+        blank=True,
+        related_name='available_rewards',
+        help_text="Leave empty for global reward. Select specific barangays to restrict availability."
+    )
+    
     # Image field - storage backend will be determined by settings
     image = models.ImageField(upload_to='reward_images/', null=True, blank=True)
     
@@ -608,6 +618,94 @@ class Reward(models.Model):
     
     def __str__(self):
         return self.name
+    
+    def is_global_reward(self):
+        """Check if reward is available to all barangays (global)"""
+        return self.available_barangays.count() == 0
+    
+    def is_available_to_barangay(self, barangay):
+        """
+        Check if reward is available to a specific barangay
+        Args:
+            barangay: Barangay instance or barangay ID
+        Returns:
+            bool: True if reward is available (global or in barangay list)
+        """
+        # Global rewards are available to all
+        if self.is_global_reward():
+            return True
+        
+        # Check if barangay is in the allowed list
+        if isinstance(barangay, Barangay):
+            return self.available_barangays.filter(id=barangay.id).exists()
+        else:
+            # Assume barangay is an ID
+            return self.available_barangays.filter(id=barangay).exists()
+    
+    def is_available_to_user(self, user):
+        """
+        Check if reward is available to a specific user based on their barangay
+        Args:
+            user: Users instance
+        Returns:
+            bool: True if reward is available to user's barangay
+        """
+        user_barangay = user.get_barangay()
+        if not user_barangay:
+            return False
+        return self.is_available_to_barangay(user_barangay)
+    
+    def get_barangay_names(self):
+        """Get comma-separated list of barangay names for display"""
+        if self.is_global_reward():
+            return "All Barangays"
+        return ", ".join(self.available_barangays.values_list('name', flat=True))
+    
+    @classmethod
+    def get_available_for_barangay(cls, barangay, include_inactive=False):
+        """
+        Get all rewards available to a specific barangay
+        Args:
+            barangay: Barangay instance or ID
+            include_inactive: Whether to include inactive rewards
+        Returns:
+            QuerySet of Reward objects
+        """
+        from django.db.models import Q
+        
+        # Start with base queryset
+        queryset = cls.objects.all()
+        
+        # Filter by active status
+        if not include_inactive:
+            queryset = queryset.filter(is_active=True)
+        
+        # Get barangay ID
+        barangay_id = barangay.id if isinstance(barangay, Barangay) else barangay
+        
+        # Filter: global rewards OR rewards assigned to this barangay
+        # Global rewards have no barangays assigned (available_barangays is empty)
+        queryset = queryset.filter(
+            Q(available_barangays__isnull=True) |  # Global rewards
+            Q(available_barangays__id=barangay_id)  # Barangay-specific rewards
+        ).distinct()
+        
+        return queryset
+    
+    @classmethod
+    def get_available_for_user(cls, user, include_inactive=False):
+        """
+        Get all rewards available to a specific user based on their barangay
+        Args:
+            user: Users instance
+            include_inactive: Whether to include inactive rewards
+        Returns:
+            QuerySet of Reward objects
+        """
+        user_barangay = user.get_barangay()
+        if not user_barangay:
+            return cls.objects.none()
+        return cls.get_available_for_barangay(user_barangay, include_inactive)
     
     def add_stock(self, quantity, admin_user=None, notes=""):
         """Add stock and record history"""
