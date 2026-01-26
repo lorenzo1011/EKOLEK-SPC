@@ -10,6 +10,30 @@ function closeRegistrationModal() {
         modal.classList.remove('show');
         modal.style.display = 'none';
     }
+    
+    // Clear session when user manually closes modal
+    clearRegistrationSession();
+}
+
+function clearRegistrationSession() {
+    // Clear server-side session
+    fetch('/clear-registration-session/', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': window.CSRF_TOKEN,
+            'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            console.log('✅ Registration session cleared successfully');
+        }
+    })
+    .catch(err => {
+        console.error('❌ Failed to clear registration session:', err);
+    });
 }
 
 function showRegistrationModal(registrationType) {
@@ -46,15 +70,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const registrationType = window.REGISTRATION_TYPE || '';
         showRegistrationModal(registrationType);
         
-        // Clear the flag to prevent modal showing again on page refresh
-        // This is done via AJAX to clear server-side session
-        fetch('/clear-registration-session/', {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': window.CSRF_TOKEN,
-                'Content-Type': 'application/json'
-            },
-            credentials: 'same-origin'
-        }).catch(err => console.log('Session clear request sent'));
+        // IMMEDIATELY clear the session flag to prevent modal showing again
+        clearRegistrationSession();
     }
 });

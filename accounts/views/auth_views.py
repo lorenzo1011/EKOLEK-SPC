@@ -77,6 +77,19 @@ def login_page(request):
     # ============================================================
     if request.method == 'GET':
         # ============================================================
+        # CRITICAL FIX: Clear registration flags on GET to prevent
+        # modal from showing when user directly visits login page
+        # Only preserve them if coming directly from registration redirect
+        # ============================================================
+        referer = request.META.get('HTTP_REFERER', '')
+        is_from_registration = '/register/' in referer
+        
+        # Clear flags if NOT coming from registration page
+        if not is_from_registration:
+            request.session.pop('registration_success', None)
+            request.session.pop('registration_type', None)
+        
+        # ============================================================
         # CRITICAL: Consume all messages, only keep login-relevant ones
         # This prevents message persistence and duplication
         # ============================================================
@@ -559,6 +572,7 @@ def qr_login(request):
     }, status=405)
 
 
+@csrf_exempt
 @require_http_methods(["POST"])
 def clear_registration_session(request):
     """
@@ -568,4 +582,5 @@ def clear_registration_session(request):
     """
     request.session.pop('registration_success', None)
     request.session.pop('registration_type', None)
-    return JsonResponse({'status': 'cleared'})
+    request.session.modified = True  # Force session save
+    return JsonResponse({'status': 'cleared', 'success': True})
