@@ -168,7 +168,7 @@ def login_page(request):
                     if user.phone:
                         otp_service.clear_failed_login_attempts(user.phone)
                     messages.success(request, 'Login successful!')
-                    return redirect('user_dashboard')
+                    return redirect('userdashboard')
                 else:
                     # OTP login path (only used if OTP_LOGIN_ENABLED=True)
                     logger.info(f"[LOGIN] Sending OTP to {user.username} for login verification")
@@ -279,7 +279,7 @@ def code_login(request):
                     if user.phone:
                         otp_service.clear_failed_login_attempts(user.phone)
                     messages.success(request, 'Login successful!')
-                    return redirect('user_dashboard')
+                    return redirect('userdashboard')
                 else:
                     # OTP code login path (only used if OTP_LOGIN_ENABLED=True)
                     logger.info(f"[CODE LOGIN] Sending OTP to {user.username}")
