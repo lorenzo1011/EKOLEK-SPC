@@ -13,8 +13,15 @@ from django.core.cache import cache
 
 logger = logging.getLogger(__name__)
 
-# OTP Verification Feature Flag
-# When False, OTP verification is bypassed (for temporary disable)
+# ==============================================================================
+# PER-FEATURE OTP FLAGS (Production-Safe Configuration)
+# ==============================================================================
+# Read per-feature flags from settings
+OTP_LOGIN_ENABLED = getattr(settings, 'OTP_LOGIN_ENABLED', False)
+OTP_REGISTER_ENABLED = getattr(settings, 'OTP_REGISTER_ENABLED', False)
+OTP_RESET_PASSWORD_ENABLED = getattr(settings, 'OTP_RESET_PASSWORD_ENABLED', True)
+
+# Legacy flag for backward compatibility
 OTP_VERIFICATION_ENABLED = getattr(settings, 'OTP_VERIFICATION_ENABLED', True)
 
 # Import Celery task

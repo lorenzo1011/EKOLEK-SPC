@@ -289,9 +289,11 @@ EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=30, cast=int)
 # ==============================================================================
 
 # SMS API Settings (iProg Tech)
+# IMPORTANT: SMS/Email credentials are optional if OTP is fully disabled
+# Use safe defaults to prevent crashes when credentials are missing
 SMS_ENABLED = config('SMS_ENABLED', default=True, cast=bool)
 SMS_API_URL = config('SMS_API_URL', default='https://www.iprogsms.com/api/v1/sms_messages')
-SMS_API_TOKEN = config('SMS_API_TOKEN')
+SMS_API_TOKEN = config('SMS_API_TOKEN', default='')  # Safe default - empty string won't crash
 SMS_API_TIMEOUT = config('SMS_API_TIMEOUT', default=10, cast=int)
 SMS_PROVIDER = config('SMS_PROVIDER', default=2, cast=int)
 
@@ -300,49 +302,74 @@ OTP_EXPIRY_MINUTES = config('OTP_EXPIRY_MINUTES', default=5, cast=int)
 OTP_MAX_ATTEMPTS = config('OTP_MAX_ATTEMPTS', default=3, cast=int)
 OTP_RESEND_COOLDOWN_SECONDS = config('OTP_RESEND_COOLDOWN_SECONDS', default=60, cast=int)
 
-# OTP Verification Feature Flag
-# Set to False to temporarily disable OTP verification for login/registration
-# Can be easily re-enabled by setting to True
-# 
-# IMPORTANT: For Railway deployment, set environment variable:
-#   OTP_VERIFICATION_ENABLED = False (as string "False" or boolean false)
+# ==============================================================================
+# PER-FEATURE OTP CONTROL (Production-Ready Architecture)
+# ==============================================================================
+# Instead of a single global flag, we now have granular control per feature:
+# - OTP_LOGIN_ENABLED: Require OTP for user login (web + mobile)
+# - OTP_REGISTER_ENABLED: Require OTP for new user registration
+# - OTP_RESET_PASSWORD_ENABLED: Require OTP for password reset
 #
-# This checks multiple sources with proper fallback:
-# 1. Railway environment variable (os.environ)
-# 2. .env file via decouple (local development)
-# 3. Defaults to True (OTP enabled) if not set
+# RECOMMENDED SETTINGS:
+# Development: All False (faster testing)
+# Production: OTP_RESET_PASSWORD_ENABLED=True, others False (cleaner UX)
+#
+# WHY THIS APPROACH:
+# 1. No 500 errors from missing OTP session variables
+# 2. No dependency on SMS/Email APIs for login/registration
+# 3. Security still maintained for password reset (most critical)
+# 4. Easier to deploy and test
+# 5. Better user experience (no OTP friction for login)
+# ==============================================================================
 
-def get_otp_enabled():
+def safe_bool_config(key, default=False):
     """
-    Robust OTP configuration that works with Railway and local .env
-    Accepts: 'False', 'false', '0', 'no', False (boolean), 0 (int) as disabled
+    Safely read boolean config from environment or .env file
+    Prevents crashes from missing or malformed values
+    Accepts: 'True', 'true', '1', 'yes', 'on', True as enabled
     """
-    # Try Railway environment variable first (os.environ)
-    env_value = os.environ.get('OTP_VERIFICATION_ENABLED', None)
-    if env_value is not None:
-        # Handle string values from Railway
-        if isinstance(env_value, str):
-            return env_value.lower() not in ('false', '0', 'no', 'off', '')
-        # Handle boolean values
-        return bool(env_value)
-    
-    # Fallback to decouple config (for .env file in local development)
     try:
-        return config('OTP_VERIFICATION_ENABLED', default=True, cast=bool)
-    except:
-        # Final fallback - OTP enabled by default
-        return True
+        # Try Railway environment variable first
+        env_value = os.environ.get(key, None)
+        if env_value is not None:
+            if isinstance(env_value, str):
+                return env_value.lower() in ('true', '1', 'yes', 'on')
+            return bool(env_value)
+        
+        # Fallback to decouple config (for .env file)
+        return config(key, default=default, cast=bool)
+    except Exception as e:
+        # If anything fails, return safe default
+        logger.warning(f"Config error for {key}: {e}. Using default: {default}")
+        return default
 
-OTP_VERIFICATION_ENABLED = get_otp_enabled()
+# Per-feature OTP flags
+OTP_LOGIN_ENABLED = safe_bool_config('OTP_LOGIN_ENABLED', default=False)
+OTP_REGISTER_ENABLED = safe_bool_config('OTP_REGISTER_ENABLED', default=False)
+OTP_RESET_PASSWORD_ENABLED = safe_bool_config('OTP_RESET_PASSWORD_ENABLED', default=True)
 
-# Log OTP configuration on startup
+# Legacy flag for backward compatibility (deprecated, use per-feature flags instead)
+# This is kept only for existing code that checks OTP_VERIFICATION_ENABLED
+# It returns True only if ANY feature has OTP enabled
+OTP_VERIFICATION_ENABLED = OTP_LOGIN_ENABLED or OTP_REGISTER_ENABLED or OTP_RESET_PASSWORD_ENABLED
+
+# Log OTP configuration on startup for debugging
 import logging
 logger = logging.getLogger(__name__)
-logger.info(f"🔐 OTP Configuration: OTP_VERIFICATION_ENABLED = {OTP_VERIFICATION_ENABLED}")
-if not OTP_VERIFICATION_ENABLED:
-    logger.warning("⚠️  OTP VERIFICATION IS DISABLED - Mobile login will skip OTP step")
-else:
-    logger.info("✅ OTP VERIFICATION IS ENABLED - Mobile login requires OTP")
+logger.info("="*70)
+logger.info("🔐 OTP CONFIGURATION (Per-Feature Control)")
+logger.info("="*70)
+logger.info(f"  📱 Login OTP:        {'ENABLED ✅' if OTP_LOGIN_ENABLED else 'DISABLED ❌'}")
+logger.info(f"  ✍️  Registration OTP: {'ENABLED ✅' if OTP_REGISTER_ENABLED else 'DISABLED ❌'}")
+logger.info(f"  🔑 Password Reset:   {'ENABLED ✅' if OTP_RESET_PASSWORD_ENABLED else 'DISABLED ❌'}")
+logger.info(f"  🔗 Legacy Flag:      {'ENABLED ✅' if OTP_VERIFICATION_ENABLED else 'DISABLED ❌'}")
+logger.info("="*70)
+
+# Warn if SMS/Email credentials are missing but OTP is enabled for password reset
+if OTP_RESET_PASSWORD_ENABLED:
+    if not SMS_API_TOKEN and not config('SENDGRID_API_KEY', default=''):
+        logger.error("⚠️  CRITICAL: OTP enabled for password reset but no SMS or Email credentials found!")
+        logger.error("⚠️  Set SMS_API_TOKEN or SENDGRID_API_KEY in environment variables")
 
 
 # ==============================================================================

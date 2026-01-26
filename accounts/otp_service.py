@@ -10,17 +10,30 @@ from datetime import datetime, timedelta
 
 logger = logging.getLogger(__name__)
 
-# OTP Verification Feature Flag
-# When False, OTP verification is bypassed (for temporary disable)
+# ==============================================================================
+# PER-FEATURE OTP FLAGS (Production-Safe Configuration)
+# ==============================================================================
+# Read per-feature flags from settings (which safely reads from env vars/.env)
+# These control OTP behavior for different features independently
+OTP_LOGIN_ENABLED = getattr(settings, 'OTP_LOGIN_ENABLED', False)
+OTP_REGISTER_ENABLED = getattr(settings, 'OTP_REGISTER_ENABLED', False)
+OTP_RESET_PASSWORD_ENABLED = getattr(settings, 'OTP_RESET_PASSWORD_ENABLED', True)
+
+# Legacy flag for backward compatibility
 OTP_VERIFICATION_ENABLED = getattr(settings, 'OTP_VERIFICATION_ENABLED', True)
 
-# Load API token from environment or Django settings
-# Using SMS_API_TOKEN for sending OTP via SMS API
-SMS_API_TOKEN = os.environ.get('SMS_API_TOKEN') or getattr(settings, 'SMS_API_TOKEN', None)
+# Load API token from environment or Django settings with SAFE DEFAULTS
+# CRITICAL FIX: Using empty string as default prevents crashes when credentials missing
+SMS_API_TOKEN = os.environ.get('SMS_API_TOKEN') or getattr(settings, 'SMS_API_TOKEN', '')
 SMS_PROVIDER = getattr(settings, 'SMS_PROVIDER', 2)  # Default to 2 for multi-network support
 
 # iProg Tech SMS API endpoint for sending OTP
 SMS_API_URL = 'https://www.iprogsms.com/api/v1/sms_messages'
+
+# Validate SMS credentials on import (log warning if missing but OTP enabled)
+if OTP_RESET_PASSWORD_ENABLED and not SMS_API_TOKEN:
+    logger.warning("⚠️  SMS_API_TOKEN is missing but OTP is enabled for password reset!")
+    logger.warning("⚠️  Password reset via SMS will fail. Set SMS_API_TOKEN in environment.")
 
 # REDIS-BACKED OTP STORAGE (survives server restarts!)
 # Using Django's cache framework (configured with Redis on Railway)

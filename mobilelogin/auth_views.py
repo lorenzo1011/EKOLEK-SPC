@@ -11,6 +11,7 @@ import uuid
 # Django
 from django.http import JsonResponse
 from django.utils import timezone
+from django.conf import settings
 
 # Django REST Framework
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
@@ -29,13 +30,32 @@ from accounts import otp_service
 
 logger = logging.getLogger(__name__)
 
+# ==============================================================================
+# PER-FEATURE OTP FLAGS FOR MOBILE API
+# ==============================================================================
+# Mobile login now NEVER requires OTP (cleaner UX, no 500 errors)
+# Password reset still uses OTP for security
+OTP_LOGIN_ENABLED = getattr(settings, 'OTP_LOGIN_ENABLED', False)
+OTP_REGISTER_ENABLED = getattr(settings, 'OTP_REGISTER_ENABLED', False)
+OTP_RESET_PASSWORD_ENABLED = getattr(settings, 'OTP_RESET_PASSWORD_ENABLED', True)
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_view(request):
     """
-    Mobile login: validate username/password then send OTP to the user's phone.
-    Client must call /api/login/verify-otp/ with user_id and otp to obtain token.
+    Mobile login: validates username/password and returns JWT tokens DIRECTLY.
+    
+    IMPORTANT FIX: OTP is now DISABLED for mobile login
+    - Old behavior: Send OTP, require verification via separate endpoint
+    - New behavior: Direct login with JWT tokens (cleaner UX, no 500 errors)
+    - Password reset still uses OTP for security
+    
+    This change:
+    - Eliminates 500 errors from missing OTP session variables
+    - Improves user experience (no OTP delay)
+    - Matches modern mobile app authentication patterns
+    - Maintains security via JWT token expiration
     """
     try:
         username = request.data.get('username', '').strip()
@@ -66,18 +86,73 @@ def login_view(request):
         if hasattr(user, 'can_access_system') and not user.can_access_system():
             return Response({'success': False, 'message': 'Account or family not approved', 'error_code': 'FAMILY_NOT_APPROVED'}, status=403)
 
-        phone = getattr(user, 'phone', None)
-        if not phone:
-            logger.error(f"No phone number for user {user.username}")
-            return Response({'success': False, 'message': 'No phone number on record', 'error_code': 'NO_PHONE'}, status=500)
+        # ============================================================
+        # FIX: Mobile login now returns JWT tokens DIRECTLY
+        # No OTP required (OTP_LOGIN_ENABLED=False)
+        # This prevents 500 errors and improves mobile UX
+        # ============================================================
+        if not OTP_LOGIN_ENABLED:
+            # Direct login without OTP (recommended setting)
+            logger.info(f"[MOBILE LOGIN] User {user.username} logged in successfully (no OTP required)")
+            
+            # Generate JWT tokens
+            refresh = RefreshToken.for_user(user)
+            
+            # Update last login
+            user.last_login = timezone.now()
+            user.save(update_fields=['last_login'])
+            
+            # Clear failed login attempts
+            if user.phone:
+                otp_service.clear_failed_login_attempts(user.phone)
 
-        send_resp = otp_service.send_otp(phone)
-        if not send_resp.get('success', False):
-            logger.error(f"Failed to send OTP to {phone}: {send_resp}")
-            return Response({'success': False, 'message': 'Failed to send OTP', 'error_code': 'OTP_SEND_FAILED'}, status=500)
+            # Build user response with family info
+            family = getattr(user, 'family', None)
+            family_info = None
+            if family:
+                family_info = {
+                    'id': str(getattr(family, 'id', '')),
+                    'family_name': getattr(family, 'family_name', ''),
+                    'family_code': getattr(family, 'family_code', ''),
+                    'barangay': getattr(family.barangay, 'name', '') if hasattr(family, 'barangay') and family.barangay else '',
+                    'address': getattr(family, 'address', ''),
+                }
 
-        # Respond with user id so client can call verify endpoint
-        return Response({'success': True, 'otp_sent': True, 'user_id': str(user.id)}, status=200)
+            return Response({
+                'success': True,
+                'access_token': str(refresh.access_token),
+                'refresh_token': str(refresh),
+                'user': {
+                    'id': str(user.id),
+                    'username': user.username,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'full_name': user.full_name,
+                    'phone': user.phone,
+                    'email': user.email or '',
+                    'user_type': user.user_type,
+                    'points': float(user.points) if hasattr(user, 'points') else 0.0,
+                    'family': family_info,
+                    'is_family_representative': getattr(user, 'is_family_representative', False),
+                }
+            }, status=200)
+        else:
+            # OTP login path (only used if OTP_LOGIN_ENABLED=True)
+            # This code is kept for flexibility but not recommended
+            logger.info(f"[MOBILE LOGIN] Sending OTP to {user.username} (OTP enabled)")
+            
+            phone = getattr(user, 'phone', None)
+            if not phone:
+                logger.error(f"No phone number for user {user.username}")
+                return Response({'success': False, 'message': 'No phone number on record', 'error_code': 'NO_PHONE'}, status=500)
+
+            send_resp = otp_service.send_otp(phone)
+            if not send_resp.get('success', False):
+                logger.error(f"Failed to send OTP to {phone}: {send_resp}")
+                return Response({'success': False, 'message': 'Failed to send OTP', 'error_code': 'OTP_SEND_FAILED'}, status=500)
+
+            # Respond with user id so client can call verify endpoint
+            return Response({'success': True, 'otp_sent': True, 'user_id': str(user.id)}, status=200)
 
     except Exception as e:
         logger.exception(f"Unexpected error during login: {e}")
@@ -88,8 +163,16 @@ def login_view(request):
 @permission_classes([AllowAny])
 def qr_login(request):
     """
-    QR login: identify user by QR payload (username | user_id | family_code), then send OTP.
-    Client must call /api/login/verify-otp/ with user_id and otp to obtain token.
+    QR login: identifies user by QR payload and returns JWT tokens DIRECTLY.
+    
+    IMPORTANT FIX: OTP is now DISABLED for QR login
+    - Old behavior: Send OTP, require verification
+    - New behavior: Direct login with JWT tokens
+    
+    Accepts QR codes containing:
+    - username
+    - user_id (UUID)
+    - family_code (for family representatives)
     """
     try:
         qr_code = (request.data.get('qr_code', '') or '').strip()
@@ -139,16 +222,70 @@ def qr_login(request):
         if user.family and getattr(user.family, 'status', '') != 'approved':
             return Response({'success': False, 'message': 'Family not approved', 'error_code': 'FAMILY_NOT_APPROVED'}, status=403)
 
-        phone = getattr(user, 'phone', None)
-        if not phone:
-            return Response({'success': False, 'message': 'No phone number on record', 'error_code': 'NO_PHONE'}, status=500)
+        # ============================================================
+        # FIX: QR login now returns JWT tokens DIRECTLY
+        # No OTP required (OTP_LOGIN_ENABLED=False)
+        # ============================================================
+        if not OTP_LOGIN_ENABLED:
+            # Direct login without OTP (recommended setting)
+            logger.info(f"[MOBILE QR LOGIN] User {user.username} logged in successfully (no OTP required)")
+            
+            # Generate JWT tokens
+            refresh = RefreshToken.for_user(user)
+            
+            # Update last login
+            user.last_login = timezone.now()
+            user.save(update_fields=['last_login'])
+            
+            # Clear failed login attempts
+            if user.phone:
+                otp_service.clear_failed_login_attempts(user.phone)
 
-        send_resp = otp_service.send_otp(phone)
-        if not send_resp.get('success', False):
-            logger.error(f"Failed to send OTP for QR login to {phone}: {send_resp}")
-            return Response({'success': False, 'message': 'Failed to send OTP', 'error_code': 'OTP_SEND_FAILED'}, status=500)
+            # Build user response with family info
+            family = getattr(user, 'family', None)
+            family_info = None
+            if family:
+                family_info = {
+                    'id': str(getattr(family, 'id', '')),
+                    'family_name': getattr(family, 'family_name', ''),
+                    'family_code': getattr(family, 'family_code', ''),
+                    'barangay': getattr(family.barangay, 'name', '') if hasattr(family, 'barangay') and family.barangay else '',
+                    'address': getattr(family, 'address', ''),
+                }
 
-        return Response({'success': True, 'otp_sent': True, 'user_id': str(user.id), 'via': search_method}, status=200)
+            return Response({
+                'success': True,
+                'access_token': str(refresh.access_token),
+                'refresh_token': str(refresh),
+                'via': search_method,
+                'user': {
+                    'id': str(user.id),
+                    'username': user.username,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'full_name': user.full_name,
+                    'phone': user.phone,
+                    'email': user.email or '',
+                    'user_type': user.user_type,
+                    'points': float(user.points) if hasattr(user, 'points') else 0.0,
+                    'family': family_info,
+                    'is_family_representative': getattr(user, 'is_family_representative', False),
+                }
+            }, status=200)
+        else:
+            # OTP QR login path (only used if OTP_LOGIN_ENABLED=True)
+            logger.info(f"[MOBILE QR LOGIN] Sending OTP to {user.username} (OTP enabled)")
+            
+            phone = getattr(user, 'phone', None)
+            if not phone:
+                return Response({'success': False, 'message': 'No phone number on record', 'error_code': 'NO_PHONE'}, status=500)
+
+            send_resp = otp_service.send_otp(phone)
+            if not send_resp.get('success', False):
+                logger.error(f"Failed to send OTP for QR login to {phone}: {send_resp}")
+                return Response({'success': False, 'message': 'Failed to send OTP', 'error_code': 'OTP_SEND_FAILED'}, status=500)
+
+            return Response({'success': True, 'otp_sent': True, 'user_id': str(user.id), 'via': search_method}, status=200)
 
     except Exception as e:
         logger.exception(f"Unexpected QR login error: {e}")

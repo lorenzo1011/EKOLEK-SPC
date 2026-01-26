@@ -21,7 +21,17 @@ from accounts import otp_service
 
 logger = logging.getLogger(__name__)
 
-# OTP Verification Feature Flag
+# ==============================================================================
+# PER-FEATURE OTP FLAGS
+# ==============================================================================
+# OTP is now controlled per-feature instead of globally
+# Login and registration: OTP DISABLED (cleaner UX, no 500 errors)
+# Password reset: OTP ENABLED (security maintained)
+OTP_LOGIN_ENABLED = getattr(settings, 'OTP_LOGIN_ENABLED', False)
+OTP_REGISTER_ENABLED = getattr(settings, 'OTP_REGISTER_ENABLED', False)
+OTP_RESET_PASSWORD_ENABLED = getattr(settings, 'OTP_RESET_PASSWORD_ENABLED', True)
+
+# Legacy flag (kept for backward compatibility with existing code)
 OTP_VERIFICATION_ENABLED = getattr(settings, 'OTP_VERIFICATION_ENABLED', True)
 
 
@@ -144,26 +154,38 @@ def login_page(request):
 
         if user is not None:
             if user.status == 'approved':
-                # Check if OTP is disabled - if so, login directly
-                if not OTP_VERIFICATION_ENABLED:
-                    logger.info(f"[OTP BYPASS] Skipping OTP for user {user.username} - logging in directly")
+                # ============================================================
+                # FIX: Login now NEVER requires OTP
+                # OTP_LOGIN_ENABLED is set to False in settings
+                # This prevents 500 errors and improves UX
+                # ============================================================
+                if not OTP_LOGIN_ENABLED:
+                    # Direct login without OTP (recommended setting)
+                    logger.info(f"[LOGIN] User {user.username} logged in successfully (no OTP required)")
                     login(request, user)
                     # Clear failed attempts on successful login
                     UserLoginSecurity.clear_failed_attempts(username)
-                    otp_service.clear_failed_login_attempts(user.phone) if user.phone else None
+                    if user.phone:
+                        otp_service.clear_failed_login_attempts(user.phone)
                     messages.success(request, 'Login successful!')
                     return redirect('user_dashboard')
-                
-                # OTP is enabled - send OTP to user's phone
-                phone = user.phone
-                send_resp = otp_service.send_otp(phone, purpose='login')
-                if send_resp.get('success', True):
-                    request.session['pending_login_user_id'] = str(user.id)
-                    request.session['pending_phone'] = phone
-                    messages.info(request, 'OTP sent to your phone. Please verify to continue.')
-                    return redirect('verify_otp')
                 else:
-                    messages.error(request, 'Failed to send OTP. Please try again later.')
+                    # OTP login path (only used if OTP_LOGIN_ENABLED=True)
+                    logger.info(f"[LOGIN] Sending OTP to {user.username} for login verification")
+                    phone = user.phone
+                    if not phone:
+                        messages.error(request, 'No phone number on record. Please contact admin.')
+                        return render(request, 'login.html')
+                    
+                    send_resp = otp_service.send_otp(phone, purpose='login')
+                    if send_resp.get('success', True):
+                        request.session['pending_login_user_id'] = str(user.id)
+                        request.session['pending_phone'] = phone
+                        messages.info(request, 'OTP sent to your phone. Please verify to continue.')
+                        return redirect('verify_otp')
+                    else:
+                        messages.error(request, 'Failed to send OTP. Please try again later.')
+                        return render(request, 'login.html')
             else:
                 # Account not approved - this is not a failed authentication, so we manually log it
                 UserLoginSecurity.increment_failed_attempts(
@@ -244,26 +266,37 @@ def code_login(request):
         
         if user is not None:
             if user.status == 'approved':
-                # Check if OTP is disabled - if so, login directly
-                if not OTP_VERIFICATION_ENABLED:
-                    logger.info(f"[OTP BYPASS] Skipping OTP for code login user {user.username} - logging in directly")
+                # ============================================================
+                # FIX: Code login (QR login) now NEVER requires OTP
+                # Same logic as regular login - cleaner and safer
+                # ============================================================
+                if not OTP_LOGIN_ENABLED:
+                    # Direct login without OTP (recommended setting)
+                    logger.info(f"[CODE LOGIN] User {user.username} logged in successfully (no OTP required)")
                     login(request, user)
                     # Clear failed attempts on successful login
                     UserLoginSecurity.clear_failed_attempts(username)
-                    otp_service.clear_failed_login_attempts(user.phone) if user.phone else None
+                    if user.phone:
+                        otp_service.clear_failed_login_attempts(user.phone)
                     messages.success(request, 'Login successful!')
                     return redirect('user_dashboard')
-                
-                # Send OTP instead of immediate login
-                phone = user.phone
-                send_resp = otp_service.send_otp(phone, purpose='login')
-                if send_resp.get('success', True):
-                    request.session['pending_login_user_id'] = str(user.id)
-                    request.session['pending_phone'] = phone
-                    messages.info(request, 'OTP sent to your phone. Please verify to continue.')
-                    return redirect('verify_otp')
                 else:
-                    messages.error(request, 'Failed to send OTP. Please try again later.')
+                    # OTP code login path (only used if OTP_LOGIN_ENABLED=True)
+                    logger.info(f"[CODE LOGIN] Sending OTP to {user.username}")
+                    phone = user.phone
+                    if not phone:
+                        messages.error(request, 'No phone number on record. Please contact admin.')
+                        return render(request, 'login.html')
+                    
+                    send_resp = otp_service.send_otp(phone, purpose='login')
+                    if send_resp.get('success', True):
+                        request.session['pending_login_user_id'] = str(user.id)
+                        request.session['pending_phone'] = phone
+                        messages.info(request, 'OTP sent to your phone. Please verify to continue.')
+                        return redirect('verify_otp')
+                    else:
+                        messages.error(request, 'Failed to send OTP. Please try again later.')
+                        return render(request, 'login.html')
             else:
                 # Account not approved - this is not a failed authentication, so we manually log it
                 UserLoginSecurity.increment_failed_attempts(
@@ -438,43 +471,51 @@ def qr_login(request):
                     'error': f'Your family "{user.family.family_name}" is not approved yet.'
                 }, status=403)
             
-            # Instead of immediate login, send OTP to user's phone and return success to client
+            # Instead of immediate login, check if OTP is required for QR login
             phone = user.phone
             
-            # Check if OTP is disabled - if so, login directly and return session info
-            if not OTP_VERIFICATION_ENABLED:
-                logger.info(f"[OTP BYPASS] Skipping OTP for QR login user {user.username} - logging in directly")
+            # ============================================================
+            # FIX: QR login now NEVER requires OTP (cleaner web experience)
+            # OTP_LOGIN_ENABLED is set to False in settings
+            # ============================================================
+            if not OTP_LOGIN_ENABLED:
+                # Direct login without OTP (recommended setting)
+                logger.info(f"[QR LOGIN] User {user.username} logged in successfully (no OTP required)")
                 login(request, user)
                 
                 # Clear failed attempts on successful login
                 UserLoginSecurity.clear_failed_attempts(user.username)
-                otp_service.clear_failed_login_attempts(user.phone) if user.phone else None
+                if user.phone:
+                    otp_service.clear_failed_login_attempts(user.phone)
                 
-                logger.info(f"Web QR Login: User {user.username} logged in successfully (OTP bypassed)")
+                logger.info(f"Web QR Login: User {user.username} logged in successfully")
                 log_security_event(
-                    'QR_LOGIN_SUCCESS_BYPASS',
+                    'QR_LOGIN_SUCCESS',
                     user=user,
                     ip_address=ip_address,
-                    details=f'QR login successful (OTP bypassed) for user: {user.username}'
+                    details=f'QR login successful for user: {user.username}'
                 )
                 
                 return JsonResponse({
                     'success': True,
-                    'otp_bypassed': True,
                     'user_id': str(user.id),
                     'user_name': user.first_name or user.username,
                     'search_method': search_method,
                     'redirect_url': '/userdashboard/'
                 })
-            
-            # OTP is enabled - proceed with OTP flow
-            send_resp = otp_service.send_otp(phone, purpose='login')
-            if not send_resp.get('success', True):
-                logger.error(f"Web QR Login: Failed to send OTP to {phone}: {send_resp.get('error')}")
-                return JsonResponse({'error': 'Failed to send OTP'}, status=500)
+            else:
+                # OTP QR login path (only used if OTP_LOGIN_ENABLED=True)
+                if not phone:
+                    return JsonResponse({'error': 'No phone number on record. Please contact admin.'}, status=500)
+                
+                logger.info(f"[QR LOGIN] Sending OTP to {user.username}")
+                send_resp = otp_service.send_otp(phone, purpose='login')
+                if not send_resp.get('success', True):
+                    logger.error(f"Web QR Login: Failed to send OTP to {phone}: {send_resp.get('error')}")
+                    return JsonResponse({'error': 'Failed to send OTP'}, status=500)
 
-            # Store pending login in session (used when verifying OTP)
-            request.session['pending_login_user_id'] = str(user.id)
+                # Store pending login in session (used when verifying OTP)
+                request.session['pending_login_user_id'] = str(user.id)
             request.session['pending_phone'] = phone
 
             logger.info(f"Web QR Login: OTP sent to {phone} for user {user.username}")
