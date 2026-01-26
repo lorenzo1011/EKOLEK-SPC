@@ -1,6 +1,7 @@
 """
 Authentication views for mobile API
-Handles login, logout, OTP verification, and JWT token management
+Handles login, logout, and JWT token management
+NO OTP - Direct JWT authentication only
 """
 # Standard library
 import json
@@ -18,26 +19,14 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.authentication import TokenAuthentication
-from rest_framework.authtoken.models import Token
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 
 # Local apps
 from accounts.models import Users
-from accounts import otp_service
 
 
 logger = logging.getLogger(__name__)
-
-# ==============================================================================
-# PER-FEATURE OTP FLAGS FOR MOBILE API
-# ==============================================================================
-# Mobile login now NEVER requires OTP (cleaner UX, no 500 errors)
-# Password reset still uses OTP for security
-OTP_LOGIN_ENABLED = getattr(settings, 'OTP_LOGIN_ENABLED', False)
-OTP_REGISTER_ENABLED = getattr(settings, 'OTP_REGISTER_ENABLED', False)
-OTP_RESET_PASSWORD_ENABLED = getattr(settings, 'OTP_RESET_PASSWORD_ENABLED', True)
 
 
 @api_view(['POST'])
@@ -364,7 +353,7 @@ def login_verify_otp(request):
 
 
 @api_view(['POST', 'GET'])  # Allow both POST and GET for browser compatibility
-@authentication_classes([JWTAuthentication, TokenAuthentication])  # Support both JWT and DRF Token
+@authentication_classes([JWTAuthentication])  # JWT ONLY - multi-device support
 @permission_classes([])  # Allow unauthenticated requests (authentication is optional)
 def logout_view(request):
     """
@@ -575,7 +564,7 @@ def refresh_token_view(request):
 
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication, TokenAuthentication])  # Support both JWT and DRF Token
+@authentication_classes([JWTAuthentication])  # JWT ONLY - multi-device support
 @permission_classes([IsAuthenticated])
 def validate_token_view(request):
     """

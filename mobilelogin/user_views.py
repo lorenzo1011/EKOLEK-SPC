@@ -1,7 +1,7 @@
 """
 User data views for mobile API
 Handles user points, profile data, and family information
-Uses JWT authentication for mobile apps
+Uses JWT authentication ONLY for mobile apps - supports multi-device login
 """
 # Standard library
 import json
@@ -15,7 +15,6 @@ from django.utils import timezone
 # Django REST Framework
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -27,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication, TokenAuthentication])  # Support both JWT and DRF Token
+@authentication_classes([JWTAuthentication])  # JWT ONLY - multi-device support
 @permission_classes([IsAuthenticated])
 def current_points(request):
     """Enhanced current points endpoint with comprehensive data and error handling"""
@@ -130,7 +129,7 @@ def current_points(request):
 
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication, TokenAuthentication])  # Support both JWT and DRF Token
+@authentication_classes([JWTAuthentication])  # JWT ONLY - multi-device support
 @permission_classes([IsAuthenticated])
 def current_user_data(request):
     """Enhanced user data endpoint with comprehensive error handling"""
@@ -304,7 +303,7 @@ def current_user_data(request):
 
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication, TokenAuthentication])  # Support both JWT and DRF Token
+@authentication_classes([JWTAuthentication])  # JWT ONLY - multi-device support
 @permission_classes([IsAuthenticated])
 def family_members(request):
     """Enhanced family members endpoint with comprehensive family data"""
@@ -385,7 +384,7 @@ def family_members(request):
 
 
 @api_view(['POST'])
-@authentication_classes([JWTAuthentication, TokenAuthentication])  # Support both JWT and DRF Token
+@authentication_classes([JWTAuthentication])  # JWT ONLY - multi-device support
 @permission_classes([IsAuthenticated])
 def update_points(request):
     """Update user points via JWT or Token authenticated API"""

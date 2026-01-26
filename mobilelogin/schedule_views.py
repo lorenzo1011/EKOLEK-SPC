@@ -1,12 +1,12 @@
 """
 Schedule views for mobile API
 Handles garbage collection schedule endpoints for Flutter app
+Uses JWT authentication ONLY - supports multi-device login
 """
 import logging
 from django.utils import timezone
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from accounts.models import GarbageSchedule, Barangay
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication, TokenAuthentication])  # Support both JWT and DRF Token
+@authentication_classes([JWTAuthentication])  # JWT ONLY - multi-device support
 @permission_classes([IsAuthenticated])
 def get_garbage_schedule(request):
     """
@@ -106,7 +106,7 @@ def get_garbage_schedule(request):
 
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication, TokenAuthentication])  # Support both JWT and DRF Token
+@authentication_classes([JWTAuthentication])  # JWT ONLY - multi-device support
 @permission_classes([IsAuthenticated])
 def get_all_schedules(request):
     """
@@ -189,7 +189,7 @@ def get_all_schedules(request):
 
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication, TokenAuthentication])  # Support both JWT and DRF Token
+@authentication_classes([JWTAuthentication])  # JWT ONLY - multi-device support
 @permission_classes([IsAuthenticated])
 def get_schedule_by_barangay(request, barangay_id):
     """
@@ -271,7 +271,7 @@ def get_schedule_by_barangay(request, barangay_id):
 
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication, TokenAuthentication])  # Support both JWT and DRF Token
+@authentication_classes([JWTAuthentication])  # JWT ONLY - multi-device support
 @permission_classes([IsAuthenticated])
 def get_todays_schedule(request):
     """

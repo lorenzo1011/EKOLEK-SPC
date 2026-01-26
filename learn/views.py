@@ -9,7 +9,6 @@ from django.db import transaction
 from django.db.models import Max
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
@@ -30,7 +29,7 @@ from accounts.models import PointsTransaction
 logger = logging.getLogger(__name__)
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication, TokenAuthentication])
+@authentication_classes([JWTAuthentication])  # JWT ONLY - multi-device support
 @permission_classes([IsAuthenticated])
 def get_learning_videos(request):
     """Get all active learning videos with quiz information"""
@@ -64,7 +63,7 @@ def get_learning_videos(request):
         }, status=500)
 
 @api_view(['POST'])
-@authentication_classes([JWTAuthentication, TokenAuthentication])
+@authentication_classes([JWTAuthentication])  # JWT ONLY - multi-device support
 @permission_classes([IsAuthenticated])
 def mark_video_as_watched(request):
     """Mark a video as watched and award points"""
@@ -239,7 +238,7 @@ def test_api(request):
 # Quiz System Views
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication, TokenAuthentication])
+@authentication_classes([JWTAuthentication])  # JWT ONLY - multi-device support
 @permission_classes([IsAuthenticated])
 def get_quiz_questions(request, video_id):
     """
@@ -278,7 +277,7 @@ def get_quiz_questions(request, video_id):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
-@authentication_classes([JWTAuthentication, TokenAuthentication])
+@authentication_classes([JWTAuthentication])  # JWT ONLY - multi-device support
 @permission_classes([IsAuthenticated])
 def submit_quiz_answers(request, video_id):
     """
@@ -432,7 +431,7 @@ def submit_quiz_answers(request, video_id):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['POST'])
-@authentication_classes([JWTAuthentication, TokenAuthentication])
+@authentication_classes([JWTAuthentication])  # JWT ONLY - multi-device support
 @permission_classes([IsAuthenticated])
 def mark_video_watched(request, video_id):
     """
@@ -505,7 +504,7 @@ def mark_video_watched(request, video_id):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication, TokenAuthentication])
+@authentication_classes([JWTAuthentication])  # JWT ONLY - multi-device support
 @permission_classes([IsAuthenticated])
 def check_quiz_availability(request, video_id):
     """
@@ -543,7 +542,7 @@ def check_quiz_availability(request, video_id):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication, TokenAuthentication])
+@authentication_classes([JWTAuthentication])  # JWT ONLY - multi-device support
 @permission_classes([IsAuthenticated])
 def get_quiz_result(request, video_id):
     """
@@ -575,7 +574,7 @@ def get_quiz_result(request, video_id):
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication, TokenAuthentication])
+@authentication_classes([JWTAuthentication])  # JWT ONLY - multi-device support
 @permission_classes([IsAuthenticated])
 def debug_quiz_question(request, video_id, question_id):
     """
