@@ -83,12 +83,19 @@ def register_family(request):
                     except Exception as e:
                         logger.error(f"Error creating user consent: {e}")
                 
-                # Set session flag for successful registration
-                request.session['registration_success'] = True
-                request.session['registration_type'] = 'family'
-                
                 logger.info(f"[REGISTRATION] Family {family.family_name} registered successfully (no OTP)")
-                messages.success(request, "Family registered successfully! Please wait for admin approval.")
+                
+                # Use Django messages with 'registration' tag for special styling
+                success_msg = (
+                    "✅ Registration Successful! "
+                    "<div class='message-info'>"
+                    "⏳ <strong>Waiting for Admin Approval</strong><br>"
+                    "📱 You will receive an SMS notification once your account is approved. "
+                    "Please wait for administrator approval before attempting to log in."
+                    "</div>"
+                )
+                messages.success(request, success_msg, extra_tags='registration')
+                
                 return redirect('login_page')
         else:
             # OTP registration path (only used if OTP_REGISTER_ENABLED=True)
@@ -164,10 +171,16 @@ def register_family(request):
                 request.session.pop('email_otp_verified', None)
                 request.session.pop('verified_email', None)
             
-            # Set session flag for successful registration instead of message
-            # This prevents the message from bleeding into login page
-            request.session['registration_success'] = True
-            request.session['registration_type'] = 'family'
+            # Show success message with registration tag
+            success_msg = (
+                "✅ Registration Successful! "
+                "<div class='message-info'>"
+                "⏳ <strong>Waiting for Admin Approval</strong><br>"
+                "📱 You will receive an SMS notification once your account is approved. "
+                "Please wait for administrator approval before attempting to log in."
+                "</div>"
+            )
+            messages.success(request, success_msg, extra_tags='registration')
             
             return redirect('login_page')
     else:
@@ -220,9 +233,16 @@ def register_member(request):
                 except Exception as e:
                     logger.error(f"Error creating user consent: {e}")
                 
-                # Set session flag for successful registration
-                request.session['registration_success'] = True
-                request.session['registration_type'] = 'member'
+                # Show success message with registration tag
+                success_msg = (
+                    "✅ Registration Successful! "
+                    "<div class='message-info'>"
+                    "⏳ <strong>Waiting for Admin Approval</strong><br>"
+                    "📱 You will receive an SMS notification once your account is approved. "
+                    "Please wait for administrator approval before attempting to log in."
+                    "</div>"
+                )
+                messages.success(request, success_msg, extra_tags='registration')
                 
                 return redirect('login_page')
         
@@ -286,9 +306,16 @@ def register_member(request):
             request.session.pop('email_otp_verified', None)
             request.session.pop('verified_email', None)
             
-            # Set session flag for successful registration instead of message
-            request.session['registration_success'] = True
-            request.session['registration_type'] = 'member'
+            # Show success message with registration tag
+            success_msg = (
+                "✅ Registration Successful! "
+                "<div class='message-info'>"
+                "⏳ <strong>Waiting for Admin Approval</strong><br>"
+                "📱 You will receive an SMS notification once your account is approved. "
+                "Please wait for administrator approval before attempting to log in."
+                "</div>"
+            )
+            messages.success(request, success_msg, extra_tags='registration')
             
             return redirect('login_page')
         else:

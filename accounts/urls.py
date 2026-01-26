@@ -16,8 +16,7 @@ urlpatterns = [
     path('register/member/', views.register_member, name='register_member'),
 
     path('login/', views.login_page, name='login_page'),
-    path('logout/', views.logout_view, name='logout'),
-    path('clear-registration-session/', views.clear_registration_session, name='clear_registration_session'), 
+    path('logout/', views.logout_view, name='logout'), 
 
     # Forgot Password URLs
     path('forgot-password/', views.forgot_password, name='forgot_password'),

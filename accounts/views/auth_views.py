@@ -73,30 +73,17 @@ def login_page(request):
     # ============================================================
     # STRICT MESSAGE FILTERING FOR LOGIN PAGE
     # Only show login-relevant messages (credentials, account status)
-    # Registration success shows as MODAL POPUP (not Django message)
+    # Registration success shows as enhanced message banner
     # ============================================================
     if request.method == 'GET':
         # ============================================================
-        # CRITICAL FIX: Clear registration flags on GET to prevent
-        # modal from showing when user directly visits login page
-        # Only preserve them if coming directly from registration redirect
-        # ============================================================
-        referer = request.META.get('HTTP_REFERER', '')
-        is_from_registration = '/register/' in referer
-        
-        # Clear flags if NOT coming from registration page
-        if not is_from_registration:
-            request.session.pop('registration_success', None)
-            request.session.pop('registration_type', None)
-        
-        # ============================================================
-        # CRITICAL: Consume all messages, only keep login-relevant ones
-        # This prevents message persistence and duplication
+        # MESSAGE FILTERING: Consume and filter Django messages
+        # Only keep login, logout, security, and registration messages
         # ============================================================
         storage = messages.get_messages(request)
         
         # Tags that are allowed on login page
-        allowed_tags = {'login', 'logout', 'security'}
+        allowed_tags = {'login', 'logout', 'security', 'registration'}
         
         # Patterns for messages allowed even without tags (legacy support)
         allowed_patterns = [
@@ -104,6 +91,7 @@ def login_page(request):
             'account temporarily locked',
             'too many requests from your ip',
             'your account is not yet approved',
+            'your account is awaiting admin approval',
             'logged out successfully',
             'attempts remaining'
         ]
@@ -207,7 +195,13 @@ def login_page(request):
                 UserLoginSecurity.increment_failed_attempts(
                     username, ip_address, user_agent, 'Account not approved'
                 )
-                messages.error(request, 'Your account is not yet approved by the admin.')
+                messages.error(
+                    request, 
+                    '⏳ Your account is awaiting admin approval. '
+                    'You will receive an SMS notification once approved. '
+                    'Please wait before attempting to log in.',
+                    extra_tags='security'
+                )
         else:
             # Failed login - signals will handle LoginAttempt creation
             attempts = UserLoginSecurity.get_failed_attempts(username)
@@ -238,10 +232,6 @@ def logout_view(request):
     
     # Check if admin is logged in to preserve session
     has_admin_session = bool(request.session.get('admin_user_id'))
-    
-    # Clear registration session flags to prevent modal showing after logout
-    request.session.pop('registration_success', None)
-    request.session.pop('registration_type', None)
     
     # Use safe logout to preserve admin session data
     safe_user_logout(request)
@@ -324,7 +314,13 @@ def code_login(request):
                 UserLoginSecurity.increment_failed_attempts(
                     username, ip_address, user_agent, 'Account not approved'
                 )
-                messages.error(request, 'Your account is not yet approved by the admin.')
+                messages.error(
+                    request, 
+                    '⏳ Your account is awaiting admin approval. '
+                    'You will receive an SMS notification once approved. '
+                    'Please wait before attempting to log in.',
+                    extra_tags='security'
+                )
         else:
             # Check if username exists (to store for forgot password)
             try:
@@ -570,17 +566,3 @@ def qr_login(request):
     return JsonResponse({
         'error': 'Invalid request method'
     }, status=405)
-
-
-@csrf_exempt
-@require_http_methods(["POST"])
-def clear_registration_session(request):
-    """
-    Clear registration success session flags
-    Called via AJAX after showing registration modal once
-    Prevents modal from showing again on page refresh
-    """
-    request.session.pop('registration_success', None)
-    request.session.pop('registration_type', None)
-    request.session.modified = True  # Force session save
-    return JsonResponse({'status': 'cleared', 'success': True})
