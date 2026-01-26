@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="{% static 'css/register_member.css' %}?v=1.2" />
   
 </head>
-<body data-otp-enabled="{% if otp_enabled %}true{% else %}false{% endif %}">
+<body>
 
   <!-- Header -->
   <header>
@@ -72,89 +72,23 @@
 
         <div class="form-group">
           <label for="id_phone">Your Phone Number</label>
-          <div style="display: flex; gap: 10px; align-items: flex-start;">
-            <div style="flex: 1;">
-              <input id="id_phone" name="phone" type="text" placeholder="09123456789" maxlength="11" value="{{ form.phone.value|default:'' }}" required />
-              {% if form.phone.errors %}
-                <p class="error-text">{{ form.phone.errors|striptags }}</p>
-              {% endif %}
-            </div>
-            {% if otp_enabled %}
-            <button type="button" id="sendOtpBtn" class="btn-send-otp" style="padding: 12px 20px; background: #6366f1; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; white-space: nowrap;">
-              Send OTP
-            </button>
-            {% endif %}
-          </div>
+          <input id="id_phone" name="phone" type="text" placeholder="09123456789" maxlength="11" value="{{ form.phone.value|default:'' }}" required />
+          {% if form.phone.errors %}
+            <p class="error-text">{{ form.phone.errors|striptags }}</p>
+          {% endif %}
         </div>
-
-        {% if otp_enabled %}
-        <!-- OTP Verification Section (Hidden by default) -->
-        <div id="otpVerificationSection" style="display: none;" class="form-group">
-          <label for="id_otp_code">Enter OTP Code</label>
-          <div style="display: flex; gap: 10px; align-items: flex-start;">
-            <div style="flex: 1;">
-              <input id="id_otp_code" name="otp_code" type="text" placeholder="Enter 6-digit OTP" maxlength="6" />
-              <small class="help-text" id="otpTimer" style="color: #059669;">OTP sent! Valid for 5 minutes</small>
-            </div>
-            <button type="button" id="verifyOtpBtn" class="btn-verify-otp" style="padding: 12px 20px; background: #059669; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; white-space: nowrap;">
-              Verify OTP
-            </button>
-          </div>
-          <button type="button" id="resendOtpBtn" class="link-login" style="background: none; border: none; color: #6366f1; cursor: pointer; text-decoration: underline; font-size: 0.9rem; margin-top: 8px; padding: 0;">
-            Resend OTP
-          </button>
-          <div id="otpStatusMessage" style="margin-top: 8px;"></div>
-        </div>
-
-        <!-- Hidden field to track OTP verification status -->
-        <input type="hidden" id="otp_verified" name="otp_verified" value="false" />
-        {% else %}
-        <!-- Auto-verify when OTP is disabled -->
-        <input type="hidden" id="otp_verified" name="otp_verified" value="true" />
-        {% endif %}
 
         <div class="form-group">
           <label for="id_email">Your Email Address</label>
-          <div style="display: flex; gap: 10px; align-items: flex-start;">
-            <div style="flex: 1;">
-              <input id="id_email" name="email" type="email" placeholder="email@example.com" value="{{ form.email.value|default:'' }}" required />
-              {% if form.email.errors %}
-                <p class="error-text">{{ form.email.errors|striptags }}</p>
-              {% endif %}
-            </div>
-            {% if otp_enabled %}
-            <button type="button" id="sendEmailOtpBtn" class="btn-send-otp" style="padding: 12px 20px; background: #6366f1; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; white-space: nowrap;">
-              Send OTP
-            </button>
-            {% endif %}
-          </div>
+          <input id="id_email" name="email" type="email" placeholder="email@example.com" value="{{ form.email.value|default:'' }}" required />
+          {% if form.email.errors %}
+            <p class="error-text">{{ form.email.errors|striptags }}</p>
+          {% endif %}
         </div>
-
-        {% if otp_enabled %}
-        <!-- Email OTP Verification Section (Hidden by default) -->
-        <div id="emailOtpVerificationSection" style="display: none;" class="form-group">
-          <label for="id_email_otp_code">Enter Email OTP Code</label>
-          <div style="display: flex; gap: 10px; align-items: flex-start;">
-            <div style="flex: 1;">
-              <input id="id_email_otp_code" name="email_otp_code" type="text" placeholder="Enter 6-digit OTP" maxlength="6" />
-              <small class="help-text" id="emailOtpTimer" style="color: #059669;">OTP sent! Valid for 5 minutes</small>
-            </div>
-            <button type="button" id="verifyEmailOtpBtn" class="btn-verify-otp" style="padding: 12px 20px; background: #059669; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; white-space: nowrap;">
-              Verify OTP
-            </button>
-          </div>
-          <button type="button" id="resendEmailOtpBtn" class="link-login" style="background: none; border: none; color: #6366f1; cursor: pointer; text-decoration: underline; font-size: 0.9rem; margin-top: 8px; padding: 0;">
-            Resend OTP
-          </button>
-          <div id="emailOtpStatusMessage" style="margin-top: 8px;"></div>
+          {% if form.email.errors %}
+            <p class="error-text">{{ form.email.errors|striptags }}</p>
+          {% endif %}
         </div>
-
-        <!-- Hidden field to track email OTP verification status -->
-        <input type="hidden" id="email_otp_verified" name="email_otp_verified" value="false" />
-        {% else %}
-        <!-- Auto-verify email when OTP is disabled -->
-        <input type="hidden" id="email_otp_verified" name="email_otp_verified" value="true" />
-        {% endif %}
 
         <div class="form-group">
           <label for="id_username">Choose User ID</label>
@@ -350,13 +284,7 @@
           });
         </script>
 
-        <button type="submit" class="btn-submit" id="submitBtn" disabled style="opacity: 0.5; cursor: not-allowed;">
-          {% if otp_enabled %}
-            Join Family (Verify Phone & Email First)
-          {% else %}
-            Join Family (Accept Terms First)
-          {% endif %}
-        </button>
+        <button type="submit" class="btn-submit" id="submitBtn" disabled style="opacity: 0.5; cursor: not-allowed;">Join Family</button>
       </form>
 
       <p class="text-center text-center-spaced">
@@ -485,13 +413,10 @@
   </div>
 
   <script src="{% static 'js/app_common.js' %}"></script>
-  <script src="{% static 'js/register_member.js' %}?v=9.0"></script>
-  <script src="{% static 'js/email_verification.js' %}?v=2.0"></script>
   <script src="{% static 'js/terms_modal.js' %}?v=3.0"></script>
   
-  {% if not otp_enabled %}
   <script>
-    // Auto-enable form when OTP is disabled
+    // Enable form submission when terms are accepted
     document.addEventListener('DOMContentLoaded', function() {
       const termsCheckbox = document.getElementById('id_accept_terms');
       const submitBtn = document.querySelector('button[type="submit"]');
@@ -501,6 +426,7 @@
         submitBtn.disabled = !this.checked;
         submitBtn.style.opacity = this.checked ? '1' : '0.5';
         submitBtn.style.cursor = this.checked ? 'pointer' : 'not-allowed';
+        submitBtn.textContent = this.checked ? 'Join Family' : 'Join Family (Accept Terms First)';
       });
       
       // Enable submit immediately if terms already checked
@@ -508,10 +434,10 @@
         submitBtn.disabled = false;
         submitBtn.style.opacity = '1';
         submitBtn.style.cursor = 'pointer';
+        submitBtn.textContent = 'Join Family';
       }
     });
   </script>
-  {% endif %}
   
   <style>
     .form-row {

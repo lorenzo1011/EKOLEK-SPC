@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="{% static 'css/register.css' %}?v=1.2" />
   
 </head>
-<body data-otp-enabled="{% if otp_enabled %}true{% else %}false{% endif %}">
+<body>
 
   <!-- Header -->
   <header>
@@ -388,11 +388,7 @@
           });
         </script>
 
-        {% if otp_enabled %}
-        <button type="submit" class="btn-submit" id="submitBtn" disabled style="opacity: 0.5; cursor: not-allowed;">Register Family (Verify Phone & Email First)</button>
-        {% else %}
-        <button type="submit" class="btn-submit" id="submitBtn" disabled style="opacity: 0.5; cursor: not-allowed;">Register Family (Accept Terms First)</button>
-        {% endif %}
+        <button type="submit" class="btn-submit" id="submitBtn" disabled style="opacity: 0.5; cursor: not-allowed;">Register Family</button>
       </form>
 
 
@@ -523,13 +519,10 @@
   </div>
 
   <script src="{% static 'js/app_common.js' %}"></script>
-  <script src="{% static 'js/register.js' %}?v=9.0"></script>
-  <script src="{% static 'js/email_verification.js' %}?v=2.0"></script>
   <script src="{% static 'js/terms_modal.js' %}?v=3.0"></script>
   
-  {% if not otp_enabled %}
   <script>
-    // Auto-enable form when OTP is disabled
+    // Enable form submission when terms are accepted
     document.addEventListener('DOMContentLoaded', function() {
       const termsCheckbox = document.getElementById('id_accept_terms');
       const submitBtn = document.querySelector('button[type="submit"]');
@@ -539,6 +532,7 @@
         submitBtn.disabled = !this.checked;
         submitBtn.style.opacity = this.checked ? '1' : '0.5';
         submitBtn.style.cursor = this.checked ? 'pointer' : 'not-allowed';
+        submitBtn.textContent = this.checked ? 'Register Family' : 'Register Family (Accept Terms First)';
       });
       
       // Enable submit immediately if terms already checked
@@ -546,10 +540,10 @@
         submitBtn.disabled = false;
         submitBtn.style.opacity = '1';
         submitBtn.style.cursor = 'pointer';
+        submitBtn.textContent = 'Register Family';
       }
     });
   </script>
-  {% endif %}
   
 </body>
 </html>
