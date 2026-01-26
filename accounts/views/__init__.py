@@ -10,6 +10,7 @@ from .auth_views import (
     logout_view,
     code_login,
     qr_login,
+    clear_registration_session,
 )
 
 # Registration views
@@ -62,6 +63,7 @@ __all__ = [
     'logout_view',
     'code_login',
     'qr_login',
+    'clear_registration_session',
     
     # Registration
     'register',

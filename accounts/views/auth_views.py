@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_http_methods
+from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from django.conf import settings
 import json
@@ -88,9 +89,9 @@ def login_page(request):
             'you have been logged out successfully',
             'attempts remaining',
             'no phone number on record',
-            'failed to send otp',
-            'login successful'
+            'failed to send otp'
         ]
+        # NOTE: "login successful" is NOT shown on login page - it only shows after redirect to dashboard
         
         user_messages = []
         seen_messages = set()  # Track unique messages to prevent duplicates
@@ -214,6 +215,10 @@ def logout_view(request):
     
     # Check if admin is logged in to preserve session
     has_admin_session = bool(request.session.get('admin_user_id'))
+    
+    # Clear registration session flags to prevent modal showing after logout
+    request.session.pop('registration_success', None)
+    request.session.pop('registration_type', None)
     
     # Use safe logout to preserve admin session data
     safe_user_logout(request)
@@ -542,3 +547,15 @@ def qr_login(request):
     return JsonResponse({
         'error': 'Invalid request method'
     }, status=405)
+
+
+@require_http_methods(["POST"])
+def clear_registration_session(request):
+    """
+    Clear registration success session flags
+    Called via AJAX after showing registration modal once
+    Prevents modal from showing again on page refresh
+    """
+    request.session.pop('registration_success', None)
+    request.session.pop('registration_type', None)
+    return JsonResponse({'status': 'cleared'})

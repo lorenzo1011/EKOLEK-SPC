@@ -31,9 +31,9 @@
     {% if messages %}
       {% for message in messages %}
         <!-- Display only login-relevant messages -->
-        <div class="{% if message.tags == 'success' %}success-message{% else %}error-message{% endif %}">
+        <div class="{% if message.tags == 'success' or message.level_tag == 'success' %}success-message{% else %}error-message{% endif %}">
           {{ message }}
-          {% if "attempts remaining" in message.message %}
+          {% if "attempts remaining" in message|lower %}
             <div style="margin-top: 10px; padding: 10px; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; color: #856404;">
               <strong>⚠️ Security Notice:</strong> Multiple failed login attempts detected. Your account will be temporarily locked after 5 failed attempts for security purposes.
             </div>

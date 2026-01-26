@@ -45,5 +45,16 @@ document.addEventListener('DOMContentLoaded', function() {
     if (typeof window.REGISTRATION_SUCCESS !== 'undefined' && window.REGISTRATION_SUCCESS) {
         const registrationType = window.REGISTRATION_TYPE || '';
         showRegistrationModal(registrationType);
+        
+        // Clear the flag to prevent modal showing again on page refresh
+        // This is done via AJAX to clear server-side session
+        fetch('/clear-registration-session/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': window.CSRF_TOKEN,
+                'Content-Type': 'application/json'
+            },
+            credentials: 'same-origin'
+        }).catch(err => console.log('Session clear request sent'));
     }
 });
