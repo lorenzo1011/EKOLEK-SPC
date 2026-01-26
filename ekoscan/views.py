@@ -821,7 +821,7 @@ def get_available_rewards(request):
 @permission_classes([AllowAny])
 @admin_jwt_required
 def redeem_reward(request):
-    """Redeem a reward (admin mobile version)"""
+    """Redeem a reward with quantity support (admin mobile version)"""
     try:
         data = request.data
         admin = request.admin_user
@@ -853,6 +853,39 @@ def redeem_reward(request):
                 'error': 'Reward ID is required'
             }, status=status.HTTP_400_BAD_REQUEST)
         
+        # ========================================================================
+        # QUANTITY VALIDATION
+        # ========================================================================
+        quantity = data.get('quantity', 1)
+        
+        # Validate quantity is an integer
+        if not isinstance(quantity, int):
+            try:
+                quantity = int(quantity)
+            except (ValueError, TypeError):
+                logger.error(f"Redemption failed: Invalid quantity type: {type(quantity)}")
+                return Response({
+                    'success': False,
+                    'error': 'Invalid quantity. Must be a number.',
+                    'error_code': 'INVALID_QUANTITY'
+                }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate quantity range (1-99)
+        if quantity < 1 or quantity > 99:
+            logger.error(f"Redemption failed: Quantity {quantity} out of range (1-99)")
+            return Response({
+                'success': False,
+                'error': 'Invalid quantity. Must be between 1 and 99.',
+                'error_code': 'INVALID_QUANTITY',
+                'details': {
+                    'quantity': quantity,
+                    'min': 1,
+                    'max': 99
+                }
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        logger.info(f"Redemption request: quantity={quantity}")
+        
         try:
             reward = Reward.objects.get(id=reward_id, is_active=True)
             logger.info(f"Found reward for redemption: {reward.name} (Stock: {reward.stock}, Points: {reward.points_required})")
@@ -863,73 +896,98 @@ def redeem_reward(request):
                 'error': 'Reward not found or not available'
             }, status=status.HTTP_404_NOT_FOUND)
         
-        # Check if reward is in stock
-        if reward.stock <= 0:
-            logger.warning(f"Redemption failed: Reward {reward.name} is out of stock")
+        # ========================================================================
+        # STOCK VALIDATION
+        # ========================================================================
+        # Check if enough stock is available
+        if reward.stock < quantity:
+            logger.warning(f"Redemption failed: Insufficient stock. Requested: {quantity}, Available: {reward.stock}")
             return Response({
                 'success': False,
-                'error': 'Reward is out of stock'
+                'error': 'Reward is out of stock',
+                'error_code': 'OUT_OF_STOCK',
+                'details': {
+                    'requested_quantity': quantity,
+                    'available_stock': reward.stock,
+                    'reward_name': reward.name
+                }
             }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # ========================================================================
+        # POINTS CALCULATION
+        # ========================================================================
+        points_per_item = reward.points_required
+        total_points_needed = points_per_item * quantity
+        
+        logger.info(f"Points calculation: {points_per_item} × {quantity} = {total_points_needed}")
         
         # Check if user has enough points (use total_points field)
         user_points = user.total_points
-        if user_points < reward.points_required:
-            logger.warning(f"Redemption failed: User {user.username} has insufficient points. Need {reward.points_required}, have {user_points}")
+        if user_points < total_points_needed:
+            logger.warning(f"Redemption failed: User {user.username} has insufficient points. Need {total_points_needed}, have {user_points}")
             return Response({
                 'success': False,
-                'error': f'Insufficient points. Need {reward.points_required}, have {user_points}'
+                'error': 'User has insufficient points',
+                'error_code': 'INSUFFICIENT_POINTS',
+                'details': {
+                    'required': int(total_points_needed),
+                    'available': int(user_points),
+                    'quantity': quantity,
+                    'points_per_item': int(points_per_item)
+                }
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        logger.info(f"Processing redemption: User {user.username} redeeming {reward.name} for {reward.points_required} points")
+        logger.info(f"Processing redemption: User {user.username} redeeming {quantity}x {reward.name} for {total_points_needed} points")
         
+        # ========================================================================
+        # PROCESS REDEMPTION WITH QUANTITY
+        # ========================================================================
         # Process redemption
         with transaction.atomic():
-            # Create redemption record (using correct field names)
+            # Store previous balances for response
+            previous_user_points = user.total_points
+            previous_family_points = user.family.total_family_points if user.family else 0
+            
+            # Create redemption record with quantity
+            # NOTE: The Redemption model's save() method automatically:
+            # 1. Validates stock availability
+            # 2. Reduces reward.stock by quantity
+            # 3. Creates RewardHistory record
+            # So we don't need to manually update stock or create history!
             redemption = Redemption.objects.create(
                 user=user,
                 reward=reward,
-                points_used=reward.points_required,
+                quantity=quantity,  # ✅ SAVE QUANTITY
+                points_used=total_points_needed,  # ✅ TOTAL POINTS (not per-item)
                 requested_by=user,  # User who requested the redemption
                 approved_by=admin,  # Admin who approved/processed the redemption
                 # created_at is auto-generated
             )
             
-            # Create points transaction (using correct field names)
+            logger.info(f"Created redemption record: ID={redemption.id}, quantity={quantity}, points_used={total_points_needed}")
+            logger.info(f"Stock automatically reduced by Redemption model: {reward.stock}")
+            
+            # Create points transaction
             points_transaction = PointsTransaction.objects.create(
                 user=user,
                 transaction_type='redeemed',
-                points_amount=-reward.points_required,  # Field name is points_amount
-                description=f"Redeemed: {reward.name}",
+                points_amount=-total_points_needed,  # ✅ DEDUCT TOTAL POINTS
+                description=f"Redeemed: {quantity}x {reward.name}",  # ✅ SHOW QUANTITY
                 processed_by=admin,  # Track which admin processed this
                 # transaction_date and created_at are auto-generated
             )
             
-            # Update user's points (use total_points field)
-            user.total_points -= reward.points_required
+            # Update user's points
+            user.total_points -= total_points_needed  # ✅ DEDUCT TOTAL POINTS
             user.save()
+            
+            logger.info(f"Updated user points: {previous_user_points} → {user.total_points} (deducted {total_points_needed})")
             
             # Update family points if user has a family
             if user.family:
-                user.family.total_family_points -= reward.points_required
+                user.family.total_family_points -= total_points_needed  # ✅ DEDUCT TOTAL POINTS
                 user.family.save(update_fields=['total_family_points'])
-            
-            # Update reward stock
-            reward.stock -= 1
-            reward.save()
-            
-            # Create reward history
-            RewardHistory.objects.create(
-                reward=reward,
-                action='stock_redeemed',  # Use correct action choice
-                admin_user=admin,
-                user=user,
-                redemption=redemption,
-                stock_change=-1,  # Reducing stock by 1
-                previous_stock=reward.stock + 1,  # Stock before redemption
-                new_stock=reward.stock,  # Stock after redemption
-                notes=f"Redeemed {reward.name} for {reward.points_required} points",
-                timestamp=timezone.now()
-            )
+                logger.info(f"Updated family points: {previous_family_points} → {user.family.total_family_points}")
             
             # Create notification for user dashboard
             try:
@@ -937,8 +995,8 @@ def redeem_reward(request):
                 notification = Notification.objects.create(
                     user=user,
                     type='redeem',
-                    message=f'Your reward "{reward.name}" has been processed successfully! {reward.points_required} points deducted by {admin.full_name}.',
-                    points=-reward.points_required,
+                    message=f'Your reward "{quantity}x {reward.name}" has been processed successfully! {int(total_points_needed)} points deducted by {admin.full_name}.',  # ✅ SHOW QUANTITY
+                    points=-int(total_points_needed),  # ✅ TOTAL POINTS
                     reward_name=reward.name
                 )
                 logger.info(f"Redemption notification created for user {user.username}: {notification.message}")
@@ -950,21 +1008,33 @@ def redeem_reward(request):
         from cenro.admin_utils import log_admin_action
         log_admin_action(
             admin, None, 'reward_redemption',
-            f"Processed redemption for {user.full_name}: {reward.name} (-{reward.points_required} points)",
+            f"Processed redemption for {user.full_name}: {quantity}x {reward.name} (-{total_points_needed} points)",  # ✅ SHOW QUANTITY
             request
         )
         
+        # ========================================================================
+        # RETURN COMPLETE RESPONSE WITH QUANTITY
+        # ========================================================================
         return Response({
             'success': True,
+            'message': 'Reward redeemed successfully',
             'redemption': {
-                'id': redemption.id,
+                'id': str(redemption.id),
                 'user_name': user.full_name,
                 'reward_name': reward.name,
-                'points_used': reward.points_required,
-                'timestamp': redemption.created_at.isoformat(),  # Use created_at
-                'processed_by': admin.full_name
+                'quantity': quantity,  # ✅ RETURN QUANTITY
+                'points_per_item': int(points_per_item),  # ✅ RETURN UNIT PRICE
+                'points_used': int(total_points_needed),  # ✅ RETURN TOTAL POINTS
+                'timestamp': redemption.created_at.isoformat(),
+                'processed_by': admin.full_name,
+                'status': 'completed'
             },
-            'user_new_points': user.total_points  # Use total_points
+            'updated_points': {
+                'previous_balance': int(previous_user_points),
+                'points_deducted': int(total_points_needed),
+                'new_balance': int(user.total_points),
+                'family_total': int(user.family.total_family_points) if user.family else 0
+            }
         }, status=status.HTTP_201_CREATED)
         
     except Exception as e:
