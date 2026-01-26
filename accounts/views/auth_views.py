@@ -69,67 +69,61 @@ def safe_user_logout(request):
 @never_cache
 @require_http_methods(["GET", "POST"])
 def login_page(request):
-    # Clear any admin-related messages when loading the login page
-    # This prevents admin dashboard messages from appearing in user login interface
+    # ============================================================
+    # STRICT MESSAGE FILTERING FOR LOGIN PAGE
+    # Only show login-relevant messages (credentials, account status)
+    # Registration success shows as MODAL POPUP (not Django message)
+    # ============================================================
     if request.method == 'GET':
-        # Check if user just completed registration
-        registration_success = request.session.pop('registration_success', False)
-        registration_type = request.session.pop('registration_type', None)
-        
-        # If registration was successful, add appropriate success message
-        if registration_success:
-            if registration_type == 'family':
-                messages.success(request, "Family registered successfully! Please wait for admin approval.")
-            elif registration_type == 'member':
-                messages.success(request, "Successfully registered as family member! Please wait for admin approval.")
-        
-        # Get all messages and filter out admin-specific ones
+        # Get all messages and filter strictly
         storage = messages.get_messages(request)
+        
+        # Define EXACT messages allowed on login page
+        allowed_message_patterns = [
+            'invalid username or password',
+            'account temporarily locked',
+            'too many requests from your ip',
+            'too many failed login attempts',
+            'your account is not yet approved',
+            'you have been logged out successfully',
+            'attempts remaining',
+            'no phone number on record',
+            'failed to send otp',
+            'login successful'
+        ]
+        
         user_messages = []
         seen_messages = set()  # Track unique messages to prevent duplicates
         
         for message in storage:
-            # Only keep messages that are NOT admin-related
-            message_text = str(message)
+            message_text = str(message).lower()
             
             # Skip duplicate messages
             if message_text in seen_messages:
                 continue
-                
-            seen_messages.add(message_text)
             
-            # Comprehensive filter to exclude ALL admin messages
-            admin_keywords = [
-                'admin account', 'suspended', 'unsuspended', 'unlocked', 
-                'reactivated', 'approved successfully', 'admin management',
-                'sms notification sent', 'sms notification failed', 
-                'rejected successfully', 'rejected and removed', 
-                'user satoru', 'user gojo',
-                'removed from database', 'deleted by',
-                'admin created', 'password changed',
-                'waste type', 'barangay', 'schedule',
-                'reward', 'video', 'question'
-            ]
+            # Only keep messages matching allowed patterns
+            is_allowed = any(pattern in message_text for pattern in allowed_message_patterns)
             
-            # Check if it starts with "User " followed by a name (admin action pattern)
-            is_admin_user_action = False
-            if message_text.startswith('User ') and any(keyword in message_text.lower() for keyword in ['approved', 'rejected', 'deleted', 'removed']):
-                is_admin_user_action = True
-            
-            # Only keep login-relevant messages
-            if not is_admin_user_action and not any(keyword in message_text.lower() for keyword in admin_keywords):
-                user_messages.append((message.level, message_text, message.tags))
+            if is_allowed:
+                seen_messages.add(message_text)
+                user_messages.append((message.level, str(message), message.tags))
         
-        # Clear all messages and re-add only user-relevant ones
+        # Clear all messages and re-add only login-relevant ones
         storage.used = True
         for level, message_text, tags in user_messages:
             messages.add_message(request, level, message_text, tags)
         
-        # DO NOT clear admin session data here - admins should remain logged in
-        # when viewing user pages in a different tab/window
-        # Admin sessions are managed separately via JWT cookies with 'admin_' prefix
-        
+        # Modal will display registration success (handled in template)
+        # Clear the session flags after they've been passed to template context
+        # Note: Don't pop them here - template needs them for first render
+        # They'll be cleared on next page load or login POST
+    
     if request.method == 'POST':
+        # Clear registration success flags when user attempts to login
+        request.session.pop('registration_success', None)
+        request.session.pop('registration_type', None)
+        
         username = request.POST.get('username')
         password = request.POST.get('password')
         ip_address = get_client_ip(request)

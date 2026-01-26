@@ -9,6 +9,7 @@
   <link rel="icon" type="image/png" href="{% static 'image/clogo.png' %}">
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <link rel="stylesheet" href="{% static 'css/login.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/registration_modal.css' %}" />
 
   
 </head>
@@ -29,7 +30,7 @@
 
     {% if messages %}
       {% for message in messages %}
-        <!-- Display all user-relevant messages with proper styling -->
+        <!-- Display only login-relevant messages -->
         <div class="{% if message.tags == 'success' %}success-message{% else %}error-message{% endif %}">
           {{ message }}
           {% if "attempts remaining" in message.message %}
@@ -92,7 +93,39 @@
 
   <div id="loader"><div class="spinner"></div></div>
 
-  <!-- Pass Django URLs to JavaScript -->
+  <!-- Registration Success Modal -->
+  <div id="registrationSuccessModal">
+    <div class="registration-modal-content">
+      <div class="modal-icon-circle">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+          <path d="M20 6L9 17l-5-5"/>
+        </svg>
+      </div>
+      
+      <h2 id="modalTitle">Registration Successful!</h2>
+      
+      <p id="modalMessage">
+        Your account has been created successfully. Please wait for admin approval before logging in.
+      </p>
+      
+      <div class="modal-info-box">
+        <p>
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="16" x2="12" y2="12"/>
+            <line x1="12" y1="8" x2="12.01" y2="8"/>
+          </svg>
+          You will receive an SMS notification once your account is approved by the administrator.
+        </p>
+      </div>
+      
+      <button onclick="closeRegistrationModal()" class="modal-close-btn">
+        Got it, thanks!
+      </button>
+    </div>
+  </div>
+
+  <!-- Pass Django URLs and session data to JavaScript -->
   <script>
     window.DJANGO_URLS = {
       qrLogin: '{% url "web_qr_login" %}',
@@ -100,28 +133,21 @@
     };
     window.CSRF_TOKEN = '{{ csrf_token }}';
   </script>
+  {% if request.session.registration_success %}
+  <script>
+    window.REGISTRATION_SUCCESS = true;
+    window.REGISTRATION_TYPE = '{{ request.session.registration_type }}';
+  </script>
+  {% else %}
+  <script>
+    window.REGISTRATION_SUCCESS = false;
+    window.REGISTRATION_TYPE = '';
+  </script>
+  {% endif %}
 
   <script src="{% static 'js/app_common.js' %}"></script>
   <script src="{% static 'js/login.js' %}?v=2.1"></script>
-  
-  <script>
-    // Additional client-side duplicate message removal
-    document.addEventListener('DOMContentLoaded', function() {
-      const allMessages = document.querySelectorAll('.error-message, .success-message');
-      const seenTexts = new Set();
-      
-      allMessages.forEach(function(messageDiv) {
-        const text = messageDiv.textContent.trim();
-        
-        if (seenTexts.has(text)) {
-          // This is a duplicate, remove it
-          messageDiv.remove();
-        } else {
-          seenTexts.add(text);
-        }
-      });
-    });
-  </script>
+  <script src="{% static 'js/registration_modal.js' %}?v=1.0"></script>
 
 </body>
 </html>

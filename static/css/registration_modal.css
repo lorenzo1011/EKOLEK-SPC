@@ -1,0 +1,114 @@
+/* Registration Success Modal Styles */
+
+#registrationSuccessModal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+}
+
+#registrationSuccessModal.show {
+    display: flex !important;
+}
+
+.registration-modal-content {
+    background: white;
+    border-radius: 16px;
+    padding: 40px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    text-align: center;
+    animation: slideIn 0.3s ease-out;
+}
+
+.modal-icon-circle {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+}
+
+.modal-icon-circle svg {
+    width: 48px;
+    height: 48px;
+    stroke: white;
+    stroke-width: 3;
+    fill: none;
+}
+
+#registrationSuccessModal h2 {
+    margin: 0 0 16px 0;
+    color: #1f2937;
+    font-size: 1.75rem;
+    font-weight: 700;
+}
+
+#registrationSuccessModal p {
+    margin: 0 0 24px 0;
+    color: #6b7280;
+    font-size: 1.125rem;
+    line-height: 1.6;
+}
+
+.modal-info-box {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border: 2px solid #3b82f6;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+}
+
+.modal-info-box p {
+    margin: 0;
+    color: #1e40af;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+.modal-info-box svg {
+    display: inline;
+    vertical-align: text-bottom;
+    margin-right: 8px;
+    width: 20px;
+    height: 20px;
+}
+
+.modal-close-btn {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    padding: 14px 32px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 1rem;
+    width: 100%;
+    transition: all 0.2s;
+}
+
+.modal-close-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(16, 185, 129, 0.3);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
