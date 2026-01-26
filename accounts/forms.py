@@ -119,7 +119,7 @@ class FamilyRegistrationForm(forms.ModelForm):
 
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        if Users.objects.filter(email=email).exists():
+        if Users.objects.filter(email=email).exclude(status='rejected').exists():
             raise forms.ValidationError("This email address is already registered.")
         return email
 
@@ -141,7 +141,7 @@ class FamilyRegistrationForm(forms.ModelForm):
 
     def clean_username(self):
         username = self.cleaned_data.get('username')
-        if Users.objects.filter(username=username).exists():
+        if Users.objects.filter(username=username).exclude(status='rejected').exists():
             raise forms.ValidationError("This username is already taken.")
         return username
 
@@ -157,33 +157,10 @@ class FamilyRegistrationForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         
-        # Manually call field validation methods for non-model fields
-        phone = cleaned_data.get('phone')
-        email = cleaned_data.get('email')
-        username = cleaned_data.get('username')
+        # Validate passwords match
         password1 = cleaned_data.get('password1')
         password2 = cleaned_data.get('password2')
         
-        # Validate phone number
-        if phone:
-            # Check if phone is already used by any user (exclude rejected)
-            if Users.objects.filter(phone=phone).exclude(status='rejected').exists():
-                raise forms.ValidationError("This phone number is already registered.")
-            # Check if phone is already used as a family representative phone (exclude rejected)
-            if Family.objects.filter(representative_phone=phone).exclude(status='rejected').exists():
-                raise forms.ValidationError("This phone number is already registered as a family representative.")
-        
-        # Validate email
-        if email:
-            if Users.objects.filter(email=email).exists():
-                raise forms.ValidationError("This email address is already registered.")
-        
-        # Validate username
-        if username:
-            if Users.objects.filter(username=username).exists():
-                raise forms.ValidationError("This username is already taken.")
-        
-        # Validate passwords match
         if password1 and password2 and password1 != password2:
             raise forms.ValidationError("Passwords don't match.")
 
