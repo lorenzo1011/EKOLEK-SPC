@@ -97,11 +97,18 @@ def userdashboard(request):
             'is_current_user': leaderboard_user.id == request.user.id
         })
 
-    # Barangay Leaderboard: sum family points by barangay, limit to top 10
+    # Barangay Leaderboard: sum ALL user points by barangay, limit to top 10
+    # FIX: Directly aggregate user points instead of using cached family points
+    # This ensures accurate real-time totals from the source of truth
     barangay_leaderboard_qs = (
-        Family.objects.filter(status='approved', total_family_points__gt=0)
-        .values('barangay__name')
-        .annotate(points=Sum('total_family_points'))
+        Users.objects.filter(
+            status='approved',
+            total_points__gt=0,
+            family__status='approved',
+            family__barangay__isnull=False  # Ensure barangay exists
+        )
+        .values('family__barangay__name')
+        .annotate(points=Sum('total_points'))
         .filter(points__gt=0)  # Only include barangays with points > 0
         .order_by('-points')[:10]
     )
@@ -110,7 +117,7 @@ def userdashboard(request):
     for i, entry in enumerate(barangay_leaderboard_qs):
         barangay_leaderboard.append({
             'rank': i + 1,
-            'barangay_name': entry['barangay__name'],
+            'barangay_name': entry['family__barangay__name'],
             'points': entry['points']
         })
 
