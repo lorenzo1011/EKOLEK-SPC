@@ -79,49 +79,26 @@
       line-height: 1.5;
     }
 
-    /* Registration Success Message - Enhanced styling */
+    /* Registration Success Message - Simplified styling */
     .registration-message {
       background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
       color: #166534;
-      text-align: left;
+      text-align: center;
       font-weight: 600;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       margin-bottom: 1.5rem;
-      padding: 1.25rem 1rem;
+      padding: 0.75rem 1rem;
       border-radius: 0.5rem;
       border: 2px solid #86efac;
-      line-height: 1.6;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-    }
-
-    .registration-message::before {
-      content: "✅ ";
-      font-size: 1.2rem;
-      margin-right: 0.5rem;
+      line-height: 1.4;
     }
 
     .registration-message .message-title {
-      font-size: 1.1rem;
-      font-weight: 700;
-      margin-bottom: 0.5rem;
-      display: block;
+      display: none;
     }
 
     .registration-message .message-info {
-      font-size: 0.875rem;
-      font-weight: 400;
-      color: #166534;
-      margin-top: 0.75rem;
-      padding-top: 0.75rem;
-      border-top: 1px solid #86efac;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .registration-message .message-info::before {
-      content: "ℹ️";
-      font-size: 1rem;
+      display: inline;
     }
 
     .tabs {
