@@ -649,22 +649,121 @@
 /* Barangay Badge Styles */
 .barangay-badge {
     display: inline-block;
-    padding: 4px 10px;
-    border-radius: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
     font-size: 0.85rem;
-    font-weight: 500;
+    font-weight: 600;
     white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
 }
 
 .barangay-badge-global {
     background: linear-gradient(135deg, #10b981 0%, #059669 100%);
     color: white;
-    box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);
 }
 
 .barangay-badge-specific {
-    background: #eff6ff;
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
     color: #1e40af;
-    border: 1px solid #bfdbfe;
+    border: 2px solid #bfdbfe;
+}
+
+.barangay-badge-count {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    color: #92400e;
+    border: 2px solid #fbbf24;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.barangay-badge-count:hover {
+    background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%);
+    box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+    transform: translateY(-2px);
+}
+
+/* Barangay Dropdown */
+.barangay-dropdown-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.barangay-dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 220px;
+    max-width: 300px;
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    margin-top: 8px;
+    overflow: hidden;
+    animation: dropdownFadeIn 0.2s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.barangay-dropdown-item {
+    padding: 10px 14px;
+    border-bottom: 1px solid #f3f4f6;
+    cursor: default;
+    transition: background 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    color: #374151;
+}
+
+.barangay-dropdown-item:last-child {
+    border-bottom: none;
+}
+
+.barangay-dropdown-item:hover {
+    background: #f9fafb;
+}
+
+.barangay-dropdown-item i {
+    color: #667eea;
+    font-size: 1.1rem;
+}
+
+/* Scrollbar styling for barangay list */
+#barangayListAdd::-webkit-scrollbar,
+#barangayListEdit::-webkit-scrollbar {
+    width: 8px;
+}
+
+#barangayListAdd::-webkit-scrollbar-track,
+#barangayListEdit::-webkit-scrollbar-track {
+    background: #f3f4f6;
+    border-radius: 10px;
+}
+
+#barangayListAdd::-webkit-scrollbar-thumb,
+#barangayListEdit::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+}
+
+#barangayListAdd::-webkit-scrollbar-thumb:hover,
+#barangayListEdit::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #5568d3 0%, #633a8a 100%);
 }
    
