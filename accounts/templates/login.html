@@ -28,10 +28,10 @@
     <h2>Welcome to E-KOLEK</h2>
     <p>Choose a login method to access your dashboard.</p>
 
-    {% if messages %}
-      {% for message in messages %}
-        <!-- Display only login-relevant messages -->
-        <div class="{% if message.tags == 'success' or message.level_tag == 'success' %}success-message{% else %}error-message{% endif %}">
+    {% if login_messages %}
+      {% for message in login_messages %}
+        <!-- Display only login-relevant messages (filtered by backend) -->
+        <div class="{% if message.level_tag == 'success' or 'success' in message.tags %}success-message{% else %}error-message{% endif %}">
           {{ message }}
           {% if "attempts remaining" in message|lower %}
             <div style="margin-top: 10px; padding: 10px; background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; color: #856404;">

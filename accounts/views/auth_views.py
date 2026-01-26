@@ -76,44 +76,52 @@ def login_page(request):
     # Registration success shows as MODAL POPUP (not Django message)
     # ============================================================
     if request.method == 'GET':
-        # Get all messages and filter strictly
+        # ============================================================
+        # CRITICAL: Consume all messages, only keep login-relevant ones
+        # This prevents message persistence and duplication
+        # ============================================================
         storage = messages.get_messages(request)
         
-        # Define EXACT messages allowed on login page
-        allowed_message_patterns = [
+        # Tags that are allowed on login page
+        allowed_tags = {'login', 'logout', 'security'}
+        
+        # Patterns for messages allowed even without tags (legacy support)
+        allowed_patterns = [
             'invalid username or password',
             'account temporarily locked',
             'too many requests from your ip',
-            'too many failed login attempts',
             'your account is not yet approved',
-            'you have been logged out successfully',
-            'attempts remaining',
-            'no phone number on record',
-            'failed to send otp'
+            'logged out successfully',
+            'attempts remaining'
         ]
-        # NOTE: "login successful" is NOT shown on login page - it only shows after redirect to dashboard
         
-        user_messages = []
-        seen_messages = set()  # Track unique messages to prevent duplicates
+        # Collect login-relevant messages (prevents duplicates)
+        login_messages = []
+        seen_texts = set()
         
-        for message in storage:
-            message_text = str(message).lower()
+        for msg in storage:
+            msg_text = str(msg).lower()
+            msg_tags = set(msg.tags.split()) if msg.tags else set()
             
-            # Skip duplicate messages
-            if message_text in seen_messages:
+            # Skip if already seen (prevents duplicates)
+            if msg_text in seen_texts:
                 continue
             
-            # Only keep messages matching allowed patterns
-            is_allowed = any(pattern in message_text for pattern in allowed_message_patterns)
+            # Check if message is login-relevant
+            has_allowed_tag = bool(allowed_tags & msg_tags)
+            matches_pattern = any(pattern in msg_text for pattern in allowed_patterns)
             
-            if is_allowed:
-                seen_messages.add(message_text)
-                user_messages.append((message.level, str(message), message.tags))
+            if has_allowed_tag or matches_pattern:
+                login_messages.append(msg)
+                seen_texts.add(msg_text)
         
-        # Clear all messages and re-add only login-relevant ones
+        # CRITICAL: Mark all messages as used (consumed)
+        # This prevents them from persisting to next request
         storage.used = True
-        for level, message_text, tags in user_messages:
-            messages.add_message(request, level, message_text, tags)
+        
+        # Pass filtered messages to template via context
+        # Don't use messages.add_message() - that persists them again!
+        request._login_messages = login_messages
         
         # Modal will display registration success (handled in template)
         # Clear the session flags after they've been passed to template context
@@ -170,7 +178,7 @@ def login_page(request):
                     phone = user.phone
                     if not phone:
                         messages.error(request, 'No phone number on record. Please contact admin.')
-                        return render(request, 'login.html')
+                        return redirect('login_page')
                     
                     send_resp = otp_service.send_otp(phone, purpose='login')
                     if send_resp.get('success', True):
@@ -180,7 +188,7 @@ def login_page(request):
                         return redirect('verify_otp')
                     else:
                         messages.error(request, 'Failed to send OTP. Please try again later.')
-                        return render(request, 'login.html')
+                        return redirect('login_page')
             else:
                 # Account not approved - this is not a failed authentication, so we manually log it
                 UserLoginSecurity.increment_failed_attempts(
@@ -199,7 +207,9 @@ def login_page(request):
             else:
                 messages.error(request, 'Invalid username or password.')
 
-    context = {}
+    context = {
+        'login_messages': getattr(request, '_login_messages', [])
+    }
     return render(request, 'login.html', context)
 
 
@@ -223,8 +233,8 @@ def logout_view(request):
     # Use safe logout to preserve admin session data
     safe_user_logout(request)
     
-    # Add success message
-    messages.success(request, 'You have been logged out successfully.')
+    # Add success message with 'logout' tag for filtering
+    messages.success(request, 'You have been logged out successfully.', extra_tags='logout')
     
     # Log the action
     if has_admin_session:
@@ -248,18 +258,18 @@ def code_login(request):
         
         # Check if account is locked
         if UserLoginSecurity.is_account_locked(username):
-            messages.error(request, 'Account temporarily locked due to too many failed attempts. Please try again later.')
+            messages.error(request, 'Account temporarily locked due to too many failed attempts. Please try again later.', extra_tags='login security')
             log_security_event(
                 'LOGIN_BLOCKED_LOCKED_ACCOUNT',
                 ip_address=ip_address,
                 details=f'Blocked code login attempt for locked account: {username}'
             )
-            return render(request, 'login.html')
+            return redirect('login_page')
 
         # Check IP rate limiting
         if UserLoginSecurity.is_ip_rate_limited(ip_address):
-            messages.error(request, 'Too many requests from your IP. Please try again later.')
-            return render(request, 'login.html')
+            messages.error(request, 'Too many requests from your IP. Please try again later.', extra_tags='login security')
+            return redirect('login_page')
         
         user = authenticate(request, username=username, password=password)
         
@@ -277,7 +287,7 @@ def code_login(request):
                     UserLoginSecurity.clear_failed_attempts(username)
                     if user.phone:
                         otp_service.clear_failed_login_attempts(user.phone)
-                    messages.success(request, 'Login successful!')
+                    messages.success(request, 'Login successful!', extra_tags='dashboard')
                     return redirect('userdashboard')
                 else:
                     # OTP code login path (only used if OTP_LOGIN_ENABLED=True)
@@ -318,13 +328,13 @@ def code_login(request):
             remaining_attempts = max(0, 5 - attempts)  # Ensure non-negative
             
             if attempts >= 5:
-                messages.error(request, 'Too many failed login attempts. Your account has been temporarily locked.')
+                messages.error(request, 'Too many failed login attempts. Your account has been temporarily locked.', extra_tags='login security')
             elif attempts >= 3:
-                messages.error(request, f'Invalid username or password. {remaining_attempts} attempts remaining before account lock.')
+                messages.error(request, f'Invalid username or password. {remaining_attempts} attempts remaining before account lock.', extra_tags='login security')
             else:
-                messages.error(request, 'Invalid username or password.')
+                messages.error(request, 'Invalid username or password.', extra_tags='login')
 
-    return render(request, 'login.html')
+    return redirect('login_page')
 
 
 @never_cache
