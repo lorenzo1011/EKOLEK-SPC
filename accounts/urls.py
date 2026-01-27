@@ -53,9 +53,6 @@ urlpatterns = [
     # QR Code download
     path('api/qr-code/download/', views.download_qr_code, name='download_qr_code'),
     
-    # Profile update
-    path('api/profile/update/', views.update_profile, name='update_profile'),
-    
     # Security monitoring URLs (admin only)
     path('admin/security/api/stats/', security_views.security_api_stats, name='security_api_stats'),
     path('admin/security/block-ip/', security_views.block_ip, name='block_ip'),

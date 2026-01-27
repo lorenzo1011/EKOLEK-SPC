@@ -47,7 +47,6 @@ from .dashboard_views import (
     privacy_policy,
     terms_of_service,
     download_qr_code,
-    update_profile,
 )
 
 # Validation API views
@@ -94,7 +93,6 @@ __all__ = [
     'privacy_policy',
     'terms_of_service',
     'download_qr_code',
-    'update_profile',
     
     # Validation
     'check_phone_availability',
