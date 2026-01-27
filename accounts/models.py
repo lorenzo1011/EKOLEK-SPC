@@ -478,7 +478,11 @@ class Users(AbstractBaseUser, PermissionsMixin):
     
     def can_access_system(self):
         """Check if user can access the system (both user and family must be approved)"""
-        return self.status == 'approved' and self.family.status == 'approved' and self.is_active
+        if not self.is_active or self.status != 'approved':
+            return False
+        if not self.family:
+            return False
+        return self.family.status == 'approved'
     
     def get_family_members(self):
         """Get other family members"""

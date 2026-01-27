@@ -21,12 +21,20 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
+from rest_framework.authtoken.models import Token  # For legacy DRF Token support
 
 # Local apps
 from accounts.models import Users
 
 
 logger = logging.getLogger(__name__)
+
+# ============================================================
+# AUTHENTICATION CONFIGURATION
+# ============================================================
+# OTP is DISABLED for mobile login - JWT tokens are issued directly
+# This prevents 500 errors and improves mobile UX
+OTP_LOGIN_ENABLED = False
 
 
 @api_view(['POST'])
@@ -76,72 +84,48 @@ def login_view(request):
             return Response({'success': False, 'message': 'Account or family not approved', 'error_code': 'FAMILY_NOT_APPROVED'}, status=403)
 
         # ============================================================
-        # FIX: Mobile login now returns JWT tokens DIRECTLY
-        # No OTP required (OTP_LOGIN_ENABLED=False)
-        # This prevents 500 errors and improves mobile UX
+        # JWT DIRECT LOGIN - NO OTP (Mobile App Mode)
         # ============================================================
-        if not OTP_LOGIN_ENABLED:
-            # Direct login without OTP (recommended setting)
-            logger.info(f"[MOBILE LOGIN] User {user.username} logged in successfully (no OTP required)")
-            
-            # Generate JWT tokens
-            refresh = RefreshToken.for_user(user)
-            
-            # Update last login
-            user.last_login = timezone.now()
-            user.save(update_fields=['last_login'])
-            
-            # Clear failed login attempts
-            if user.phone:
-                otp_service.clear_failed_login_attempts(user.phone)
+        logger.info(f"[MOBILE LOGIN] User {user.username} logged in successfully (JWT direct authentication)")
+        
+        # Generate JWT tokens
+        refresh = RefreshToken.for_user(user)
+        
+        # Update last login
+        user.last_login = timezone.now()
+        user.save(update_fields=['last_login'])
 
-            # Build user response with family info
-            family = getattr(user, 'family', None)
-            family_info = None
-            if family:
-                family_info = {
-                    'id': str(getattr(family, 'id', '')),
-                    'family_name': getattr(family, 'family_name', ''),
-                    'family_code': getattr(family, 'family_code', ''),
-                    'barangay': getattr(family.barangay, 'name', '') if hasattr(family, 'barangay') and family.barangay else '',
-                    'address': getattr(family, 'address', ''),
-                }
+        # Build user response with family info
+        family = getattr(user, 'family', None)
+        family_info = None
+        if family:
+            family_info = {
+                'id': str(getattr(family, 'id', '')),
+                'family_name': getattr(family, 'family_name', ''),
+                'family_code': getattr(family, 'family_code', ''),
+                'barangay': getattr(family.barangay, 'name', '') if hasattr(family, 'barangay') and family.barangay else '',
+                'address': getattr(family, 'address', ''),
+            }
 
-            return Response({
-                'success': True,
-                'access_token': str(refresh.access_token),
-                'refresh_token': str(refresh),
-                'user': {
-                    'id': str(user.id),
-                    'username': user.username,
-                    'first_name': user.first_name,
-                    'last_name': user.last_name,
-                    'full_name': user.full_name,
-                    'phone': user.phone,
-                    'email': user.email or '',
-                    'user_type': user.user_type,
-                    'points': float(user.points) if hasattr(user, 'points') else 0.0,
-                    'family': family_info,
-                    'is_family_representative': getattr(user, 'is_family_representative', False),
-                }
-            }, status=200)
-        else:
-            # OTP login path (only used if OTP_LOGIN_ENABLED=True)
-            # This code is kept for flexibility but not recommended
-            logger.info(f"[MOBILE LOGIN] Sending OTP to {user.username} (OTP enabled)")
-            
-            phone = getattr(user, 'phone', None)
-            if not phone:
-                logger.error(f"No phone number for user {user.username}")
-                return Response({'success': False, 'message': 'No phone number on record', 'error_code': 'NO_PHONE'}, status=500)
-
-            send_resp = otp_service.send_otp(phone)
-            if not send_resp.get('success', False):
-                logger.error(f"Failed to send OTP to {phone}: {send_resp}")
-                return Response({'success': False, 'message': 'Failed to send OTP', 'error_code': 'OTP_SEND_FAILED'}, status=500)
-
-            # Respond with user id so client can call verify endpoint
-            return Response({'success': True, 'otp_sent': True, 'user_id': str(user.id)}, status=200)
+        # ✅ IMPORTANT: Use 'access' and 'refresh' keys (not 'access_token')
+        # Mobile app expects these exact key names for JWT authentication
+        return Response({
+            'success': True,
+            'access': str(refresh.access_token),  # Mobile expects 'access' key
+            'refresh': str(refresh),               # Mobile expects 'refresh' key
+            'user': {
+                'id': str(user.id),
+                'username': user.username,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'full_name': user.full_name,
+                'phone': user.phone,
+                'email': user.email or '',
+                'total_points': float(user.total_points) if hasattr(user, 'total_points') else 0.0,
+                'family': family_info,
+                'is_family_representative': getattr(user, 'is_family_representative', False),
+            }
+        }, status=200)
 
     except Exception as e:
         logger.exception(f"Unexpected error during login: {e}")
@@ -212,104 +196,11 @@ def qr_login(request):
             return Response({'success': False, 'message': 'Family not approved', 'error_code': 'FAMILY_NOT_APPROVED'}, status=403)
 
         # ============================================================
-        # FIX: QR login now returns JWT tokens DIRECTLY
-        # No OTP required (OTP_LOGIN_ENABLED=False)
+        # JWT DIRECT QR LOGIN - NO OTP (Mobile App Mode)
         # ============================================================
-        if not OTP_LOGIN_ENABLED:
-            # Direct login without OTP (recommended setting)
-            logger.info(f"[MOBILE QR LOGIN] User {user.username} logged in successfully (no OTP required)")
-            
-            # Generate JWT tokens
-            refresh = RefreshToken.for_user(user)
-            
-            # Update last login
-            user.last_login = timezone.now()
-            user.save(update_fields=['last_login'])
-            
-            # Clear failed login attempts
-            if user.phone:
-                otp_service.clear_failed_login_attempts(user.phone)
-
-            # Build user response with family info
-            family = getattr(user, 'family', None)
-            family_info = None
-            if family:
-                family_info = {
-                    'id': str(getattr(family, 'id', '')),
-                    'family_name': getattr(family, 'family_name', ''),
-                    'family_code': getattr(family, 'family_code', ''),
-                    'barangay': getattr(family.barangay, 'name', '') if hasattr(family, 'barangay') and family.barangay else '',
-                    'address': getattr(family, 'address', ''),
-                }
-
-            return Response({
-                'success': True,
-                'access_token': str(refresh.access_token),
-                'refresh_token': str(refresh),
-                'via': search_method,
-                'user': {
-                    'id': str(user.id),
-                    'username': user.username,
-                    'first_name': user.first_name,
-                    'last_name': user.last_name,
-                    'full_name': user.full_name,
-                    'phone': user.phone,
-                    'email': user.email or '',
-                    'user_type': user.user_type,
-                    'points': float(user.points) if hasattr(user, 'points') else 0.0,
-                    'family': family_info,
-                    'is_family_representative': getattr(user, 'is_family_representative', False),
-                }
-            }, status=200)
-        else:
-            # OTP QR login path (only used if OTP_LOGIN_ENABLED=True)
-            logger.info(f"[MOBILE QR LOGIN] Sending OTP to {user.username} (OTP enabled)")
-            
-            phone = getattr(user, 'phone', None)
-            if not phone:
-                return Response({'success': False, 'message': 'No phone number on record', 'error_code': 'NO_PHONE'}, status=500)
-
-            send_resp = otp_service.send_otp(phone)
-            if not send_resp.get('success', False):
-                logger.error(f"Failed to send OTP for QR login to {phone}: {send_resp}")
-                return Response({'success': False, 'message': 'Failed to send OTP', 'error_code': 'OTP_SEND_FAILED'}, status=500)
-
-            return Response({'success': True, 'otp_sent': True, 'user_id': str(user.id), 'via': search_method}, status=200)
-
-    except Exception as e:
-        logger.exception(f"Unexpected QR login error: {e}")
-        return Response({'success': False, 'message': 'Internal error', 'error_code': 'INTERNAL_ERROR'}, status=500)
-
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def login_verify_otp(request):
-    """
-    Verify OTP and issue token. Expects {user_id, otp}.
-    Returns token and user data on success.
-    """
-    try:
-        user_id = request.data.get('user_id')
-        otp = request.data.get('otp')
-
-        if not user_id or not otp:
-            return Response({'success': False, 'message': 'user_id and otp required', 'error_code': 'MISSING_PARAMS'}, status=400)
-
-        try:
-            user = Users.objects.get(id=user_id)
-        except Users.DoesNotExist:
-            return Response({'success': False, 'message': 'User not found', 'error_code': 'USER_NOT_FOUND'}, status=404)
-
-        phone = getattr(user, 'phone', None)
-        if not phone:
-            return Response({'success': False, 'message': 'No phone number on record', 'error_code': 'NO_PHONE'}, status=500)
-
-        verify_resp = otp_service.verify_otp(phone, otp)
-        if not verify_resp.get('success', False):
-            logger.warning(f"OTP verify failed for user {user.username}: {verify_resp}")
-            return Response({'success': False, 'message': 'OTP verification failed', 'error_code': 'OTP_VERIFY_FAILED'}, status=400)
-
-        # OTP verified - generate JWT tokens
+        logger.info(f"[MOBILE QR LOGIN] User {user.username} logged in successfully via {search_method} (JWT direct authentication)")
+        
+        # Generate JWT tokens
         refresh = RefreshToken.for_user(user)
         
         # Update last login
@@ -324,32 +215,53 @@ def login_verify_otp(request):
                 'id': str(getattr(family, 'id', '')),
                 'family_name': getattr(family, 'family_name', ''),
                 'family_code': getattr(family, 'family_code', ''),
-                'barangay': getattr(getattr(family, 'barangay', None), 'name', '')
+                'barangay': getattr(family.barangay, 'name', '') if hasattr(family, 'barangay') and family.barangay else '',
+                'address': getattr(family, 'address', ''),
             }
 
-        response_data = {
+        # ✅ IMPORTANT: Use 'access' and 'refresh' keys (not 'access_token')
+        # Mobile app expects these exact key names for JWT authentication
+        return Response({
             'success': True,
-            'message': 'Login successful',
-            'access_token': str(refresh.access_token),
-            'refresh_token': str(refresh),
-            'token_type': 'Bearer',
-            'expires_in': 3600,  # 1 hour in seconds
-            'user_info': {
+            'access': str(refresh.access_token),  # Mobile expects 'access' key
+            'refresh': str(refresh),               # Mobile expects 'refresh' key
+            'via': search_method,  # How the user was identified (username/user_id/family_code)
+            'user': {
                 'id': str(user.id),
                 'username': user.username,
-                'full_name': getattr(user, 'full_name', ''),
-                'total_points': getattr(user, 'total_points', 0),
-                'status': getattr(user, 'status', ''),
-            },
-            'family_info': family_info
-        }
-
-        logger.info(f"OTP login successful for user {user.username} - JWT tokens issued")
-        return Response(response_data, status=200)
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'full_name': user.full_name,
+                'phone': user.phone,
+                'email': user.email or '',
+                'total_points': float(user.total_points) if hasattr(user, 'total_points') else 0.0,
+                'family': family_info,
+                'is_family_representative': getattr(user, 'is_family_representative', False),
+            }
+        }, status=200)
 
     except Exception as e:
-        logger.exception(f"Error in OTP verification: {e}")
+        logger.exception(f"Unexpected QR login error: {e}")
         return Response({'success': False, 'message': 'Internal error', 'error_code': 'INTERNAL_ERROR'}, status=500)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def login_verify_otp(request):
+    """
+    DEPRECATED: OTP verification endpoint (OTP_LOGIN_ENABLED = False)
+    
+    This endpoint is kept for backwards compatibility but is not actively used
+    since OTP authentication is disabled for mobile login.
+    
+    Mobile apps now receive JWT tokens directly from /api/login/ and /api/qr-login/
+    without requiring OTP verification.
+    """
+    return Response({
+        'success': False,
+        'message': 'OTP authentication is disabled. Use /api/login/ or /api/qr-login/ for direct JWT authentication.',
+        'error_code': 'OTP_DISABLED'
+    }, status=400)
 
 
 @api_view(['POST', 'GET'])  # Allow both POST and GET for browser compatibility
@@ -536,11 +448,12 @@ def refresh_token_view(request):
             
             logger.info(f"JWT tokens refreshed successfully")
             
+            # ✅ IMPORTANT: Use 'access' and 'refresh' keys (consistent with login endpoints)
             return Response({
                 'success': True,
                 'message': 'Tokens refreshed successfully',
-                'access_token': new_access_token,
-                'refresh_token': new_refresh_token,
+                'access': new_access_token,  # Mobile expects 'access' key
+                'refresh': new_refresh_token,  # Mobile expects 'refresh' key
                 'token_type': 'Bearer',
                 'expires_in': 3600,  # 1 hour
                 'timestamp': timezone.now().isoformat()
