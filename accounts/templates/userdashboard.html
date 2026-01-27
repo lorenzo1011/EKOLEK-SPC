@@ -1259,7 +1259,7 @@
             <div style="flex: 1;">
               <h3>Personal Information</h3>
             </div>
-            <button onclick="openEditProfileModal()" class="edit-profile-btn" aria-label="Edit Contact Information">
+            <button onclick="openEditProfileModal(event)" class="edit-profile-btn" aria-label="Edit Contact Information">
               <i class='bx bx-edit-alt'></i>
               <span>Edit Contact</span>
             </button>
@@ -1745,7 +1745,7 @@
 
   <!-- Edit Profile Modal -->
   <div id="editProfileModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="editProfileTitle">
-    <div class="modal-container">
+    <div class="modal-container" onclick="event.stopPropagation()">
       <div class="modal-header">
         <div class="modal-title-group">
           <div class="modal-icon">
@@ -1950,7 +1950,12 @@
   }
   
   // Edit Profile Modal Functions
-  function openEditProfileModal() {
+  function openEditProfileModal(event) {
+    // Prevent event propagation to avoid triggering click-outside handler
+    if (event) {
+      event.stopPropagation();
+    }
+    
     const modal = document.getElementById('editProfileModal');
     modal.classList.add('active');
     document.body.style.overflow = 'hidden'; // Prevent background scrolling
@@ -1974,8 +1979,14 @@
   // Close modal when clicking outside
   document.addEventListener('click', function(event) {
     const modal = document.getElementById('editProfileModal');
-    if (event.target === modal) {
-      closeEditProfileModal();
+    const modalContainer = modal?.querySelector('.modal-container');
+    
+    // Only close if modal is active and click is on the overlay (not the container)
+    if (modal && modal.classList.contains('active') && event.target === modal) {
+      // Double-check that click isn't on the modal container
+      if (modalContainer && !modalContainer.contains(event.target)) {
+        closeEditProfileModal();
+      }
     }
   });
   
