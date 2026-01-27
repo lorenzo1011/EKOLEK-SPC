@@ -50,6 +50,9 @@ urlpatterns = [
     path('api/notifications/mark-viewed/', views.mark_notifications_viewed, name='mark_notifications_viewed'),
     path('api/notifications/unread-count/', views.get_unread_count, name='get_unread_count'),
     
+    # QR Code download
+    path('api/qr-code/download/', views.download_qr_code, name='download_qr_code'),
+    
     # Security monitoring URLs (admin only)
     path('admin/security/api/stats/', security_views.security_api_stats, name='security_api_stats'),
     path('admin/security/block-ip/', security_views.block_ip, name='block_ip'),

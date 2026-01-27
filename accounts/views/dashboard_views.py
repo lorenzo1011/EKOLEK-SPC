@@ -4,11 +4,14 @@ Dashboard and notification views
 
 from django.shortcuts import render
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from django.db.models import Sum
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 from datetime import datetime, timedelta
+import qrcode
+from io import BytesIO
+import base64
 
 from accounts.models import Users, Family, Notification, Reward, GarbageSchedule
 
@@ -152,6 +155,9 @@ def userdashboard(request):
         total_points__gt=user.total_points,
         is_active=True
     ).count() + 1
+    
+    # Generate QR code for user profile
+    qr_code_data = generate_user_qr_code(user)
 
     return render(request, 'userdashboard.html', {
         'rewards': rewards,
@@ -168,6 +174,7 @@ def userdashboard(request):
         'user_age': user_age,
         'member_since_days': member_since_days,
         'user_family_rank': user_family_rank,
+        'qr_code_base64': qr_code_data,  # Base64 encoded QR code image
     })
 
 
@@ -222,3 +229,76 @@ def get_unread_count(request):
             'success': False,
             'error': str(e)
         }, status=500)
+
+
+def generate_user_qr_code(user):
+    """
+    Generate QR code for user containing their ID.
+    Returns base64 encoded image that can be embedded directly in HTML.
+    
+    The QR code contains the user's UUID which admins scan during transactions.
+    """
+    try:
+        # Create QR code with user's UUID
+        qr = qrcode.QRCode(
+            version=1,  # Size of QR code (1-40, 1 is smallest)
+            error_correction=qrcode.constants.ERROR_CORRECT_H,  # High error correction
+            box_size=10,  # Size of each box in pixels
+            border=4,  # Border size in boxes
+        )
+        
+        # Add user ID as data (UUID as string)
+        qr_data = str(user.id)
+        qr.add_data(qr_data)
+        qr.make(fit=True)
+        
+        # Create image
+        img = qr.make_image(fill_color="#10b981", back_color="white")  # Green theme matching E-KOLEK
+        
+        # Convert to base64 for embedding in HTML
+        buffer = BytesIO()
+        img.save(buffer, format='PNG')
+        buffer.seek(0)
+        img_base64 = base64.b64encode(buffer.getvalue()).decode()
+        
+        return img_base64
+    except Exception as e:
+        logger.error(f"Error generating QR code for user {user.id}: {e}")
+        return None
+
+
+@login_required
+def download_qr_code(request):
+    """
+    Generate and download user's QR code as PNG file.
+    Filename includes username for easy identification.
+    """
+    try:
+        user = request.user
+        
+        # Create QR code
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_H,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(str(user.id))
+        qr.make(fit=True)
+        
+        # Create image
+        img = qr.make_image(fill_color="#10b981", back_color="white")
+        
+        # Save to buffer
+        buffer = BytesIO()
+        img.save(buffer, format='PNG')
+        buffer.seek(0)
+        
+        # Return as downloadable file
+        response = HttpResponse(buffer, content_type='image/png')
+        response['Content-Disposition'] = f'attachment; filename="ekolek_qr_{user.username}.png"'
+        
+        return response
+    except Exception as e:
+        logger.error(f"Error downloading QR code for user {user.id}: {e}")
+        return HttpResponse("Error generating QR code", status=500)
