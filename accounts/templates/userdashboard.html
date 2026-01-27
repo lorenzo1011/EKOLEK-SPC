@@ -12,6 +12,476 @@
   <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
       <link rel="stylesheet" href="{% static 'css/userdashboard_v3.css' %}?v=19">
   
+  <style>
+    /* QR Code Accordion Styles */
+    .qr-accordion-card {
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .qr-accordion-header {
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.3s ease;
+      padding: 1.25rem !important;
+    }
+    
+    .qr-accordion-header:hover {
+      background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+    }
+    
+    .qr-accordion-header:focus {
+      outline: 2px solid #10b981;
+      outline-offset: 2px;
+    }
+    
+    .qr-header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .qr-header-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex: 1;
+    }
+    
+    .qr-icon {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    }
+    
+    .qr-title-group h3 {
+      margin: 0 0 0.25rem 0;
+      font-size: 1.1rem;
+      color: #1f2937;
+    }
+    
+    .qr-subtitle {
+      font-size: 0.75rem;
+      color: #6b7280;
+      font-weight: 500;
+    }
+    
+    .qr-header-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .qr-status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.35rem 0.75rem;
+      background: #d1fae5;
+      color: #065f46;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    
+    .qr-status-badge i {
+      font-size: 1rem;
+    }
+    
+    .qr-chevron {
+      font-size: 1.5rem;
+      color: #6b7280;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .qr-accordion-header[aria-expanded="true"] .qr-chevron {
+      transform: rotate(180deg);
+    }
+    
+    .qr-accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .qr-accordion-content.expanded {
+      max-height: 2000px;
+    }
+    
+    .qr-content-wrapper {
+      padding: 0 1.5rem 1.5rem;
+      text-align: center;
+    }
+    
+    .qr-description {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      color: #6b7280;
+      margin-bottom: 1.5rem;
+      font-size: 0.9rem;
+      padding: 0.75rem;
+      background: #f9fafb;
+      border-radius: 0.5rem;
+    }
+    
+    .qr-description i {
+      color: #10b981;
+      font-size: 1.25rem;
+    }
+    
+    .qr-code-container {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 1rem;
+      display: inline-block;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      margin-bottom: 1.5rem;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .qr-code-container:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 30px rgba(16, 185, 129, 0.15);
+    }
+    
+    .qr-image-wrapper {
+      position: relative;
+    }
+    
+    .qr-image-wrapper img {
+      max-width: 250px;
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 0.5rem;
+    }
+    
+    .qr-user-info {
+      margin-top: 1rem;
+    }
+    
+    .qr-username {
+      font-size: 0.875rem;
+      color: #374151;
+      font-weight: 600;
+      margin: 0 0 0.75rem 0;
+    }
+    
+    .qr-user-id {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      background: #f3f4f6;
+      border-radius: 0.5rem;
+    }
+    
+    .user-id-label {
+      font-size: 0.75rem;
+      color: #6b7280;
+      font-weight: 600;
+    }
+    
+    .user-id-value {
+      font-family: 'Courier New', monospace;
+      font-size: 0.7rem;
+      color: #1f2937;
+      background: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: 0.25rem;
+      border: 1px solid #e5e7eb;
+      max-width: 180px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    
+    .copy-id-btn {
+      background: #10b981;
+      color: white;
+      border: none;
+      padding: 0.35rem 0.5rem;
+      border-radius: 0.375rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+    }
+    
+    .copy-id-btn:hover {
+      background: #059669;
+      transform: scale(1.05);
+    }
+    
+    .copy-id-btn:active {
+      transform: scale(0.95);
+    }
+    
+    .copy-id-btn i {
+      font-size: 1rem;
+    }
+    
+    .qr-action-buttons {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+    
+    .qr-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.25rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: none;
+      text-decoration: none;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+    
+    .qr-btn i {
+      font-size: 1.1rem;
+    }
+    
+    .qr-btn-primary {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+    }
+    
+    .qr-btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    }
+    
+    .qr-btn-secondary {
+      background: white;
+      color: #10b981;
+      border: 2px solid #10b981;
+    }
+    
+    .qr-btn-secondary:hover {
+      background: #f0fdf4;
+      transform: translateY(-2px);
+    }
+    
+    .qr-btn-outline {
+      background: transparent;
+      color: #6b7280;
+      border: 2px solid #e5e7eb;
+    }
+    
+    .qr-btn-outline:hover {
+      border-color: #10b981;
+      color: #10b981;
+      background: #f0fdf4;
+    }
+    
+    .qr-error-state {
+      padding: 2rem;
+      background: #fef2f2;
+      border-radius: 0.75rem;
+      color: #dc2626;
+      margin-bottom: 1.5rem;
+    }
+    
+    .qr-error-state i {
+      font-size: 3rem;
+      margin-bottom: 0.75rem;
+      display: block;
+    }
+    
+    .qr-error-state p {
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+    
+    .qr-retry-btn {
+      background: #dc2626;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .qr-retry-btn:hover {
+      background: #b91c1c;
+      transform: scale(1.05);
+    }
+    
+    .qr-info-box {
+      margin-top: 1.5rem;
+      padding: 1.25rem;
+      background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+      border-left: 4px solid #10b981;
+      border-radius: 0.75rem;
+      text-align: left;
+    }
+    
+    .qr-info-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      font-weight: 700;
+      color: #059669;
+      font-size: 1rem;
+    }
+    
+    .qr-info-header i {
+      font-size: 1.5rem;
+    }
+    
+    .qr-info-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    
+    .qr-info-list li {
+      display: flex;
+      align-items: start;
+      gap: 0.75rem;
+      color: #374151;
+      font-size: 0.875rem;
+      line-height: 1.6;
+      margin-bottom: 0.75rem;
+      padding-left: 0.5rem;
+    }
+    
+    .qr-info-list li:last-child {
+      margin-bottom: 0;
+    }
+    
+    .qr-info-list li i {
+      color: #10b981;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+      margin-top: 0.125rem;
+    }
+    
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+      .qr-header-content {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      
+      .qr-header-right {
+        width: 100%;
+        justify-content: space-between;
+      }
+      
+      .qr-action-buttons {
+        flex-direction: column;
+        width: 100%;
+      }
+      
+      .qr-btn {
+        width: 100%;
+        justify-content: center;
+      }
+      
+      .user-id-value {
+        max-width: 120px;
+      }
+    }
+    
+    /* Animation for copy feedback */
+    @keyframes copySuccess {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); background: #059669; }
+      100% { transform: scale(1); }
+    }
+    
+    .copy-id-btn.copied {
+      animation: copySuccess 0.3s ease;
+    }
+    
+    /* Toast Notification Styles */
+    .custom-toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: white;
+      padding: 1rem 1.5rem;
+      border-radius: 0.75rem;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 600;
+      z-index: 10000;
+      opacity: 0;
+      transform: translateY(100px);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .custom-toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    .custom-toast i {
+      font-size: 1.5rem;
+    }
+    
+    .toast-success {
+      border-left: 4px solid #10b981;
+      color: #059669;
+    }
+    
+    .toast-success i {
+      color: #10b981;
+    }
+    
+    .toast-error {
+      border-left: 4px solid #ef4444;
+      color: #dc2626;
+    }
+    
+    .toast-error i {
+      color: #ef4444;
+    }
+    
+    .toast-warning {
+      border-left: 4px solid #f59e0b;
+      color: #d97706;
+    }
+    
+    .toast-warning i {
+      color: #f59e0b;
+    }
+    
+    .toast-info {
+      border-left: 4px solid #3b82f6;
+      color: #2563eb;
+    }
+    
+    .toast-info i {
+      color: #3b82f6;
+    }
+    
+    @media (max-width: 768px) {
+      .custom-toast {
+        bottom: 1rem;
+        right: 1rem;
+        left: 1rem;
+      }
+    }
+  </style>
 </head>
 <body>
   <!-- Header -->
@@ -523,61 +993,107 @@
           </div>
         </div>
 
-        <!-- QR Code Card (NEW) -->
-        <div class="profile-card">
-          <div class="profile-card-header">
-            <div class="profile-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
-              <i class='bx bx-qr-scan'></i>
+        <!-- QR Code Accordion Card -->
+        <div class="profile-card qr-accordion-card">
+          <div class="profile-card-header qr-accordion-header" 
+               onclick="toggleQRAccordion()" 
+               role="button" 
+               tabindex="0"
+               aria-expanded="false"
+               aria-controls="qr-accordion-content"
+               onkeypress="if(event.key === 'Enter' || event.key === ' ') toggleQRAccordion()">
+            <div class="qr-header-content">
+              <div class="qr-header-left">
+                <div class="profile-icon qr-icon">
+                  <i class='bx bx-qr-scan'></i>
+                </div>
+                <div class="qr-title-group">
+                  <h3>My QR Code</h3>
+                  <span class="qr-subtitle">Tap to view • Use for transactions</span>
+                </div>
+              </div>
+              <div class="qr-header-right">
+                <span class="qr-status-badge">
+                  <i class='bx bx-check-circle'></i> Active
+                </span>
+                <i class='bx bx-chevron-down qr-chevron'></i>
+              </div>
             </div>
-            <h3>My QR Code</h3>
           </div>
-          <div class="profile-card-body">
-            <div style="text-align: center; padding: 1.5rem;">
-              <p style="color: #6b7280; margin-bottom: 1.5rem; font-size: 0.9rem;">
-                Show this QR code to admin during reward redemption or point transactions
-              </p>
-              {% if qr_code_base64 %}
-              <div class="qr-code-container" style="background: white; padding: 1.5rem; border-radius: 1rem; display: inline-block; box-shadow: 0 4px 16px rgba(0,0,0,0.08); margin-bottom: 1.5rem;">
-                <img src="data:image/png;base64,{{ qr_code_base64 }}" 
-                     alt="User QR Code" 
-                     style="max-width: 250px; width: 100%; height: auto; display: block;">
-                <p style="margin-top: 1rem; font-size: 0.75rem; color: #9ca3af; font-weight: 600;">
-                  {{ request.user.username }} • {{ request.user.family.family_code }}
+          
+          <div id="qr-accordion-content" class="qr-accordion-content" aria-hidden="true">
+            <div class="profile-card-body">
+              <div class="qr-content-wrapper">
+                <p class="qr-description">
+                  <i class='bx bx-info-circle'></i>
+                  Show this QR code to admin during reward redemption or point transactions
                 </p>
-              </div>
-              <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
-                <a href="{% url 'download_qr_code' %}" 
-                   class="qr-action-btn" 
-                   download
-                   style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; text-decoration: none; border-radius: 0.5rem; font-weight: 600; font-size: 0.9rem; transition: all 0.3s; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);">
-                  <i class='bx bx-download'></i>
-                  Download QR Code
-                </a>
-                <button onclick="printQRCode()" 
-                        class="qr-action-btn"
-                        style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; background: white; color: #10b981; border: 2px solid #10b981; text-decoration: none; border-radius: 0.5rem; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.3s;">
-                  <i class='bx bx-printer'></i>
-                  Print QR Code
-                </button>
-              </div>
-              {% else %}
-              <div style="padding: 2rem; background: #fef2f2; border-radius: 0.5rem; color: #dc2626;">
-                <i class='bx bx-error-circle' style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
-                <p>Unable to generate QR code</p>
-              </div>
-              {% endif %}
-              <div class="qr-info-box" style="margin-top: 1.5rem; padding: 1rem; background: #f0fdf4; border-left: 4px solid #10b981; border-radius: 0.5rem; text-align: left;">
-                <div style="display: flex; align-items: start; gap: 0.75rem;">
-                  <i class='bx bx-info-circle' style="font-size: 1.5rem; color: #10b981; flex-shrink: 0; margin-top: 0.125rem;"></i>
-                  <div>
-                    <p style="font-weight: 600; color: #059669; margin-bottom: 0.5rem; font-size: 0.95rem;">How to use:</p>
-                    <ul style="margin: 0; padding-left: 1.25rem; color: #6b7280; font-size: 0.875rem; line-height: 1.6;">
-                      <li>Show this QR code when visiting the barangay hall</li>
-                      <li>Admin will scan it to verify your identity</li>
-                      <li>Used for reward redemption and point collection</li>
-                      <li>Download or print for offline access</li>
-                    </ul>
+                
+                {% if qr_code_base64 %}
+                <div class="qr-code-container">
+                  <div class="qr-image-wrapper">
+                    <img src="data:image/png;base64,{{ qr_code_base64 }}" 
+                         alt="User QR Code for {{ request.user.username }}"
+                         loading="lazy">
                   </div>
+                  <div class="qr-user-info">
+                    <p class="qr-username">{{ request.user.username }} • {{ request.user.family.family_code }}</p>
+                    <div class="qr-user-id">
+                      <span class="user-id-label">User ID:</span>
+                      <code class="user-id-value" id="userIdValue">{{ request.user.id }}</code>
+                      <button onclick="copyUserID()" 
+                              class="copy-id-btn" 
+                              title="Copy User ID"
+                              aria-label="Copy User ID to clipboard">
+                        <i class='bx bx-copy'></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="qr-action-buttons">
+                  <a href="{% url 'download_qr_code' %}" 
+                     class="qr-btn qr-btn-primary" 
+                     download
+                     aria-label="Download QR Code as PNG image">
+                    <i class='bx bx-download'></i>
+                    <span>Download</span>
+                  </a>
+                  <button onclick="printQRCode()" 
+                          class="qr-btn qr-btn-secondary"
+                          aria-label="Print QR Code">
+                    <i class='bx bx-printer'></i>
+                    <span>Print</span>
+                  </button>
+                  <button onclick="shareQR()" 
+                          class="qr-btn qr-btn-outline"
+                          aria-label="Share QR Code">
+                    <i class='bx bx-share-alt'></i>
+                    <span>Share</span>
+                  </button>
+                </div>
+                
+                {% else %}
+                <div class="qr-error-state">
+                  <i class='bx bx-error-circle'></i>
+                  <p>Unable to generate QR code</p>
+                  <button onclick="location.reload()" class="qr-retry-btn">
+                    <i class='bx bx-refresh'></i> Retry
+                  </button>
+                </div>
+                {% endif %}
+                
+                <div class="qr-info-box">
+                  <div class="qr-info-header">
+                    <i class='bx bx-bulb'></i>
+                    <span>How to use your QR code</span>
+                  </div>
+                  <ul class="qr-info-list">
+                    <li><i class='bx bx-check'></i> Show this QR code when visiting the barangay hall</li>
+                    <li><i class='bx bx-check'></i> Admin will scan it to verify your identity instantly</li>
+                    <li><i class='bx bx-check'></i> Used for reward redemption and point collection</li>
+                    <li><i class='bx bx-check'></i> Download or print for offline access anytime</li>
+                  </ul>
                 </div>
               </div>
             </div>
@@ -919,11 +1435,118 @@
     logout: '{% url "logout" %}',
   };
   
+  // QR Accordion Toggle Function
+  function toggleQRAccordion() {
+    const header = document.querySelector('.qr-accordion-header');
+    const content = document.getElementById('qr-accordion-content');
+    const isExpanded = header.getAttribute('aria-expanded') === 'true';
+    
+    // Toggle aria-expanded
+    header.setAttribute('aria-expanded', !isExpanded);
+    content.setAttribute('aria-hidden', isExpanded);
+    
+    // Toggle content visibility
+    if (isExpanded) {
+      content.classList.remove('expanded');
+    } else {
+      content.classList.add('expanded');
+    }
+  }
+  
+  // Copy User ID Function
+  function copyUserID() {
+    const userIdElement = document.getElementById('userIdValue');
+    const userId = userIdElement.textContent;
+    const copyBtn = document.querySelector('.copy-id-btn');
+    
+    // Copy to clipboard
+    navigator.clipboard.writeText(userId).then(() => {
+      // Visual feedback
+      const originalHTML = copyBtn.innerHTML;
+      copyBtn.classList.add('copied');
+      copyBtn.innerHTML = '<i class="bx bx-check"></i>';
+      
+      // Show success message
+      showToast('User ID copied to clipboard!', 'success');
+      
+      // Reset button after animation
+      setTimeout(() => {
+        copyBtn.classList.remove('copied');
+        copyBtn.innerHTML = originalHTML;
+      }, 2000);
+    }).catch(err => {
+      console.error('Failed to copy:', err);
+      showToast('Failed to copy. Please try manually.', 'error');
+    });
+  }
+  
+  // Share QR Code Function
+  function shareQR() {
+    const username = '{{ request.user.username }}';
+    const familyCode = '{{ request.user.family.family_code }}';
+    
+    if (navigator.share) {
+      // Use Web Share API if available (mobile devices)
+      navigator.share({
+        title: 'My E-KOLEK QR Code',
+        text: `${username} • ${familyCode}\nE-KOLEK Environmental Points & Rewards System`,
+        url: window.location.href
+      }).catch(err => {
+        if (err.name !== 'AbortError') {
+          console.error('Share failed:', err);
+        }
+      });
+    } else {
+      // Fallback: Copy link and show message
+      navigator.clipboard.writeText(window.location.href).then(() => {
+        showToast('Link copied! Share it with others.', 'info');
+      }).catch(err => {
+        showToast('Sharing not supported on this device', 'warning');
+      });
+    }
+  }
+  
+  // Toast Notification Function
+  function showToast(message, type = 'info') {
+    // Remove existing toast if any
+    const existingToast = document.querySelector('.custom-toast');
+    if (existingToast) {
+      existingToast.remove();
+    }
+    
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = `custom-toast toast-${type}`;
+    
+    const icons = {
+      success: 'bx-check-circle',
+      error: 'bx-error-circle',
+      warning: 'bx-error',
+      info: 'bx-info-circle'
+    };
+    
+    toast.innerHTML = `
+      <i class='bx ${icons[type] || icons.info}'></i>
+      <span>${message}</span>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    // Trigger animation
+    setTimeout(() => toast.classList.add('show'), 100);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+      toast.classList.remove('show');
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
+  
   // Print QR Code function
   function printQRCode() {
     const qrContainer = document.querySelector('.qr-code-container');
     if (!qrContainer) {
-      alert('QR code not found');
+      showToast('QR code not found', 'error');
       return;
     }
     
@@ -1012,6 +1635,7 @@
           <div class="user-info">
             <p>Name: {{ request.user.full_name }}</p>
             <p>Username: {{ request.user.username }}</p>
+            <p>User ID: {{ request.user.id }}</p>
             <p>Family: {{ request.user.family.family_name }}</p>
             <p>Barangay: {{ request.user.family.barangay.name }}</p>
           </div>
