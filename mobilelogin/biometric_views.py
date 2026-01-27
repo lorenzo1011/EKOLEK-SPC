@@ -485,21 +485,22 @@ def biometric_login_verify(request):
         
         logger.info(f"Biometric login successful for user {user.username}, device {device_id}")
         
+        # ✅ IMPORTANT: Use 'access' and 'refresh' keys (consistent with other login endpoints)
         return Response({
             'success': True,
             'message': 'Biometric login successful',
-            'access_token': str(refresh.access_token),
-            'refresh_token': str(refresh),
+            'access': str(refresh.access_token),  # Mobile expects 'access' key
+            'refresh': str(refresh),  # Mobile expects 'refresh' key
             'token_type': 'Bearer',
             'expires_in': 3600,  # 1 hour
-            'user_info': {
+            'user': {  # Use 'user' key (consistent with other endpoints)
                 'id': str(user.id),
                 'username': user.username,
                 'full_name': getattr(user, 'full_name', ''),
                 'total_points': getattr(user, 'total_points', 0),
                 'status': getattr(user, 'status', ''),
+                'family': family_info,
             },
-            'family_info': family_info,
             'device_info': {
                 'device_name': device.device_name,
                 'is_trusted': device.is_trusted,
