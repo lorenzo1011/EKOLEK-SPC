@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from django.utils import timezone
 import uuid
 
 class Question(models.Model):
@@ -47,8 +48,24 @@ class WasteItem(models.Model):
         return f"{self.emoji} {self.name}"
 
 class GameSession(models.Model):
+    GAME_TYPE_CHOICES = [
+        ('quiz', 'Quiz Game'),
+        ('drag_drop', 'Drag & Drop Game'),
+    ]
+    
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    game_type = models.CharField(
+        max_length=20,
+        choices=GAME_TYPE_CHOICES,
+        default='drag_drop',  # For backward compatibility with existing sessions
+        help_text="Type of game played (quiz or drag_drop)"
+    )
+    game_name = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="User-friendly game name for display"
+    )
     score = models.IntegerField(default=0)
     correct_answers = models.IntegerField(default=0)
     wrong_answers = models.IntegerField(default=0)
@@ -57,7 +74,89 @@ class GameSession(models.Model):
     completed_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.user.username} - {self.score} points"
+        return f"{self.user.username} - {self.get_game_type_display()} - {self.score} points"
+    
+    class Meta:
+        ordering = ['-completed_at']
+        indexes = [
+            models.Index(fields=['user', 'game_type', '-completed_at']),
+        ]
+
+
+class UserGameCooldown(models.Model):
+    """
+    Tracks when each user last played each game type
+    Used to enforce per-game cooldown restrictions
+    """
+    GAME_TYPE_CHOICES = [
+        ('quiz', 'Quiz Game'),
+        ('drag_drop', 'Drag & Drop Game'),
+    ]
+    
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='game_cooldowns'
+    )
+    game_type = models.CharField(
+        max_length=20,
+        choices=GAME_TYPE_CHOICES,
+        help_text="Type of game (quiz or drag_drop)"
+    )
+    last_played_at = models.DateTimeField(
+        auto_now=True,
+        help_text="When the user last completed this game"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        unique_together = [['user', 'game_type']]
+        verbose_name = "User Game Cooldown"
+        verbose_name_plural = "User Game Cooldowns"
+        ordering = ['-last_played_at']
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.get_game_type_display()} - {self.last_played_at}"
+    
+    def can_play_again(self):
+        """
+        Check if user can play this game again based on cooldown configuration
+        Returns: (can_play: bool, time_remaining_seconds: int)
+        """
+        from django.utils import timezone
+        
+        config = GameConfiguration.get_cooldown_for_game(self.game_type)
+        
+        # No config or inactive = unrestricted play
+        if not config or not config.is_active:
+            return True, 0
+        
+        # Zero cooldown = unrestricted play
+        if config.total_cooldown_seconds == 0:
+            return True, 0
+        
+        # Calculate time since last play
+        time_since_play = timezone.now() - self.last_played_at
+        time_remaining = config.total_cooldown_seconds - time_since_play.total_seconds()
+        
+        if time_remaining <= 0:
+            return True, 0
+        else:
+            return False, int(time_remaining)
+    
+    @classmethod
+    def update_or_create_cooldown(cls, user, game_type):
+        """
+        Update or create cooldown record for user and game type
+        Returns the cooldown instance
+        """
+        cooldown, created = cls.objects.update_or_create(
+            user=user,
+            game_type=game_type,
+            defaults={'last_played_at': timezone.now()}
+        )
+        return cooldown
 
 
 class GameConfiguration(models.Model):

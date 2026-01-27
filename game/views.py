@@ -168,17 +168,41 @@ def get_game_data(request):
 @authentication_classes([JWTAuthentication])  # JWT ONLY - multi-device support
 @permission_classes([IsAuthenticated])
 def save_game_session(request):
-    """Save completed game session"""
+    """Save completed game session with game_type support"""
     try:
         data = request.data
+        
+        # Extract game type information from Flutter payload
+        game_type = data.get('game_type') or data.get('game_id', 'drag_drop')
+        game_name = data.get('game_name', '')
+        
+        # Validate game_type
+        valid_game_types = ['quiz', 'drag_drop']
+        if game_type not in valid_game_types:
+            return Response({
+                'success': False,
+                'error': f'Invalid game_type. Must be one of: {", ".join(valid_game_types)}',
+                'error_code': 'INVALID_GAME_TYPE'
+            }, status=400)
+        
+        # Auto-generate game_name if not provided
+        if not game_name:
+            game_name_map = {
+                'quiz': 'Quiz Game',
+                'drag_drop': 'Waste Sorting Game'
+            }
+            game_name = game_name_map.get(game_type, 'Game')
         
         with transaction.atomic():
             # Get the authenticated user (should be a Users instance)
             user = request.user
-            logger.debug(f"Game session for user: {user.full_name} ({user.username})")
+            logger.debug(f"Game session for user: {user.full_name} ({user.username}) - Game: {game_type}")
             
+            # Create game session with game_type
             session = GameSession.objects.create(
                 user=user,
+                game_type=game_type,
+                game_name=game_name,
                 score=data.get('score', 0),
                 correct_answers=data.get('correct_answers', 0),
                 wrong_answers=data.get('wrong_answers', 0),
@@ -191,15 +215,35 @@ def save_game_session(request):
             user.total_points += points_earned
             user.save()
             
-            logger.debug(f"Added {points_earned} points. New total: {user.total_points}")
+            logger.debug(f"Added {points_earned} points for {game_type}. New total: {user.total_points}")
+            
+            # Update cooldown tracking for this game type
+            from .models import UserGameCooldown
+            UserGameCooldown.update_or_create_cooldown(user, game_type)
             
             # Create notification for game completion (only if points were earned)
             if points_earned > 0:
                 from accounts.models import Notification
+                
+                # Use game_type to generate appropriate notification message
+                notification_templates = {
+                    'quiz': f'You earned {points_earned} points from playing the quiz game!',
+                    'drag_drop': f'You earned {points_earned} points from playing the waste sorting game!',
+                }
+                
+                # Use game_name if available for more personalized message
+                if game_name and game_name not in ['Quiz Game', 'Waste Sorting Game']:
+                    notification_message = f'You earned {points_earned} points from playing {game_name}!'
+                else:
+                    notification_message = notification_templates.get(
+                        game_type,
+                        f'You earned {points_earned} points from playing a game!'
+                    )
+                
                 Notification.objects.create(
                     user=user,
                     type='game',
-                    message=f'You earned {points_earned} points from playing the waste sorting game!',
+                    message=notification_message,
                     points=points_earned,
                     game_score=data.get('score', 0)
                 )
@@ -210,6 +254,8 @@ def save_game_session(request):
         return Response({
             'success': True,
             'session_id': str(session.id),
+            'game_type': game_type,  # Echo back the game type
+            'game_name': game_name,
             'new_total_points': user.total_points,
             'points_earned': points_earned
         })
