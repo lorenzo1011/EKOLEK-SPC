@@ -1950,10 +1950,13 @@
   }
   
   // Edit Profile Modal Functions
+  let clickOutsideListener = null; // Store listener reference for cleanup
+  
   function openEditProfileModal(event) {
     // Prevent event propagation to avoid triggering click-outside handler
     if (event) {
       event.stopPropagation();
+      event.preventDefault();
     }
     
     const modal = document.getElementById('editProfileModal');
@@ -1964,6 +1967,19 @@
     setTimeout(() => {
       document.getElementById('editPhone').focus();
     }, 100);
+    
+    // CRITICAL FIX: Attach click-outside listener AFTER modal opens, with delay
+    // This prevents the opening click from immediately triggering the close
+    setTimeout(() => {
+      clickOutsideListener = function(e) {
+        const modal = document.getElementById('editProfileModal');
+        // Close if clicking directly on the overlay (not on the modal content)
+        if (e.target === modal) {
+          closeEditProfileModal();
+        }
+      };
+      document.addEventListener('click', clickOutsideListener);
+    }, 100); // 100ms delay ensures opening click has finished propagating
   }
   
   function closeEditProfileModal() {
@@ -1971,24 +1987,16 @@
     modal.classList.remove('active');
     document.body.style.overflow = ''; // Restore scrolling
     
+    // CRITICAL FIX: Remove the click-outside listener when modal closes
+    if (clickOutsideListener) {
+      document.removeEventListener('click', clickOutsideListener);
+      clickOutsideListener = null;
+    }
+    
     // Reset form
     document.getElementById('editProfileForm').reset();
     clearFormErrors();
   }
-  
-  // Close modal when clicking outside
-  document.addEventListener('click', function(event) {
-    const modal = document.getElementById('editProfileModal');
-    const modalContainer = modal?.querySelector('.modal-container');
-    
-    // Only close if modal is active and click is on the overlay (not the container)
-    if (modal && modal.classList.contains('active') && event.target === modal) {
-      // Double-check that click isn't on the modal container
-      if (modalContainer && !modalContainer.contains(event.target)) {
-        closeEditProfileModal();
-      }
-    }
-  });
   
   // Close modal with Escape key
   document.addEventListener('keydown', function(event) {
