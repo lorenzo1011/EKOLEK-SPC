@@ -46,6 +46,7 @@ from .dashboard_views import (
     get_unread_count,
     privacy_policy,
     terms_of_service,
+    download_qr_code,
 )
 
 # Validation API views
@@ -91,6 +92,7 @@ __all__ = [
     'get_unread_count',
     'privacy_policy',
     'terms_of_service',
+    'download_qr_code',
     
     # Validation
     'check_phone_availability',
