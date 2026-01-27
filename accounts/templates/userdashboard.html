@@ -1781,7 +1781,7 @@
               required
               maxlength="13">
             <small class="form-help">Format: 09XXXXXXXXX or +639XXXXXXXXX</small>
-            <span class="form-error" id="phoneError"></span>
+            <span class="form-error" id="editPhoneError"></span>
           </div>
 
           <div class="form-group">
@@ -1798,7 +1798,7 @@
               placeholder="yourname@example.com"
               required>
             <small class="form-help">We'll send a verification email to confirm changes</small>
-            <span class="form-error" id="emailError"></span>
+            <span class="form-error" id="editEmailError"></span>
           </div>
 
           <div class="form-group">
@@ -1815,7 +1815,7 @@
               required
               minlength="6">
             <small class="form-help">Required for security verification</small>
-            <span class="form-error" id="passwordError"></span>
+            <span class="form-error" id="confirmPasswordError"></span>
           </div>
 
           <div class="form-actions">
@@ -1951,6 +1951,7 @@
   
   // Edit Profile Modal Functions
   let clickOutsideListener = null; // Store listener reference for cleanup
+  let modalIsOpening = false; // Flag to prevent immediate close
   
   function openEditProfileModal(event) {
     // Prevent event propagation to avoid triggering click-outside handler
@@ -1959,33 +1960,47 @@
       event.preventDefault();
     }
     
+    // Set opening flag to prevent immediate close
+    modalIsOpening = true;
+    
     const modal = document.getElementById('editProfileModal');
     modal.classList.add('active');
     document.body.style.overflow = 'hidden'; // Prevent background scrolling
     
     // Focus on first input
     setTimeout(() => {
-      document.getElementById('editPhone').focus();
-    }, 100);
+      const firstInput = document.getElementById('editPhone');
+      if (firstInput) {
+        firstInput.focus();
+      }
+    }, 150);
     
     // CRITICAL FIX: Attach click-outside listener AFTER modal opens, with delay
     // This prevents the opening click from immediately triggering the close
     setTimeout(() => {
+      modalIsOpening = false; // Clear opening flag
+      
       clickOutsideListener = function(e) {
+        // Don't close if modal is still opening
+        if (modalIsOpening) return;
+        
         const modal = document.getElementById('editProfileModal');
         // Close if clicking directly on the overlay (not on the modal content)
-        if (e.target === modal) {
+        if (e.target === modal && modal.classList.contains('active')) {
           closeEditProfileModal();
         }
       };
       document.addEventListener('click', clickOutsideListener);
-    }, 100); // 100ms delay ensures opening click has finished propagating
+    }, 200); // Increased to 200ms to ensure opening click has fully completed
   }
   
   function closeEditProfileModal() {
     const modal = document.getElementById('editProfileModal');
     modal.classList.remove('active');
     document.body.style.overflow = ''; // Restore scrolling
+    
+    // Reset opening flag
+    modalIsOpening = false;
     
     // CRITICAL FIX: Remove the click-outside listener when modal closes
     if (clickOutsideListener) {
@@ -1994,7 +2009,10 @@
     }
     
     // Reset form
-    document.getElementById('editProfileForm').reset();
+    const form = document.getElementById('editProfileForm');
+    if (form) {
+      form.reset();
+    }
     clearFormErrors();
   }
   
@@ -2023,24 +2041,31 @@
     const errorElement = document.getElementById(`${fieldId}Error`);
     const inputElement = document.getElementById(fieldId);
     
-    errorElement.textContent = message;
-    errorElement.classList.add('active');
-    inputElement.classList.add('error');
+    if (errorElement) {
+      errorElement.textContent = message;
+      errorElement.classList.add('active');
+    }
+    if (inputElement) {
+      inputElement.classList.add('error');
+    }
   }
   
   function clearFieldError(fieldId) {
     const errorElement = document.getElementById(`${fieldId}Error`);
     const inputElement = document.getElementById(fieldId);
     
-    errorElement.textContent = '';
-    errorElement.classList.remove('active');
-    inputElement.classList.remove('error');
+    if (errorElement) {
+      errorElement.textContent = '';
+      errorElement.classList.remove('active');
+    }
+    if (inputElement) {
+      inputElement.classList.remove('error');
+    }
   }
   
   function clearFormErrors() {
-    ['phone', 'email', 'password'].forEach(field => {
-      clearFieldError(`edit${field.charAt(0).toUpperCase() + field.slice(1)}`);
-    });
+    clearFieldError('editPhone');
+    clearFieldError('editEmail');
     clearFieldError('confirmPassword');
   }
   
