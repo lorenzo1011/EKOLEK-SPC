@@ -12,6 +12,7 @@ import logging
 import os
 from datetime import timedelta
 from pathlib import Path
+from django.core.exceptions import ImproperlyConfigured
 
 import dj_database_url
 from decouple import config
@@ -29,7 +30,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # ==============================================================================
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('DJANGO_SECRET_KEY')
+# Prefer DJANGO_SECRET_KEY, but allow SECRET_KEY for deployment compatibility.
+SECRET_KEY = config('DJANGO_SECRET_KEY', default=config('SECRET_KEY', default=''))
+if not SECRET_KEY:
+    raise ImproperlyConfigured(
+        'Missing secret key. Set DJANGO_SECRET_KEY (preferred) or SECRET_KEY.'
+    )
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DJANGO_DEBUG', default=False, cast=bool)
