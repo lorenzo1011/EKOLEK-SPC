@@ -20,157 +20,13 @@
 <body>
 
     <!-- SIDEBAR -->
-    <section id="sidebar">
-        <a href="#" class="brand">
-            <i class='bx bxs-group'></i>
-            <span class="text">CENRO Admin</span>
-        </a>
-        		<ul class="side-menu top">
-			<!-- Dashboard/Home -->
-			<li>
-				<a href="{% url 'cenro:dashboard' %}">
-					<i class='bx bxs-dashboard'></i>
-					<span class="text">Dashboard</span>
-				</a>
-			</li>
-
-			{% if can_manage_users %}
-			<li>
-				<a href="{% url 'cenro:adminuser' %}">
-					<i class='bx bxs-user-detail'></i>
-					<span class="text">User Management</span>
-				</a>
-			</li>
-			{% endif %}
-
-            {% if admin_user.role == 'super_admin' %}
-			<li>
-				<a href="{% url 'cenro:admin_management' %}">
-					<i class='bx bxs-user-detail' ></i>
-					<span class="text">Admin Management</span>
-				</a>
-			</li>
-			{% endif %}
-			
-			{% if can_manage_controls %}
-			<li>
-				<a href="{% url 'cenro:admincontrol' %}">
-					<i class='bx bxs-component' ></i>
-					<span class="text">Controls Management</span>
-				</a>
-			</li>
-			{% endif %}
-			
-			{% if can_manage_points %}
-			<li>
-				<a href="{% url 'cenro:adminpoints' %}">
-					<i class='bx bxs-star' ></i>
-					<span class="text">Points Management</span>
-				</a>
-			</li>
-			{% endif %}
-			
-			{% if can_manage_rewards %}
-			<li>
-				<a href="{% url 'cenro:adminrewards' %}">
-					<i class='bx bxs-gift' ></i>
-					<span class="text">Rewards Management</span>
-				</a>
-			</li>
-			{% endif %}
-
-			{% if can_manage_schedules %}
-			<li>
-				<a href="{% url 'cenro:adminschedule' %}">
-					<i class='bx bxs-calendar' ></i>
-					<span class="text">Schedule Management</span>
-				</a>
-			</li>
-			{% endif %}
-
-			{% if can_manage_security %}
-			<li>
-<a href="{% url 'cenro:security_dashboard' %}">
-<i class='bx bxs-shield' ></i>
-<span class="text">Security Management</span>
-</a>
-</li>
-			{% endif %}
-
-			{% if can_manage_learning %}
-			<li class="active">
-				<a href="{% url 'cenro:adminlearn' %}">
-					<i class='bx bxs-book-content' ></i>
-					<span class="text">Learning Management</span>
-				</a>
-			</li>
-			{% endif %}
-
-			{% if can_manage_games %}
-			<li>
-				<a href="{% url 'cenro:admingames' %}">
-					<i class='bx bxs-game' ></i>
-					<span class="text">Games Management</span>
-				</a>      
-      <li>
-        <a href="{% url 'cenro:waste_analytics' %}">
-          <i class='bx bxs-bar-chart-alt-2' ></i>
-          <span class="text">Waste Analytics</span>
-        </a>
-      </li>
-      
-			</li>
-			{% endif %}
-			
-			<!-- Security Analyst Special Dashboard -->
-			{% if admin_role == 'security_analyst' %}
-			<li>
-				<a href="{% url 'cenro:adminsecurity' %}">
-					<i class='bx bxs-dashboard' ></i>
-					<span class="text">Security Dashboard</span>
-				</a>
-			</li>
-			{% endif %}
-			
-		</ul>
-
-        <ul class="side-menu">
-            <li>
-                <a href="{% url 'cenro:admin_logout' %}" class="logout">
-                    <i class='bx bxs-log-out-circle'></i>
-                    <span class="text">Logout</span>
-                </a>
-            </li>
-        </ul>
-    </section>
+    {% include 'includes/sidebar.html' with active_page='learning' %}
 
     <!-- CONTENT -->
     <section id="content">
-        <!-- NAVBAR -->
-				<nav>
-			<i class='bx bx-menu' ></i>
-			
-			<!-- Admin User Profile Section -->
-			{% if is_admin_authenticated %}
-			<div class="profile" style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
-				<!-- Admin Notification Bell -->
-				{% include 'includes/notification_bell.html' %}
-				
-				<div class="admin-info" style="text-align: right; margin-right: 10px;">
-					<span style="display: block; font-weight: 600; color: #333;">{{ admin_full_name }}</span>
-					<span style="display: block; font-size: 0.8rem; color: #666;">{{ admin_role_display }}</span>
-				</div>
-				<i class='bx bxs-user-circle' style="font-size: 2rem; color: #667eea;"></i>
-			</div>
-			{% else %}
-			<div class="profile" style="margin-left: auto;">
-				<a href="{% url 'cenro:admin_login' %}" style="color: #667eea; text-decoration: none;">
-					<i class='bx bx-log-in' style="font-size: 1.5rem;"></i>
-					<span>Login</span>
-				</a>
-			</div>
-			{% endif %}
-		</nav>
+		<!-- NAVBAR -->
+		{% include 'includes/navbar.html' %}
+		<!-- NAVBAR -->
 
         <!-- MAIN -->
         <main>
@@ -194,89 +50,103 @@
             </div>
 
             <!-- Add Video Form -->
-            <div class="video-form">
-                <h3 style="margin-bottom: 1.5rem;">Add New Learning Video</h3>
+            <div class="lv-card" style="margin-top: 1.25rem;">
+                <div class="lv-card-header">
+                    <div class="lv-icon" style="background: var(--lv-primary);"><i class='bx bx-plus-circle'></i></div>
+                    <div>
+                        <h3 id="formHeading">Add New Learning Video</h3>
+                        <p>Create a video resource for waste management education</p>
+                    </div>
+                </div>
                 <form id="videoForm">
                     {% csrf_token %}
                     <input type="hidden" id="videoId" value="">
-                    
-                    <div class="form-group">
-                        <label for="videoTitle">Video Title:</label>
-                        <input type="text" id="videoTitle" class="form-input" placeholder="Enter video title..." required>
+
+                    <div class="lv-form-group">
+                        <label class="lv-label" for="videoTitle">Video Title</label>
+                        <input type="text" id="videoTitle" class="lv-input" placeholder="e.g., How to Sort Recyclable Waste" required>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="videoDescription">Description:</label>
-                        <textarea id="videoDescription" class="form-input form-textarea" placeholder="Enter video description..." required></textarea>
+
+                    <div class="lv-form-group">
+                        <label class="lv-label" for="videoDescription">Description</label>
+                        <textarea id="videoDescription" class="lv-textarea" placeholder="Describe what viewers will learn from this video..." required></textarea>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="videoUrl">YouTube Video URL:</label>
-                        <input type="url" id="videoUrl" class="form-input" placeholder="https://youtu.be/..." required>
-                        <div id="urlPreview" class="url-preview" style="display: none;"></div>
-                        <img id="thumbnailPreview" class="preview-thumbnail" style="display: none;">
+
+                    <div class="lv-form-row">
+                        <div class="lv-form-group">
+                            <label class="lv-label" for="videoUrl">YouTube Video URL</label>
+                            <input type="url" id="videoUrl" class="lv-input" placeholder="https://youtu.be/..." required>
+                            <div id="urlPreview" class="lv-url-preview"></div>
+                            <img id="thumbnailPreview" class="lv-thumb-preview">
+                        </div>
+                        <div class="lv-form-group">
+                            <label class="lv-label" for="thumbnailUrl">Custom Thumbnail URL <span style="color:var(--lv-text-muted);font-weight:400;">(optional)</span></label>
+                            <input type="url" id="thumbnailUrl" class="lv-input" placeholder="https://example.com/thumbnail.jpg">
+                            <span class="lv-hint">Leave empty to use the YouTube thumbnail</span>
+                        </div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="thumbnailUrl">Custom Thumbnail URL (Optional):</label>
-                        <input type="url" id="thumbnailUrl" class="form-input" placeholder="https://example.com/thumbnail.jpg">
+
+                    <div class="lv-form-row">
+                        <div class="lv-form-group">
+                            <label class="lv-label" for="pointsReward">Points Reward</label>
+                            <input type="number" id="pointsReward" class="lv-input lv-points-input points-input" min="0" step="0.01" value="0" required>
+                        </div>
+                        <div class="lv-form-group" style="display:flex;align-items:flex-end;padding-bottom:0.15rem;">
+                            <label class="lv-checkbox-label">
+                                <input type="checkbox" id="isActive" checked>
+                                Active and available to users
+                            </label>
+                        </div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="pointsReward">Points Reward:</label>
-                        <input type="number" id="pointsReward" class="form-input points-input" min="0" step="0.01" value="0" required>
+
+                    <div style="display:flex;gap:0.75rem;align-items:center;margin-top:0.25rem;">
+                        <button type="submit" class="lv-btn lv-btn-primary">
+                            <i class='bx bx-save'></i>
+                            <span id="saveButtonText">Save Video</span>
+                        </button>
+                        <button type="button" id="cancelEdit" class="lv-btn lv-btn-secondary" style="display: none;" onclick="cancelEdit(); return false;">
+                            <i class='bx bx-x'></i> Cancel
+                        </button>
                     </div>
-                    
-                    <div class="form-group">
-                        <label>
-                            <input type="checkbox" id="isActive" class="form-checkbox" checked>
-                            Video is active and available to users
-                        </label>
-                    </div>
-                    
-                    <button type="submit" class="btn-save">
-                        <i class='bx bx-save'></i>
-                        <span id="saveButtonText">Save Video</span>
-                    </button>
-                    <button type="button" id="cancelEdit" class="btn-save" style="background: #6b7280; margin-left: 1rem; display: none;" onclick="cancelEdit(); return false;">
-                        <i class='bx bx-x'></i>
-                        Cancel
-                    </button>
                 </form>
             </div>
 
             <!-- Videos List -->
-            <div class="videos-list">
-                <h3>Learning Videos</h3>
-                <div id="videosList" style="max-height: 450px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px;">
+            <div class="lv-card">
+                <div class="lv-card-header">
+                    <div class="lv-icon" style="background: var(--lv-purple);"><i class='bx bx-play-circle'></i></div>
+                    <div>
+                        <h3>Learning Videos</h3>
+                        <p>Manage your educational video library</p>
+                    </div>
+                    <span class="lv-count"><i class='bx bx-video'></i> {{ videos|length }} video{{ videos|length|pluralize }}</span>
+                </div>
+                <div id="videosList" class="lv-list-container">
                     {% for video in videos %}
-                    <div class="video-item" data-video-id="{{ video.id }}">
-                        <img src="{{ video.get_youtube_thumbnail }}" alt="Video thumbnail" class="video-thumbnail" onerror="this.style.display='none'">
-                        <div class="video-details">
-                            <h4 class="video-title">{{ video.title }}</h4>
-                            <p class="video-description">{{ video.description|truncatewords:20 }}</p>
-                            <div class="video-meta">
-                                <span class="video-points">{{ video.points_reward|smart_points }} points</span>
-                                <span class="video-status {% if video.is_active %}status-active{% else %}status-inactive{% endif %}">
-                                    {% if video.is_active %}Active{% else %}Inactive{% endif %}
-                                </span>
-                                <span>{{ video.created_at|date:"M d, Y" }}</span>
-                                <br>
+                    <div class="lv-video-item" data-video-id="{{ video.id }}">
+                        <img src="{{ video.get_youtube_thumbnail }}" alt="{{ video.title }}" class="lv-video-thumb" onerror="this.style.display='none'">
+                        <div class="lv-video-body">
+                            <h4>{{ video.title }}</h4>
+                            <p class="lv-video-desc">{{ video.description|truncatewords:25 }}</p>
+                            <div class="lv-video-meta">
+                                <span class="lv-badge green"><i class='bx bx-star'></i> {{ video.points_reward|smart_points }} pts</span>
+                                {% if video.is_active %}
+                                    <span class="lv-badge green">Active</span>
+                                {% else %}
+                                    <span class="lv-badge red">Inactive</span>
+                                {% endif %}
                                 {% with quiz_count=video.quiz_questions.count %}
                                     {% if quiz_count > 0 %}
-                                        <span class="quiz-info" style="color: #28a745; font-weight: bold;">
-                                            <i class='bx bx-brain'></i> {{ quiz_count }} Quiz Question{{ quiz_count|pluralize }}
-                                        </span>
+                                        <span class="lv-badge purple"><i class='bx bx-brain'></i> {{ quiz_count }} Quiz Q{{ quiz_count|pluralize }}</span>
                                     {% else %}
-                                        <span class="quiz-info" style="color: #6c757d;">
-                                            <i class='bx bx-brain'></i> No Quiz
-                                        </span>
+                                        <span class="lv-badge muted"><i class='bx bx-brain'></i> No Quiz</span>
                                     {% endif %}
                                 {% endwith %}
+                                <span class="lv-meta-date"><i class='bx bx-calendar'></i> {{ video.created_at|date:"M d, Y" }}</span>
                             </div>
                         </div>
-                        <div class="video-actions">
-                            <button class="btn-edit" 
+                        <div class="lv-video-actions">
+                            <button class="lv-btn lv-btn-sm lv-btn-edit"
                                     data-video-id="{{ video.id }}"
                                     data-title="{{ video.title }}"
                                     data-description="{{ video.description }}"
@@ -289,23 +159,23 @@
                             </button>
                             {% with quiz_count=video.quiz_questions.count %}
                                 {% if quiz_count > 0 %}
-                                    <a href="{% url 'cenro:quiz_questions' video.id %}" class="btn-edit" style="background: #28a745; text-decoration: none;">
-                                        <i class='bx bx-brain'></i> Manage Quiz ({{ quiz_count }})
+                                    <a href="{% url 'cenro:quiz_questions' video.id %}" class="lv-btn lv-btn-sm lv-btn-quiz">
+                                        <i class='bx bx-brain'></i> Quiz ({{ quiz_count }})
                                     </a>
                                 {% else %}
-                                    <a href="{% url 'cenro:quiz_questions' video.id %}" class="btn-edit" style="background: #6c757d; text-decoration: none;">
+                                    <a href="{% url 'cenro:quiz_questions' video.id %}" class="lv-btn lv-btn-sm lv-btn-quiz-empty">
                                         <i class='bx bx-plus'></i> Add Quiz
                                     </a>
                                 {% endif %}
                             {% endwith %}
-                            <button class="btn-toggle" 
+                            <button class="lv-btn lv-btn-sm lv-btn-toggle"
                                     data-video-id="{{ video.id }}"
                                     data-new-status="{{ video.is_active|yesno:'false,true' }}"
                                     onclick="toggleVideoHandler(this)">
-                                <i class='bx bx-toggle-{% if video.is_active %}left{% else %}right{% endif %}'></i> 
+                                <i class='bx bx-toggle-{% if video.is_active %}left{% else %}right{% endif %}'></i>
                                 {% if video.is_active %}Deactivate{% else %}Activate{% endif %}
                             </button>
-                            <button class="btn-delete" 
+                            <button class="lv-btn lv-btn-sm lv-btn-delete"
                                     data-video-id="{{ video.id }}"
                                     onclick="deleteVideoHandler(this)">
                                 <i class='bx bx-trash'></i> Delete
@@ -313,7 +183,10 @@
                         </div>
                     </div>
                     {% empty %}
-                    <p style="text-align: center; color: #6b7280; padding: 2rem;">No learning videos added yet.</p>
+                    <div class="lv-empty">
+                        <i class='bx bx-play-circle'></i>
+                        <p>No learning videos added yet.</p>
+                    </div>
                     {% endfor %}
                 </div>
             </div>

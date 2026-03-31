@@ -4,15 +4,14 @@ Handles login, logout, and JWT token management
 NO OTP - Direct JWT authentication only
 """
 # Standard library
-import json
 import logging
 import re
 import uuid
 
 # Django
-from django.http import JsonResponse
+from django.contrib.auth import authenticate
+from django.shortcuts import redirect
 from django.utils import timezone
-from django.conf import settings
 
 # Django REST Framework
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
@@ -20,7 +19,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
+from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework.authtoken.models import Token  # For legacy DRF Token support
 
 # Local apps
@@ -66,7 +65,6 @@ def login_view(request):
         if len(password) < 6:
             return Response({'success': False, 'message': 'Invalid credentials format', 'error_code': 'INVALID_FORMAT'}, status=400)
 
-        from django.contrib.auth import authenticate
         user = authenticate(username=username, password=password)
         if not user:
             logger.warning(f"Failed login attempt for username: {username}")
@@ -249,14 +247,23 @@ def qr_login(request):
 @permission_classes([AllowAny])
 def login_verify_otp(request):
     """
-    DEPRECATED: OTP verification endpoint (OTP_LOGIN_ENABLED = False)
-    
-    This endpoint is kept for backwards compatibility but is not actively used
-    since OTP authentication is disabled for mobile login.
-    
-    Mobile apps now receive JWT tokens directly from /api/login/ and /api/qr-login/
-    without requiring OTP verification.
+    .. deprecated::
+        This endpoint is deprecated and always returns HTTP 400.
+        OTP-based login has been disabled (OTP_LOGIN_ENABLED = False).
+
+    Formerly used for OTP verification during mobile login. Now mobile apps
+    receive JWT tokens directly from ``/api/login/`` and ``/api/qr-login/``
+    without requiring an OTP step.
+
+    Kept solely for backwards compatibility so existing clients receive a
+    meaningful error instead of a 404.
     """
+    import warnings
+    warnings.warn(
+        "login_verify_otp is deprecated. Use /api/login/ or /api/qr-login/ instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     return Response({
         'success': False,
         'message': 'OTP authentication is disabled. Use /api/login/ or /api/qr-login/ for direct JWT authentication.',
@@ -287,7 +294,6 @@ def logout_view(request):
             logger.info("Logout called without authentication - client-side cleanup")
             
             if is_browser_request:
-                from django.shortcuts import redirect
                 return redirect('login_page')
             
             return Response({
@@ -305,7 +311,6 @@ def logout_view(request):
                 logger.info(f"DRF Token deleted for user {request.user.username}")
                 
                 if is_browser_request:
-                    from django.shortcuts import redirect
                     return redirect('login_page')
                 
                 return Response({
@@ -331,7 +336,6 @@ def logout_view(request):
                 logger.info(f"JWT refresh token blacklisted for user {request.user.username}")
                 
                 if is_browser_request:
-                    from django.shortcuts import redirect
                     return redirect('login_page')
                 
                 return Response({
@@ -344,7 +348,6 @@ def logout_view(request):
                 logger.error(f"Error blacklisting token for {request.user.username}: {str(e)}")
                 
                 if is_browser_request:
-                    from django.shortcuts import redirect
                     return redirect('login_page')
                 
                 return Response({
@@ -357,7 +360,6 @@ def logout_view(request):
             logger.info(f"Logout without refresh token for user {request.user.username}")
             
             if is_browser_request:
-                from django.shortcuts import redirect
                 return redirect('login_page')
             
             return Response({
@@ -371,16 +373,7 @@ def logout_view(request):
         logger.error(f"Error during logout: {str(e)}")
         
         if is_browser_request:
-            from django.shortcuts import redirect
             return redirect('login_page')
-            
-        return Response({
-            'success': False,
-            'message': 'An error occurred during logout',
-            'redirect_url': '/accounts/login/',
-            'error_code': 'LOGOUT_ERROR',
-            'error_details': str(e)
-        }, status=500)
             
         return Response({
             'success': False,
@@ -415,8 +408,8 @@ def logout_debug(request):
         'debug_info': debug_info,
         'instructions': {
             'api_logout': 'POST /api/logout/ with Authorization: Bearer YOUR_ACCESS_TOKEN and refresh_token in body',
-            'api_login': 'POST /api/login/ with username/password to get OTP',
-            'verify_otp': 'POST /api/login/verify-otp/ with user_id and otp to get JWT tokens',
+            'api_login': 'POST /api/login/ with username/password to get JWT tokens directly',
+            'qr_login': 'POST /api/qr-login/ with qr_code to get JWT tokens directly',
             'refresh_token': 'POST /api/refresh-token/ with refresh_token in body'
         }
     })

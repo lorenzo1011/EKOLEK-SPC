@@ -1,6 +1,6 @@
 /**
- * Admin Quiz Management Styles
- * Styling for the quiz management overview page
+ * Admin Quiz Management — Page-specific Overrides
+ * Extends the shared adminquiz.css design system
  */
 
 /* ==================== SCROLLBAR FIX ==================== */
@@ -19,57 +19,14 @@ main {
     max-width: 100%;
 }
 
-/* ==================== STATUS BADGES ==================== */
-.status-badge {
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
+/* ==================== MANAGEMENT PAGE LAYOUT ==================== */
+.quiz-management-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
 }
 
-.video-status-active {
-    background: #28a745;
-}
-
-.video-status-inactive {
-    background: #dc3545;
-}
-
-.quiz-badge-active {
-    background: #28a745;
-}
-
-.quiz-badge-none {
-    background: #6c757d;
-}
-
-.points-badge {
-    background: #007bff;
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-}
-
-/* ==================== STATISTICS ITEMS ==================== */
-.stat-item {
-    text-align: center;
-    padding: 15px;
-    background: #f8f9fa;
-    border-radius: 8px;
-    border: 1px solid #dee2e6;
-}
-
-.stat-value {
-    font-size: 2rem;
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 5px;
-}
-
-.stat-label {
-    font-size: 0.9rem;
-    color: #666;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+/* Video cards inside the card body need bottom borders instead of margins */
+.qz-card-body > .qz-video-card:last-child {
+    border-bottom: none;
 }

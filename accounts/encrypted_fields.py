@@ -221,18 +221,4 @@ def is_encrypted(value: str) -> bool:
 
 # Example usage and testing
 if __name__ == '__main__':
-    print("EncryptedTextField and EncryptedCharField are ready to use!")
-    print("\nUsage in models:")
-    print("""
-    from accounts.encrypted_fields import EncryptedTextField, EncryptedCharField
-    
-    class MyModel(models.Model):
-        # For long text (no length limit)
-        secret_token = EncryptedTextField()
-        
-        # For short text (with max_length)
-        secret_code = EncryptedCharField(max_length=500)
-        
-        # Data is automatically encrypted on save
-        # Data is automatically decrypted on load
-    """)
+    pass

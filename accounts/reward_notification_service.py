@@ -42,7 +42,6 @@ def send_emails_in_background(user_emails, reward_data):
     success_count = 0
     failed_emails = []
     
-    print(f"\n[BACKGROUND] Sending new reward emails to {len(user_emails)} users...")
     logger.info(f"Background reward email sending started for {len(user_emails)} users")
     
     # NOTE: Image removed from email - Gmail blocks external images anyway
@@ -242,18 +241,11 @@ E-KOLEK Team
             msg.send(fail_silently=False)
             
             success_count += 1
-            print(f"  [BACKGROUND] [OK] [{i}/{len(user_emails)}] Sent to {email}")
             logger.info(f"Background reward email sent to {email}")
             
         except Exception as e:
-            print(f"  [BACKGROUND] [FAIL] [{i}/{len(user_emails)}] Failed: {email} - {str(e)}")
             logger.error(f"Failed to send background reward email to {email}: {str(e)}")
             failed_emails.append(email)
-    
-    print(f"\n[BACKGROUND] COMPLETE:")
-    print(f"   Total: {len(user_emails)}")
-    print(f"   Sent: {success_count}")
-    print(f"   Failed: {len(failed_emails)}")
     
     logger.info(f"Background reward email sending completed | Success: {success_count}/{len(user_emails)}")
 
@@ -269,14 +261,6 @@ def send_new_reward_notification(reward):
         dict: Result with success status and details
     """
     try:
-        print(f"\n{'='*70}")
-        print(f"REWARD NOTIFICATION SERVICE")
-        print(f"{'='*70}")
-        print(f"New Reward: {reward.name}")
-        print(f"Category: {reward.category.name if reward.category else 'N/A'}")
-        print(f"Points: {reward.points_required}")
-        print(f"Stock: {reward.stock}")
-        
         logger.info(f"=== REWARD NOTIFICATION SERVICE ===")
         logger.info(f"New Reward: {reward.name} | Points: {reward.points_required}")
         
@@ -284,14 +268,10 @@ def send_new_reward_notification(reward):
         users = get_all_users_with_email()
         user_emails = list(users.values_list('email', flat=True))
         
-        print(f"\nUser Check:")
-        print(f"  - Found {len(user_emails)} users with email addresses")
-        
         logger.info(f"Found {len(user_emails)} users with email addresses")
         
         if not user_emails:
             warning_msg = "WARNING: No users with email addresses found"
-            print(f"\n{warning_msg}")
             logger.warning("No users with email found")
             return {
                 'success': True,
@@ -299,13 +279,6 @@ def send_new_reward_notification(reward):
                 'recipients_count': 0,
                 'warning': 'No users with email addresses'
             }
-        
-        # Show sample of recipients
-        print(f"\nRecipients (showing first 5):")
-        for i, email in enumerate(user_emails[:5]):
-            print(f"  {i+1}. {email}")
-        if len(user_emails) > 5:
-            print(f"  ... and {len(user_emails) - 5} more")
         
         # Prepare reward data
         reward_data = {
@@ -319,23 +292,11 @@ def send_new_reward_notification(reward):
         
         # Debug logging for image URL
         if reward.image:
-            print(f"\n📸 IMAGE DEBUG:")
-            print(f"  - reward.image: {reward.image}")
-            print(f"  - reward.image.name: {reward.image.name}")
-            print(f"  - reward.image_url (web/dashboard): {reward.image_url}")
-            print(f"  - reward.image_url_for_email (email): {reward.image_url_for_email}")
             logger.info(f"Image debug | name: {reward.image.name} | web_url: {reward.image_url} | email_url: {reward.image_url_for_email}")
         else:
-            print(f"\n⚠️  No image attached to reward")
             logger.warning("No image attached to reward")
         
         # Send emails in BACKGROUND THREAD so reward save is not blocked
-        print(f"\nEmail Method:")
-        print(f"  - Using: Background Thread (Asynchronous - Non-Blocking)")
-        
-        print(f"\nStarting background email thread...")
-        print(f"  - Reward will be saved IMMEDIATELY")
-        print(f"  - Emails will send in the background")
         logger.info("Starting background email thread")
         
         # Start background thread for email sending (NO image parameter)
@@ -345,13 +306,6 @@ def send_new_reward_notification(reward):
             daemon=True  # Thread will not prevent program exit
         )
         email_thread.start()
-        
-        print(f"\n{'='*70}")
-        print(f"REWARD SAVED!")
-        print(f"  - Reward has been saved to database")
-        print(f"  - {len(user_emails)} emails are being sent in background")
-        print(f"  - Admin can continue working immediately")
-        print(f"{'='*70}\n")
         
         logger.info(f"Email thread started | {len(user_emails)} emails queued for background sending")
         
@@ -365,11 +319,7 @@ def send_new_reward_notification(reward):
     
     except Exception as e:
         error_msg = f"Reward notification service error: {str(e)}"
-        print(f"\nERROR: {error_msg}")
-        logger.error(f"ERROR: {error_msg}")
-        import traceback
-        traceback.print_exc()
-        logger.error(traceback.format_exc())
+        logger.error(error_msg, exc_info=True)
         
         return {
             'success': False,

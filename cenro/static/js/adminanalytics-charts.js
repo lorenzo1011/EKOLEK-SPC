@@ -16,11 +16,11 @@ function initializeAnalyticsCharts() {
   const wasteTypeBarData = window.WASTE_TYPE_BAR_DATA;
   const monthlyTrackingData = window.MONTHLY_TRACKING_DATA;
 
-  // Color palette for charts
+  // Color palette for charts — aligned with design tokens
   const colorPalette = [
-    '#667eea', '#764ba2', '#f093fb', '#4facfe',
-    '#43e97b', '#38f9d7', '#fa709a', '#fee140',
-    '#30cfd0', '#330867', '#a8edea', '#fed6e3'
+    '#5b6abf', '#0d9f6e', '#d97706', '#dc2626',
+    '#2563eb', '#7c3aed', '#ec4899', '#14b8a6',
+    '#f97316', '#06b6d4', '#84cc16', '#6366f1'
   ];
 
   // Initialize each chart
@@ -56,7 +56,7 @@ function initWasteTypeDoughnutChart(wasteTypeData, colorPalette) {
     },
     options: {
       responsive: true,
-      maintainAspectRatio: true,
+      maintainAspectRatio: false,
       plugins: {
         legend: {
           position: 'bottom',
@@ -116,17 +116,17 @@ function initBarangayBarChart(barangayData) {
       datasets: [{
         label: 'Weight (kg)',
         data: barangayData.weights,
-        backgroundColor: 'rgba(102, 126, 234, 0.85)',
-        borderColor: 'rgba(102, 126, 234, 1)',
+        backgroundColor: 'rgba(91, 106, 191, 0.85)',
+        borderColor: 'rgba(91, 106, 191, 1)',
         borderWidth: 2,
-        borderRadius: 8,
-        barThickness: 35
+        borderRadius: 6,
+        barThickness: 32
       }]
     },
     options: {
       indexAxis: 'y',
       responsive: true,
-      maintainAspectRatio: true,
+      maintainAspectRatio: false,
       scales: {
         x: {
           beginAtZero: true,
@@ -193,8 +193,8 @@ function initWasteTypeComparisonChart(wasteTypeBarData) {
         {
           label: 'Total Weight (kg)',
           data: wasteTypeBarData.weights,
-          backgroundColor: 'rgba(102, 126, 234, 0.8)',
-          borderColor: 'rgba(102, 126, 234, 1)',
+          backgroundColor: 'rgba(91, 106, 191, 0.8)',
+          borderColor: 'rgba(91, 106, 191, 1)',
           borderWidth: 2,
           borderRadius: 6,
           yAxisID: 'y',
@@ -203,8 +203,8 @@ function initWasteTypeComparisonChart(wasteTypeBarData) {
         {
           label: 'Number of Transactions',
           data: wasteTypeBarData.transactions,
-          backgroundColor: 'rgba(16, 185, 129, 0.8)',
-          borderColor: 'rgba(16, 185, 129, 1)',
+          backgroundColor: 'rgba(13, 159, 110, 0.8)',
+          borderColor: 'rgba(13, 159, 110, 1)',
           borderWidth: 2,
           borderRadius: 6,
           yAxisID: 'y1',
@@ -214,7 +214,7 @@ function initWasteTypeComparisonChart(wasteTypeBarData) {
     },
     options: {
       responsive: true,
-      maintainAspectRatio: true,
+      maintainAspectRatio: false,
       interaction: {
         mode: 'index',
         intersect: false
@@ -243,7 +243,7 @@ function initWasteTypeComparisonChart(wasteTypeBarData) {
               size: 12,
               weight: 'bold'
             },
-            color: '#667eea'
+            color: '#5b6abf'
           }
         },
         y1: {
@@ -269,7 +269,7 @@ function initWasteTypeComparisonChart(wasteTypeBarData) {
               size: 12,
               weight: 'bold'
             },
-            color: '#10b981'
+            color: '#0d9f6e'
           }
         },
         x: {
@@ -332,18 +332,18 @@ function initMonthlyTrackingChart(monthlyTrackingData) {
 
   // Professional gradient color palette for waste types
   const monthlyColorPalette = [
-    { primary: '#667eea', gradient: 'rgba(102, 126, 234, 0.15)' },
-    { primary: '#10b981', gradient: 'rgba(16, 185, 129, 0.15)' },
-    { primary: '#f59e0b', gradient: 'rgba(245, 158, 11, 0.15)' },
-    { primary: '#ef4444', gradient: 'rgba(239, 68, 68, 0.15)' },
-    { primary: '#3b82f6', gradient: 'rgba(59, 130, 246, 0.15)' },
-    { primary: '#ec4899', gradient: 'rgba(236, 72, 153, 0.15)' },
-    { primary: '#8b5cf6', gradient: 'rgba(139, 92, 246, 0.15)' },
-    { primary: '#14b8a6', gradient: 'rgba(20, 184, 166, 0.15)' },
-    { primary: '#f97316', gradient: 'rgba(249, 115, 22, 0.15)' },
-    { primary: '#06b6d4', gradient: 'rgba(6, 182, 212, 0.15)' },
-    { primary: '#a855f7', gradient: 'rgba(168, 85, 247, 0.15)' },
-    { primary: '#84cc16', gradient: 'rgba(132, 204, 22, 0.15)' },
+    { primary: '#5b6abf', gradient: 'rgba(91, 106, 191, 0.12)' },
+    { primary: '#0d9f6e', gradient: 'rgba(13, 159, 110, 0.12)' },
+    { primary: '#d97706', gradient: 'rgba(217, 119, 6, 0.12)' },
+    { primary: '#dc2626', gradient: 'rgba(220, 38, 38, 0.12)' },
+    { primary: '#2563eb', gradient: 'rgba(37, 99, 235, 0.12)' },
+    { primary: '#ec4899', gradient: 'rgba(236, 72, 153, 0.12)' },
+    { primary: '#7c3aed', gradient: 'rgba(124, 58, 237, 0.12)' },
+    { primary: '#14b8a6', gradient: 'rgba(20, 184, 166, 0.12)' },
+    { primary: '#f97316', gradient: 'rgba(249, 115, 22, 0.12)' },
+    { primary: '#06b6d4', gradient: 'rgba(6, 182, 212, 0.12)' },
+    { primary: '#6366f1', gradient: 'rgba(99, 102, 241, 0.12)' },
+    { primary: '#84cc16', gradient: 'rgba(132, 204, 22, 0.12)' },
   ];
 
   // Prepare enhanced datasets for monthly chart
@@ -382,7 +382,7 @@ function initMonthlyTrackingChart(monthlyTrackingData) {
       legendItem.style.background = colorScheme.primary;
       legendItem.innerHTML = `
         ${dataset.label}: ${total.toFixed(1)} kg
-        <span style="opacity: 0.8; font-size: 0.7rem;"> (${transactionTotal} transactions)</span>
+        <span class="lbsub">(${transactionTotal} txn)</span>
       `;
       legendContainer.appendChild(legendItem);
     });
@@ -397,7 +397,7 @@ function initMonthlyTrackingChart(monthlyTrackingData) {
     },
     options: {
       responsive: true,
-      maintainAspectRatio: true,
+      maintainAspectRatio: false,
       interaction: {
         mode: 'index',
         intersect: false,
@@ -411,8 +411,8 @@ function initMonthlyTrackingChart(monthlyTrackingData) {
           titleColor: '#fff',
           bodyColor: '#fff',
           padding: 16,
-          borderColor: '#667eea',
-          borderWidth: 2,
+          borderColor: '#5b6abf',
+          borderWidth: 1,
           displayColors: true,
           usePointStyle: true,
           titleFont: {
@@ -446,14 +446,14 @@ function initMonthlyTrackingChart(monthlyTrackingData) {
             footer: function(context) {
               let total = 0;
               let totalTransactions = 0;
-              context.forEach((item, idx) => {
+              context.forEach((item) => {
                 total += item.parsed.y;
-                if (monthlyTrackingData.datasets[idx] && 
-                    monthlyTrackingData.datasets[idx].counts) {
-                  totalTransactions += monthlyTrackingData.datasets[idx].counts[item.dataIndex] || 0;
+                const ds = monthlyTrackingData.datasets[item.datasetIndex];
+                if (ds && ds.counts) {
+                  totalTransactions += ds.counts[item.dataIndex] || 0;
                 }
               });
-              return `\n━━━━━━━━━━━━━━━━\n💼 Total: ${total.toFixed(2)} kg\n📋 Total Transactions: ${totalTransactions}`;
+              return `\nTotal: ${total.toFixed(2)} kg | Transactions: ${totalTransactions}`;
             }
           }
         }
@@ -513,15 +513,7 @@ function initMonthlyTrackingChart(monthlyTrackingData) {
       },
       animation: {
         duration: 2500,
-        easing: 'easeInOutQuart',
-        onProgress: function(animation) {
-          if (animation.currentStep === 1) {
-            console.log('📊 Monthly tracking chart animation started');
-          }
-        },
-        onComplete: function() {
-          console.log('✅ Monthly tracking chart rendered successfully');
-        }
+        easing: 'easeInOutQuart'
       }
     }
   });

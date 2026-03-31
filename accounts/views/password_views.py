@@ -1,18 +1,18 @@
 """
-Password reset views (forgot password flow)
+Password reset views (forgot password flow).
 """
 
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.views.decorators.cache import never_cache
-from django.http import JsonResponse
 import logging
 
+from django.contrib import messages
+from django.http import JsonResponse
+from django.shortcuts import redirect, render
+from django.views.decorators.cache import never_cache
+
+from accounts import email_otp_service, otp_service
 from accounts.models import Users
 from accounts.security import PasswordStrengthValidator
 from eko.security_utils import get_client_ip, log_security_event
-from accounts import otp_service
-from accounts import email_otp_service
 from accounts.masking_utils import mask_contact
 
 logger = logging.getLogger(__name__)
@@ -270,11 +270,10 @@ def reset_password(request):
             return render(request, 'reset_password.html')
         
         # Validate password strength
-        validator = PasswordStrengthValidator()
-        try:
-            validator.validate(new_password, user)
-        except Exception as e:
-            messages.error(request, str(e))
+        errors = PasswordStrengthValidator.validate_password_strength(new_password)
+        if errors:
+            for error in errors:
+                messages.error(request, error)
             return render(request, 'reset_password.html')
         
         # Update password

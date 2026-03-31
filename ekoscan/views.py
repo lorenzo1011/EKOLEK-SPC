@@ -1,38 +1,37 @@
-from django.shortcuts import render, get_object_or_404
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth import authenticate
-from django.utils import timezone
-from django.db import transaction
-from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.permissions import AllowAny
-from django.core.cache import cache
-from functools import wraps
+# Standard library
 import json
 import logging
-import hashlib
-import secrets
-from datetime import datetime, timedelta
+from datetime import datetime
 from decimal import Decimal, InvalidOperation
+from functools import wraps
 
+# Django
+from django.db import transaction
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+
+# Django REST Framework
+from rest_framework import status
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+
+# Local apps
 from accounts.models import (
-    Users, Family, WasteType, WasteTransaction, 
-    PointsTransaction, Reward, Redemption, RewardHistory
+    Notification, PointsTransaction, Redemption, Reward,
+    Users, WasteTransaction, WasteType,
 )
+from cenro.admin_utils import log_admin_action
 from cenro.models import AdminUser
-
-# Import JWT utilities for admin authentication
 from .jwt_utils import (
-    AdminJWTAuthentication, 
+    AdminJWTAuthentication,
     AdminRefreshToken,
     create_admin_tokens,
-    refresh_admin_token
+    refresh_admin_token,
 )
-from rest_framework_simplejwt.exceptions import TokenError, InvalidToken
 
 logger = logging.getLogger(__name__)
 
@@ -345,9 +344,7 @@ def admin_mobile_login(request):
             }, status=401)
             
     except Exception as e:
-        logger.error(f"Admin mobile login error: {str(e)}")
-        import traceback
-        logger.error(f"Full traceback: {traceback.format_exc()}")
+        logger.error(f"Admin mobile login error: {str(e)}", exc_info=True)
         
         # Check if this is the "You cannot access body after reading from request's data stream" error
         if "cannot access body after reading" in str(e).lower():
@@ -359,8 +356,7 @@ def admin_mobile_login(request):
         
         return JsonResponse({
             'success': False,
-            'error': 'Login failed',
-            'debug': f'Server error: {str(e)}'
+            'error': 'Login failed'
         }, status=500)
 
 
@@ -384,7 +380,7 @@ def admin_mobile_logout(request):
                 validated_token = auth.get_validated_token(token)
                 admin_user = auth.get_user(validated_token)
                 admin_username = admin_user.username
-            except:
+            except Exception:
                 # Token might be invalid, that's okay for logout
                 pass
         
@@ -408,7 +404,7 @@ def admin_mobile_logout(request):
                 from cenro.models import AdminUser
                 admin = AdminUser.objects.get(username=admin_username)
                 log_admin_action(admin, None, 'mobile_logout', 'Admin logged out from mobile app', request)
-            except:
+            except Exception:
                 pass
         
         return Response({
@@ -577,13 +573,10 @@ def get_user_by_qr(request):
         }, status=status.HTTP_200_OK)
         
     except Exception as e:
-        import traceback
-        logger.error(f"Error getting user by QR: {str(e)}")
-        logger.error(f"Full traceback: {traceback.format_exc()}")
+        logger.error(f"Error getting user by QR: {str(e)}", exc_info=True)
         return Response({
             'success': False,
-            'error': 'Failed to get user information',
-            'debug_error': str(e)
+            'error': 'Failed to get user information'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -615,13 +608,10 @@ def get_waste_types(request):
         }, status=status.HTTP_200_OK)
         
     except Exception as e:
-        import traceback
-        logger.error(f"Error getting waste types: {str(e)}")
-        logger.error(f"Full traceback: {traceback.format_exc()}")
+        logger.error(f"Error getting waste types: {str(e)}", exc_info=True)
         return Response({
             'success': False,
-            'error': 'Failed to get waste types',
-            'debug_error': str(e)
+            'error': 'Failed to get waste types'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -806,13 +796,10 @@ def get_available_rewards(request):
         }, status=status.HTTP_200_OK)
         
     except Exception as e:
-        import traceback
-        logger.error(f"Error getting rewards: {str(e)}")
-        logger.error(f"Full traceback: {traceback.format_exc()}")
+        logger.error(f"Error getting rewards: {str(e)}", exc_info=True)
         return Response({
             'success': False,
-            'error': 'Failed to get rewards',
-            'debug_error': str(e)
+            'error': 'Failed to get rewards'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -1038,9 +1025,7 @@ def redeem_reward(request):
         }, status=status.HTTP_201_CREATED)
         
     except Exception as e:
-        import traceback
-        logger.error(f"Error redeeming reward: {str(e)}")
-        logger.error(f"Full traceback: {traceback.format_exc()}")
+        logger.error(f"Error redeeming reward: {str(e)}", exc_info=True)
         
         # Provide more specific error information
         error_message = 'Failed to redeem reward'
@@ -1053,8 +1038,7 @@ def redeem_reward(request):
         
         return Response({
             'success': False,
-            'error': error_message,
-            'debug_error': str(e) if logger.level <= 10 else None  # Only show in debug mode
+            'error': error_message
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -1113,13 +1097,10 @@ def get_user_by_id(request, user_id):
         }, status=status.HTTP_200_OK)
         
     except Exception as e:
-        import traceback
-        logger.error(f"Error getting user by ID: {str(e)}")
-        logger.error(f"Full traceback: {traceback.format_exc()}")
+        logger.error(f"Error getting user by ID: {str(e)}", exc_info=True)
         return Response({
             'success': False,
-            'error': 'Failed to get user information',
-            'debug_error': str(e)
+            'error': 'Failed to get user information'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 

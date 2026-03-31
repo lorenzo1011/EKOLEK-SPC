@@ -3,13 +3,20 @@ Schedule views for mobile API
 Handles garbage collection schedule endpoints for Flutter app
 Uses JWT authentication ONLY - supports multi-device login
 """
+# Standard library
 import logging
+
+# Django
 from django.utils import timezone
+
+# Django REST Framework
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from accounts.models import GarbageSchedule, Barangay
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
+# Local apps
+from accounts.models import Barangay, GarbageSchedule
 
 
 logger = logging.getLogger(__name__)

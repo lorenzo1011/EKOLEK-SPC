@@ -62,9 +62,10 @@
         font-family: var(--lato);
         transition: .3s ease;
         overflow-x: hidden;
+        overflow-y: auto;
         scrollbar-width: none;
     }
-    #sidebar::--webkit-scrollbar {
+    #sidebar::-webkit-scrollbar {
         display: none;
     }
     #sidebar.hide {
@@ -158,80 +159,139 @@
         justify-content: center;
     }
     
-    /* Dropdown Submenu Styles */
-    #sidebar .side-menu.top li {
-        position: relative;
+    /* ===== Dropdown Submenu System ===== */
+
+    /* Dropdown parent: use .has-dropdown on the <li> */
+    #sidebar .side-menu.top > li.has-dropdown {
+        height: auto !important;
+        background: transparent;
+        overflow: visible;
     }
-    
-    #sidebar .side-menu.top li .dropdown-icon {
+
+    /* Remove the active rounded-corner pseudo-elements on dropdown parents */
+    #sidebar .side-menu.top > li.has-dropdown::before,
+    #sidebar .side-menu.top > li.has-dropdown::after {
+        display: none !important;
+    }
+
+    /* The main trigger link inside a dropdown: explicit height so it doesn't stretch */
+    #sidebar .side-menu.top > li.has-dropdown > a {
+        height: 34px;
+        background: var(--light);
+        border-radius: 48px;
+        position: relative;
+        z-index: 2;
+    }
+
+    /* Active/current highlight for the dropdown trigger */
+    #sidebar .side-menu.top > li.has-dropdown.active > a {
+        color: var(--blue);
+        font-weight: 600;
+    }
+
+    /* Chevron icon */
+    #sidebar .side-menu.top > li.has-dropdown .dropdown-icon {
         margin-left: auto;
-        margin-right: 15px;
+        margin-right: 14px;
         transition: transform 0.3s ease;
         font-size: 18px;
+        cursor: pointer;
+        min-width: auto;
     }
-    
-    #sidebar .side-menu.top li.dropdown-active .dropdown-icon {
+
+    #sidebar .side-menu.top > li.has-dropdown.dropdown-active .dropdown-icon {
         transform: rotate(180deg);
     }
-    
-    #sidebar .side-menu.top li .submenu {
+
+    /* Submenu container: hidden by default */
+    #sidebar .side-menu.top > li.has-dropdown > .submenu {
         display: none;
-        background: transparent;
-        margin: 0;
-        padding: 0;
         list-style: none;
+        margin: 0;
+        padding: 6px 0 6px 0;
     }
-    
-    #sidebar .side-menu.top li.dropdown-active .submenu {
+
+    #sidebar .side-menu.top > li.has-dropdown.dropdown-active > .submenu {
         display: block;
     }
-    
-    #sidebar .side-menu.top li .submenu a {
-        width: 100%;
-        height: 44px;
-        background: var(--grey);
+
+    /* Submenu <li> items: reset all inherited sidebar li styles */
+    #sidebar .side-menu.top > li.has-dropdown > .submenu > li {
+        height: auto !important;
+        margin: 0;
+        padding: 0;
+        border-radius: 0;
+        background: transparent !important;
+        position: static;
+    }
+
+    /* Kill pseudo-elements on submenu items */
+    #sidebar .side-menu.top > li.has-dropdown > .submenu > li::before,
+    #sidebar .side-menu.top > li.has-dropdown > .submenu > li::after {
+        display: none !important;
+        content: none !important;
+    }
+
+    /* Submenu links */
+    #sidebar .side-menu.top > li.has-dropdown > .submenu > li > a {
+        height: 36px;
+        width: auto;
+        background: transparent;
         display: flex;
         align-items: center;
-        border-radius: 0;
-        font-size: 13px;
+        border-radius: 6px;
+        font-size: 13.5px;
         color: var(--dark);
         white-space: nowrap;
         overflow-x: hidden;
-        padding-left: 0;
-        margin-left: 6px;
-        margin-bottom: 2px;
+        margin: 1px 10px 1px 20px;
+        padding: 0 10px;
         transition: all 0.2s ease;
+        border-left: 2px solid transparent;
     }
-    
-    #sidebar .side-menu.top li .submenu a:first-child {
-        margin-top: 4px;
-    }
-    
-    #sidebar .side-menu.top li .submenu a:last-child {
-        border-radius: 0 0 48px 0;
-    }
-    
-    #sidebar .side-menu.top li .submenu a:hover {
+
+    #sidebar .side-menu.top > li.has-dropdown > .submenu > li > a:hover {
         color: var(--blue);
-        background: rgba(34, 92, 35, 0.15);
+        background: rgba(34, 92, 35, 0.08);
+        border-left-color: var(--blue);
     }
-    
-    #sidebar .side-menu.top li .submenu a i {
-        font-size: 16px;
-        min-width: calc(60px - ((4px + 6px) * 2));
+
+    /* Active submenu link */
+    #sidebar .side-menu.top > li.has-dropdown > .submenu > li > a.sub-active {
+        color: var(--blue);
+        font-weight: 600;
+        background: rgba(34, 92, 35, 0.1);
+        border-left: 3px solid var(--blue);
+    }
+
+    #sidebar .side-menu.top > li.has-dropdown > .submenu > li > a.sub-active i {
+        opacity: 1;
+    }
+
+    /* Submenu link icons */
+    #sidebar .side-menu.top > li.has-dropdown > .submenu > li > a i {
+        font-size: 15px;
+        min-width: 28px;
         display: flex;
         justify-content: center;
+        opacity: 0.55;
     }
-    
-    #sidebar .side-menu.top li .submenu a .text {
-        padding-left: 8px;
+
+    #sidebar .side-menu.top > li.has-dropdown > .submenu > li > a:hover i,
+    #sidebar .side-menu.top > li.has-dropdown > .submenu > li > a.sub-active i {
+        opacity: 1;
     }
-    
-    #sidebar.hide .side-menu.top li .submenu {
-        display: none;
+
+    #sidebar .side-menu.top > li.has-dropdown > .submenu > li > a .text {
+        padding-left: 4px;
     }
-    
-    #sidebar.hide .side-menu.top li .dropdown-icon {
+
+    /* Hide dropdown in collapsed sidebar */
+    #sidebar.hide .side-menu.top > li.has-dropdown > .submenu {
+        display: none !important;
+    }
+
+    #sidebar.hide .side-menu.top > li.has-dropdown .dropdown-icon {
         display: none;
     }
     /* SIDEBAR */

@@ -1,6 +1,6 @@
 /**
  * Admin Analytics Dashboard JavaScript
- * Handles charts, filters, tabs, file uploads, and year comparison functionality
+ * Handles tabs, year pills, file uploads, and year comparison modal
  */
 
 /* ==================== TAB MANAGEMENT ==================== */
@@ -11,43 +11,22 @@
  * @param {string} tabId - ID of tab content to show
  */
 function switchTab(event, tabId) {
-  // Hide all tab contents
-  const tabContents = document.querySelectorAll('.tab-content');
-  tabContents.forEach(content => {
-    content.classList.remove('active');
-  });
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.tab-button').forEach(b => b.classList.remove('active'));
   
-  // Remove active class from all buttons
-  const tabButtons = document.querySelectorAll('.tab-button');
-  tabButtons.forEach(button => {
-    button.classList.remove('active');
-  });
-  
-  // Show selected tab content
   document.getElementById(tabId).classList.add('active');
-  
-  // Add active class to clicked button
   event.currentTarget.classList.add('active');
   
-  // Save tab state for persistence
   if (window.TabPersistence) {
     window.TabPersistence.saveTabState(tabId);
   }
 }
 
-/**
- * Toggle collapsible insight sections
- * @param {HTMLElement} element - Element to toggle
- */
-function toggleCollapse(element) {
-  element.classList.toggle('collapsed');
-}
-
-/* ==================== YEAR FILTER MANAGEMENT ==================== */
+/* ==================== YEAR FILTER (pill-based) ==================== */
 
 /**
  * Set year filter and submit form with loading indicator
- * @param {string} yearType - Type of year filter (current, 2024, 2023, compare, all)
+ * @param {string} yearType - Year value (current, 2024, 2023, all, compare)
  */
 function setYearFilter(yearType) {
   const form = document.getElementById('filterForm');
@@ -59,69 +38,39 @@ function setYearFilter(yearType) {
   
   const currentYear = new Date().getFullYear();
   
-  // Set date ranges based on year selection
-  switch(yearType) {
+  switch (yearType) {
     case 'current':
       startDateInput.value = `${currentYear}-01-01`;
       endDateInput.value = `${currentYear}-12-31`;
       break;
-    case '2024':
-      startDateInput.value = '2024-01-01';
-      endDateInput.value = '2024-12-31';
-      break;
-    case '2023':
-      startDateInput.value = '2023-01-01';
-      endDateInput.value = '2023-12-31';
-      break;
     case 'compare':
-      // For comparison, keep dates empty and let backend handle
-      startDateInput.value = '';
-      endDateInput.value = '';
-      break;
     case 'all':
       startDateInput.value = '';
       endDateInput.value = '';
       break;
+    default:
+      if (/^\d{4}$/.test(yearType)) {
+        startDateInput.value = `${yearType}-01-01`;
+        endDateInput.value = `${yearType}-12-31`;
+      } else {
+        startDateInput.value = '';
+        endDateInput.value = '';
+      }
+      break;
   }
   
-  // Submit form with smooth loading indicator
-  const filterSection = document.querySelector('.filter-section');
-  filterSection.style.opacity = '0.6';
-  filterSection.style.pointerEvents = 'none';
+  // Visual loading feedback on the toolbar card
+  const toolbar = document.getElementById('toolbarCard');
+  if (toolbar) {
+    toolbar.style.opacity = '0.6';
+    toolbar.style.pointerEvents = 'none';
+  }
   
   form.submit();
 }
 
 /**
- * Toggle year selector dropdown visibility
- */
-function toggleYearDropdown() {
-  const dropdown = document.getElementById('yearDropdown');
-  const icon = document.getElementById('yearDropdownIcon');
-  const isActive = dropdown.classList.contains('active');
-  
-  if (isActive) {
-    dropdown.classList.remove('active');
-    icon.style.transform = 'rotate(0deg)';
-  } else {
-    dropdown.classList.add('active');
-    icon.style.transform = 'rotate(180deg)';
-  }
-}
-
-/**
- * Select a specific year from dropdown
- * @param {string} year - Year value to filter by
- * @param {string} displayText - Text to display in selector
- */
-function selectYear(year, displayText) {
-  document.getElementById('selectedYearText').textContent = displayText;
-  toggleYearDropdown();
-  setYearFilter(year);
-}
-
-/**
- * Clear all year filters and reload page
+ * Clear all filters and reload page
  */
 function clearYearFilter() {
   const url = new URL(window.location.href);
@@ -134,39 +83,26 @@ function clearYearFilter() {
 /* ==================== YEAR COMPARISON MODAL ==================== */
 
 /**
- * Open year comparison modal with animation
+ * Open year comparison modal
  */
 function openComparisonModal() {
   const modal = document.getElementById('comparisonModal');
-  modal.style.display = 'flex';
+  modal.classList.add('active');
   document.body.style.overflow = 'hidden';
-  
-  // Animate modal appearance
-  setTimeout(() => {
-    modal.querySelector('.comparison-modal-content').style.opacity = '1';
-    modal.querySelector('.comparison-modal-content').style.transform = 'translateY(0)';
-  }, 10);
 }
 
 /**
- * Close year comparison modal with animation
+ * Close year comparison modal
  */
 function closeComparisonModal() {
   const modal = document.getElementById('comparisonModal');
-  const modalContent = modal.querySelector('.comparison-modal-content');
+  modal.classList.remove('active');
+  document.body.style.overflow = 'auto';
   
-  // Animate modal disappearance
-  modalContent.style.opacity = '0';
-  modalContent.style.transform = 'translateY(50px)';
-  
-  setTimeout(() => {
-    modal.style.display = 'none';
-    document.body.style.overflow = 'auto';
-    
-    // Reset form
-    document.getElementById('compareYear1').value = '';
-    document.getElementById('compareYear2').value = '';
-  }, 300);
+  const y1 = document.getElementById('compareYear1');
+  const y2 = document.getElementById('compareYear2');
+  if (y1) y1.value = '';
+  if (y2) y2.value = '';
 }
 
 /* ==================== FILE UPLOAD HANDLING ==================== */
@@ -188,29 +124,22 @@ function handleFileUpload(file) {
   const uploadProgress = document.getElementById('uploadProgress');
   const uploadProgressFill = document.getElementById('uploadProgressFill');
 
-  // Show progress bar
   uploadProgress.style.display = 'block';
   uploadProgressFill.style.width = '0%';
   uploadMessage.innerHTML = '';
 
-  // Simulate progress (since we can't track actual upload progress easily)
   let progress = 0;
   const progressInterval = setInterval(() => {
     progress += 10;
     uploadProgressFill.style.width = progress + '%';
-    if (progress >= 90) {
-      clearInterval(progressInterval);
-    }
+    if (progress >= 90) clearInterval(progressInterval);
   }, 200);
 
-  // Get CSRF token
   const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
   fetch(window.UPLOAD_URL, {
     method: 'POST',
-    headers: {
-      'X-CSRFToken': csrftoken
-    },
+    headers: { 'X-CSRFToken': csrftoken },
     body: formData
   })
   .then(response => response.json())
@@ -229,18 +158,13 @@ function handleFileUpload(file) {
         message += `. ${data.error_count} errors encountered.`;
         if (data.errors && data.errors.length > 0) {
           message += '<br><br><strong>Errors:</strong><ul>';
-          data.errors.forEach(error => {
-            message += `<li>${error}</li>`;
-          });
+          data.errors.forEach(error => { message += `<li>${error}</li>`; });
           message += '</ul>';
         }
         showMessage(message, 'warning');
       } else {
         showMessage(message, 'success');
-        // Reload page after 2 seconds to show updated data
-        setTimeout(() => {
-          window.location.reload();
-        }, 2000);
+        setTimeout(() => window.location.reload(), 2000);
       }
     } else {
       showMessage('Error: ' + data.error, 'error');
@@ -256,15 +180,14 @@ function handleFileUpload(file) {
 
 /**
  * Show upload message with appropriate styling
- * @param {string} message - Message to display
- * @param {string} type - Message type (success, warning, error)
+ * @param {string} message - Message text
+ * @param {string} type - success | warning | error
  */
 function showMessage(message, type) {
   const alertClass = type === 'success' ? 'alert-success' : (type === 'warning' ? 'alert-warning' : 'alert-error');
   const icon = type === 'success' ? 'bx-check-circle' : (type === 'warning' ? 'bx-error-circle' : 'bx-x-circle');
   
-  const uploadMessage = document.getElementById('uploadMessage');
-  uploadMessage.innerHTML = `
+  document.getElementById('uploadMessage').innerHTML = `
     <div class="alert ${alertClass}">
       <i class='bx ${icon}'></i>
       <div>${message}</div>
@@ -274,60 +197,38 @@ function showMessage(message, type) {
 
 /* ==================== EVENT LISTENERS ==================== */
 
-// Initialize event listeners when DOM is ready
 document.addEventListener('DOMContentLoaded', function() {
   // File upload area events
   const fileUploadArea = document.getElementById('fileUploadArea');
   const fileInput = document.getElementById('excelFileInput');
   
   if (fileUploadArea && fileInput) {
-    fileUploadArea.addEventListener('click', function() {
-      fileInput.click();
-    });
-
-    fileUploadArea.addEventListener('dragover', function(e) {
+    fileUploadArea.addEventListener('click', () => fileInput.click());
+    
+    fileUploadArea.addEventListener('dragover', e => {
       e.preventDefault();
       fileUploadArea.classList.add('dragging');
     });
-
-    fileUploadArea.addEventListener('dragleave', function() {
+    
+    fileUploadArea.addEventListener('dragleave', () => {
       fileUploadArea.classList.remove('dragging');
     });
-
-    fileUploadArea.addEventListener('drop', function(e) {
+    
+    fileUploadArea.addEventListener('drop', e => {
       e.preventDefault();
       fileUploadArea.classList.remove('dragging');
-      const files = e.dataTransfer.files;
-      if (files.length > 0) {
-        handleFileUpload(files[0]);
-      }
+      if (e.dataTransfer.files.length > 0) handleFileUpload(e.dataTransfer.files[0]);
     });
-
-    fileInput.addEventListener('change', function() {
-      if (fileInput.files.length > 0) {
-        handleFileUpload(fileInput.files[0]);
-      }
+    
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length > 0) handleFileUpload(fileInput.files[0]);
     });
   }
-  
-  // Close dropdown when clicking outside
-  document.addEventListener('click', function(event) {
-    const yearSelector = document.querySelector('.year-selector-container');
-    const dropdown = document.getElementById('yearDropdown');
-    const icon = document.getElementById('yearDropdownIcon');
-    
-    if (yearSelector && dropdown && icon && !yearSelector.contains(event.target)) {
-      dropdown.classList.remove('active');
-      icon.style.transform = 'rotate(0deg)';
-    }
-  });
 
-  // Close comparison modal when clicking outside
+  // Close comparison modal when clicking backdrop
   document.addEventListener('click', function(event) {
     const modal = document.getElementById('comparisonModal');
-    if (modal && event.target === modal) {
-      closeComparisonModal();
-    }
+    if (modal && event.target === modal) closeComparisonModal();
   });
 
   // Prevent selecting same year in both comparison dropdowns
@@ -336,35 +237,18 @@ document.addEventListener('DOMContentLoaded', function() {
   
   if (compareYear1 && compareYear2) {
     compareYear1.addEventListener('change', function() {
-      const selectedYear = this.value;
-      
-      Array.from(compareYear2.options).forEach(option => {
-        if (option.value === selectedYear && selectedYear !== '') {
-          option.disabled = true;
-          option.style.color = '#ccc';
-        } else {
-          option.disabled = false;
-          option.style.color = '';
-        }
+      Array.from(compareYear2.options).forEach(opt => {
+        opt.disabled = (opt.value === this.value && this.value !== '');
       });
     });
-
     compareYear2.addEventListener('change', function() {
-      const selectedYear = this.value;
-      
-      Array.from(compareYear1.options).forEach(option => {
-        if (option.value === selectedYear && selectedYear !== '') {
-          option.disabled = true;
-          option.style.color = '#ccc';
-        } else {
-          option.disabled = false;
-          option.style.color = '';
-        }
+      Array.from(compareYear1.options).forEach(opt => {
+        opt.disabled = (opt.value === this.value && this.value !== '');
       });
     });
   }
   
-  // Initialize tab persistence
+  // Tab persistence
   if (window.TabPersistence) {
     window.TabPersistence.init({
       tabButtonsSelector: '.tab-button',

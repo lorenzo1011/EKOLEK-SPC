@@ -2,28 +2,17 @@
 Garbage schedule management views
 """
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_exempt
-from django.contrib import messages
-from django.utils import timezone
-from django.db import transaction, IntegrityError
 import logging
+import time
 
-from accounts.models import (
-    Users, Family, Barangay, PointsTransaction, Reward, GarbageSchedule, RewardCategory,
-    WasteType, WasteTransaction, Redemption, Notification, RewardHistory
-)
-from cenro.models import AdminActionHistory
-from game.models import Question, Choice, WasteCategory, WasteItem
-from learn.models import LearningVideo, VideoWatchHistory
+from django.http import JsonResponse
+from django.shortcuts import render
 
-from ..admin_auth import admin_required, role_required, permission_required
+from accounts.models import Barangay, GarbageSchedule, WasteType
+
+from ..admin_auth import admin_required, permission_required
 
 logger = logging.getLogger(__name__)
-
-import time
 
 
 # adminschedule - views for admin schedule
@@ -41,6 +30,8 @@ def adminschedule(request):
     })
 
 
+@admin_required
+@permission_required('can_manage_schedules')
 def add_schedule(request):
     if request.method == 'POST':
         try:
@@ -84,9 +75,7 @@ def add_schedule(request):
                 })
             except Exception as notif_error:
                 logger.error(f"Notification error: {str(notif_error)}")
-                import traceback
-                traceback.print_exc()
-                logger.error(f"Failed to send schedule notification: {str(notif_error)}")
+                logger.error("Failed to send schedule notification", exc_info=True)
                 # Still return success for schedule creation even if notification fails
                 return JsonResponse({
                     'success': True, 
@@ -103,6 +92,8 @@ def add_schedule(request):
     return JsonResponse({'success': False})
 
 
+@admin_required
+@permission_required('can_manage_schedules')
 def edit_schedule(request):
     if request.method == 'POST':
         try:
@@ -148,6 +139,8 @@ def edit_schedule(request):
     return JsonResponse({'success': False})
 
 
+@admin_required
+@permission_required('can_manage_schedules')
 def delete_schedule(request):
     if request.method == 'POST':
         try:

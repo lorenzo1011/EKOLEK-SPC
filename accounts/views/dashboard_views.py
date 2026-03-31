@@ -1,21 +1,23 @@
 """
-Dashboard and notification views
+Dashboard and notification views.
 """
 
-from django.shortcuts import render
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse, HttpResponse
-from django.utils import timezone
-from django.db.models import Sum
-from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
-from datetime import datetime, timedelta
-import qrcode
-from io import BytesIO
 import base64
+import logging
+from datetime import datetime, timedelta
+from io import BytesIO
 
-from accounts.models import Users, Family, Notification, Reward, GarbageSchedule
+import qrcode
+from django.contrib.auth.decorators import login_required
+from django.db.models import Sum
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import render
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 
-logger = __import__('logging').getLogger(__name__)
+from accounts.models import Family, GarbageSchedule, Notification, Reward, Users
+
+logger = logging.getLogger(__name__)
 
 
 def home(request):

@@ -1,20 +1,28 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.permissions import IsAuthenticated
-from django.http import HttpResponse, JsonResponse
-from django.db import transaction
-from django.views.decorators.http import require_http_methods
-from cenro.admin_auth import admin_required
+# Standard library
+import logging
+from io import BytesIO
+
+# Third-party
 import pandas as pd
 from openpyxl import Workbook
-from openpyxl.styles import Font, PatternFill, Alignment
-from io import BytesIO
-from .models import Question, GameSession, WasteCategory, WasteItem, Choice
-from .serializers import QuestionSerializer
-from accounts.models import Users  
-import logging
+from openpyxl.styles import Alignment, Font, PatternFill
+
+# Django
+from django.db import transaction
+from django.db.models import Avg, Count, Max, Sum
+from django.http import HttpResponse, JsonResponse
+from django.views.decorators.http import require_http_methods
+
+# Django REST Framework
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
+# Local apps
+from accounts.models import Notification, Users
+from cenro.admin_auth import admin_required
+from .models import Choice, GameSession, Question, UserGameCooldown, WasteCategory, WasteItem
 
 logger = logging.getLogger(__name__)
 
@@ -218,13 +226,10 @@ def save_game_session(request):
             logger.debug(f"Added {points_earned} points for {game_type}. New total: {user.total_points}")
             
             # Update cooldown tracking for this game type
-            from .models import UserGameCooldown
             UserGameCooldown.update_or_create_cooldown(user, game_type)
             
             # Create notification for game completion (only if points were earned)
             if points_earned > 0:
-                from accounts.models import Notification
-                
                 # Use game_type to generate appropriate notification message
                 notification_templates = {
                     'quiz': f'You earned {points_earned} points from playing the quiz game!',
@@ -273,8 +278,6 @@ def get_game_leaderboard(request):
         auth_header = request.META.get('HTTP_AUTHORIZATION', 'Not provided')
         logger.debug(f"Auth header in game leaderboard: {auth_header}")
         logger.debug(f"User authenticated: {request.user.is_authenticated}, User: {request.user}")
-        
-        from django.db.models import Sum, Count, Avg, Max
         
         # Aggregate all sessions by user to get total scores
         user_stats = GameSession.objects.select_related('user', 'user__family').values(

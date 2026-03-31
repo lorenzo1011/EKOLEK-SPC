@@ -1,30 +1,36 @@
-from django.shortcuts import render, get_object_or_404
-from django.http import JsonResponse, HttpResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_http_methods
-from django.core.serializers import serialize
-from django.utils import timezone
+# Standard library
+import json
+import logging
+from io import BytesIO
+
+# Third-party
+import pandas as pd
+from openpyxl import Workbook
+from openpyxl.styles import Alignment, Font, PatternFill
+
+# Django
 from django.db import transaction
 from django.db.models import Max
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from django.views.decorators.http import require_http_methods
+
+# Django REST Framework
+from rest_framework import status
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework import status
-import json
-import pandas as pd
-import logging
-from openpyxl import Workbook
-from openpyxl.styles import Font, PatternFill, Alignment
-from io import BytesIO
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
+# Local apps
+from accounts.models import Notification, PointsTransaction
 from cenro.admin_auth import admin_required
-from .models import LearningVideo, VideoWatchHistory, QuizQuestion, QuizResult, QuizAnswer
+from .models import LearningVideo, QuizAnswer, QuizQuestion, QuizResult, VideoWatchHistory
 from .serializers import (
-    LearningVideoSerializer, QuizQuestionSerializer, QuizSubmissionSerializer, 
-    QuizResultSerializer, QuizAnswerInputSerializer
+    LearningVideoSerializer, QuizQuestionSerializer, QuizResultSerializer,
+    QuizSubmissionSerializer,
 )
-from accounts.models import PointsTransaction
 
 logger = logging.getLogger(__name__)
 
@@ -128,7 +134,6 @@ def mark_video_as_watched(request):
             )
             
             # Create notification for learning video completion
-            from accounts.models import Notification
             Notification.objects.create(
                 user=request.user,
                 type='learning',
@@ -397,7 +402,6 @@ def submit_quiz_answers(request, video_id):
                 )
                 
                 # Create notification
-                from accounts.models import Notification
                 Notification.objects.create(
                     user=request.user,
                     type='quiz',
@@ -481,7 +485,6 @@ def mark_video_watched(request, video_id):
             )
             
             # Create notification
-            from accounts.models import Notification
             Notification.objects.create(
                 user=request.user,
                 type='learning',

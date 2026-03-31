@@ -3,9 +3,11 @@ JWT utility functions for EkoScan Admin Authentication
 Provides custom JWT token generation and validation for AdminUser model
 """
 import logging
-from rest_framework_simplejwt.tokens import RefreshToken
+
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+from rest_framework_simplejwt.tokens import RefreshToken
+
 from cenro.models import AdminUser
 
 logger = logging.getLogger(__name__)

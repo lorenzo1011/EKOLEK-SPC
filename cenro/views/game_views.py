@@ -2,31 +2,20 @@
 Game and quiz management views
 """
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST, require_http_methods
-from django.views.decorators.csrf import csrf_exempt
-from django.contrib import messages
-from django.utils import timezone
-from django.db import transaction, IntegrityError
-from rest_framework.decorators import permission_classes, authentication_classes, api_view
-from rest_framework.permissions import AllowAny
+import json
 import logging
+import time
 
-from accounts.models import (
-    Users, Family, Barangay, PointsTransaction, Reward, GarbageSchedule, RewardCategory,
-    WasteType, WasteTransaction, Redemption, Notification, RewardHistory
-)
-from cenro.models import AdminActionHistory, AdminUser
-from game.models import Question, Choice, WasteCategory, WasteItem, GameConfiguration
-from learn.models import LearningVideo, VideoWatchHistory
+from django.http import JsonResponse
+from django.shortcuts import render
+from django.views.decorators.http import require_http_methods
 
-from ..admin_auth import admin_required, role_required, permission_required
+from cenro.models import AdminUser
+from game.models import Choice, GameConfiguration, Question, WasteCategory, WasteItem
+
+from ..admin_auth import admin_required, permission_required
 
 logger = logging.getLogger(__name__)
-
-import json
-import time
 
 
 @admin_required
@@ -81,6 +70,8 @@ def adminquiz(request):
     return render(request, 'adminquiz.html', {'questions': questions, 'timestamp': int(time.time()),})
 
 
+@admin_required
+@permission_required('can_manage_games')
 def add_question(request):
     if request.method == 'POST':
         from decimal import Decimal
@@ -107,6 +98,8 @@ def add_question(request):
     return JsonResponse({'success': False})
 
 
+@admin_required
+@permission_required('can_manage_games')
 def delete_question(request, question_id):
     if request.method == 'DELETE':
         try:
@@ -122,6 +115,8 @@ def delete_question(request, question_id):
 
 
 # Category management views
+@admin_required
+@permission_required('can_manage_games')
 def add_category(request):
     if request.method == 'POST':
         name = request.POST.get('name')
@@ -143,6 +138,8 @@ def add_category(request):
     return JsonResponse({'success': False})
 
 
+@admin_required
+@permission_required('can_manage_games')
 def delete_category(request, category_id):
     if request.method == 'DELETE':
         try:
@@ -158,6 +155,8 @@ def delete_category(request, category_id):
 
 
 # Item management views
+@admin_required
+@permission_required('can_manage_games')
 def add_item(request):
     if request.method == 'POST':
         from decimal import Decimal
@@ -188,6 +187,8 @@ def add_item(request):
     return JsonResponse({'success': False})
 
 
+@admin_required
+@permission_required('can_manage_games')
 def delete_item(request, item_id):
     if request.method == 'DELETE':
         try:
@@ -201,6 +202,8 @@ def delete_item(request, item_id):
 
 
 # Game Configuration Management
+@admin_required
+@permission_required('can_manage_games')
 @require_http_methods(["POST"])
 def update_game_cooldown(request):
     """Update game cooldown configuration"""

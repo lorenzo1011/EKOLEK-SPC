@@ -60,16 +60,16 @@ document.addEventListener('DOMContentLoaded', function() {
                     testImg.src = thumbnailUrl;
                     
                     if (preview) {
-                        preview.innerHTML = `✅ Valid YouTube Video - ID: ${videoId}`;
+                        preview.innerHTML = `<i class='bx bx-check-circle'></i> Valid YouTube Video — ID: ${videoId}`;
                         preview.style.display = 'block';
-                        preview.style.color = '#047857';
+                        preview.className = 'lv-url-preview valid';
                     }
                 } else {
                     if (thumbnail) thumbnail.style.display = 'none';
                     if (preview) {
-                        preview.innerHTML = '❌ Invalid YouTube URL - Please use a valid YouTube link';
+                        preview.innerHTML = `<i class='bx bx-error-circle'></i> Invalid YouTube URL — Please use a valid YouTube link`;
                         preview.style.display = 'block';
-                        preview.style.color = '#dc2626';
+                        preview.className = 'lv-url-preview invalid';
                     }
                     // Clear thumbnail URL field if URL is invalid
                     if (thumbnailUrlField) thumbnailUrlField.value = '';
@@ -259,10 +259,14 @@ function editVideo(id, title, description, video_url, thumbnail_url, points, isA
     }
     
     // Scroll to form
-    const form = document.querySelector('.video-form');
+    const form = document.querySelector('.lv-card');
     if (form) {
         form.scrollIntoView({ behavior: 'smooth' });
     }
+
+    // Update form heading
+    const heading = document.getElementById('formHeading');
+    if (heading) heading.textContent = 'Edit Learning Video';
 }
 
 function cancelEdit() {
@@ -318,7 +322,12 @@ function cancelEdit() {
         const urlPreview = document.getElementById('urlPreview');
         if (urlPreview) {
             urlPreview.style.display = 'none';
+            urlPreview.className = 'lv-url-preview';
         }
+
+        // Reset form heading
+        const heading = document.getElementById('formHeading');
+        if (heading) heading.textContent = 'Add New Learning Video';
         
         console.log('Cancel edit completed successfully');
         

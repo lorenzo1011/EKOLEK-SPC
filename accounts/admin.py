@@ -1,8 +1,10 @@
-from django.contrib import admin
-from .models import Barangay, Users, PointsTransaction, Reward, Redemption, GarbageSchedule, Family, LoginAttempt
-from django.utils.html import format_html
-from django.utils import timezone
 from datetime import timedelta
+
+from django.contrib import admin
+from django.utils import timezone
+from django.utils.html import format_html
+
+from .models import Barangay, Users, PointsTransaction, Reward, Redemption, GarbageSchedule, Family, LoginAttempt
 
 @admin.register(Barangay)
 class BarangayAdmin(admin.ModelAdmin):

@@ -27,12 +27,12 @@ class SendGridBackend(BaseEmailBackend):
         self.api_key = getattr(settings, 'SENDGRID_API_KEY', None)
         
         if not self.api_key:
-            logger.error("❌ SENDGRID_API_KEY not found in settings!")
+            logger.error("SENDGRID_API_KEY not found in settings!")
             if not fail_silently:
                 raise ValueError("SENDGRID_API_KEY must be set in settings")
         
         self.client = SendGridAPIClient(self.api_key)
-        logger.info("✅ SendGrid HTTP API backend initialized")
+        logger.info("SendGrid HTTP API backend initialized")
     
     def send_messages(self, email_messages):
         """
@@ -55,7 +55,7 @@ class SendGridBackend(BaseEmailBackend):
                 if sent:
                     success_count += 1
             except Exception as e:
-                logger.error(f"❌ Failed to send email via SendGrid: {str(e)}")
+                logger.error(f"Failed to send email via SendGrid: {str(e)}")
                 if not self.fail_silently:
                     raise
         
@@ -80,7 +80,7 @@ class SendGridBackend(BaseEmailBackend):
             # Get recipients
             to_emails = message.to
             if not to_emails:
-                logger.warning("⚠️ No recipients specified")
+                logger.warning("No recipients specified")
                 return False
             
             # Get subject
@@ -110,19 +110,10 @@ class SendGridBackend(BaseEmailBackend):
                     # Add HTML content if available
                     if html_content:
                         mail.add_content(Content("text/html", html_content))
-                        
-                        # DEBUG: Check for image tags in HTML
-                        import re
-                        img_tags = re.findall(r'<img[^>]+src=["\']([^"\']+)["\'][^>]*>', html_content)
-                        if img_tags:
-                            print(f"\n🖼️ IMAGE TAGS FOUND IN EMAIL HTML:")
-                            for i, img_url in enumerate(img_tags, 1):
-                                print(f"  {i}. {img_url}")
-                            print()
+
                     
                     # Handle inline attachments (for cid: references)
                     if hasattr(message, 'attachments') and message.attachments:
-                        print(f"\n📎 PROCESSING {len(message.attachments)} ATTACHMENTS...")
                         for attachment in message.attachments:
                             try:
                                 # Check if it's a MIMEImage or tuple
@@ -155,52 +146,24 @@ class SendGridBackend(BaseEmailBackend):
                                     
                                     mail.add_attachment(sg_attachment)
                                     
-                                    print(f"  ✅ Attached: inline CID: {content_id}, {len(file_data)} bytes")
                                     logger.info(f"Inline attachment: CID={content_id}")
                                     
                             except Exception as e:
-                                print(f"  ⚠️ Failed to process attachment: {str(e)}")
                                 logger.warning(f"Failed to process attachment: {str(e)}")
                     
                     # Send via HTTP API
-                    logger.info(f"📧 Sending email via SendGrid HTTP API to: {to_email}")
-                    print(f"\n{'='*80}")
-                    print(f"[SENDGRID API] Sending to: {to_email}")
-                    print(f"[SENDGRID API] From: {from_email}")
-                    print(f"[SENDGRID API] Subject: {subject}")
-                    print(f"{'='*80}\n")
+                    logger.info(f"Sending email via SendGrid HTTP API to: {to_email}")
                     
                     response = self.client.send(mail)
                     
                     if response.status_code in [200, 201, 202]:
-                        logger.info(f"✅ Email sent successfully to {to_email} | Status: {response.status_code}")
-                        print(f"\n{'='*80}")
-                        print(f"[SENDGRID API] ✅ SUCCESS!")
-                        print(f"[SENDGRID API] Status Code: {response.status_code}")
-                        print(f"[SENDGRID API] Message ID: {response.headers.get('X-Message-Id', 'N/A')}")
-                        print(f"{'='*80}\n")
+                        logger.info(f"Email sent successfully to {to_email} | Status: {response.status_code}")
                     else:
-                        logger.error(f"❌ SendGrid returned status {response.status_code}")
-                        print(f"\n{'='*80}")
-                        print(f"[SENDGRID API] ❌ FAILED!")
-                        print(f"[SENDGRID API] Status Code: {response.status_code}")
-                        print(f"[SENDGRID API] Response: {response.body}")
-                        print(f"{'='*80}\n")
+                        logger.error(f"SendGrid returned status {response.status_code}")
                         return False
                 
                 except Exception as e:
-                    logger.error(f"❌ Failed to send to {to_email}: {str(e)}")
-                    print(f"\n{'='*80}")
-                    print(f"[SENDGRID API] ❌ EXCEPTION!")
-                    print(f"[SENDGRID API] Error: {type(e).__name__}: {str(e)}")
-                    
-                    # Log detailed error if available
-                    if hasattr(e, 'body'):
-                        print(f"[SENDGRID API] Error Body: {e.body}")
-                    if hasattr(e, 'to_dict'):
-                        print(f"[SENDGRID API] Error Details: {e.to_dict}")
-                    
-                    print(f"{'='*80}\n")
+                    logger.error(f"Failed to send to {to_email}: {str(e)}")
                     
                     if not self.fail_silently:
                         raise
@@ -209,7 +172,7 @@ class SendGridBackend(BaseEmailBackend):
             return True
         
         except Exception as e:
-            logger.error(f"❌ Error in _send: {str(e)}")
+            logger.error(f"Error in _send: {str(e)}")
             if not self.fail_silently:
                 raise
             return False

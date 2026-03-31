@@ -1,0 +1,25 @@
+<!-- Unified Navbar -->
+<nav>
+  <i class='bx bx-menu'></i>
+
+  {% if is_admin_authenticated %}
+  <div class="profile" style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
+    <!-- Admin Notification Bell -->
+    {% include 'includes/notification_bell.html' %}
+    
+    <div class="admin-info" style="text-align: right; margin-right: 10px;">
+      <span style="display: block; font-weight: 600; color: #333;">{{ admin_full_name }}</span>
+      <span style="display: block; font-size: 0.8rem; color: #666;">{{ admin_role_display }}</span>
+    </div>
+    <i class='bx bxs-user-circle' style="font-size: 2rem; color: #667eea;"></i>
+  </div>
+  {% else %}
+  <div class="profile" style="margin-left: auto;">
+    <a href="{% url 'cenro:admin_login' %}" style="color: #667eea; text-decoration: none;">
+      <i class='bx bx-log-in' style="font-size: 1.5rem;"></i>
+      <span>Login</span>
+    </a>
+  </div>
+  {% endif %}
+</nav>
+<!-- END NAVBAR -->

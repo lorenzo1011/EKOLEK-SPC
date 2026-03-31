@@ -1,11 +1,12 @@
 """
-Validation API views for registration
+Validation API views for registration.
 """
 
-from django.http import JsonResponse
 import re
 
-from accounts.models import Users, Family
+from django.http import JsonResponse
+
+from accounts.models import Family, Users
 
 
 def check_phone_availability(request):

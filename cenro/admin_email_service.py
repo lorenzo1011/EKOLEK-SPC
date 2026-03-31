@@ -33,14 +33,14 @@ def send_email_async(subject, html_message, recipient_email):
                 html_message=html_message,
                 fail_silently=False
             )
-            logger.info(f"✅ Admin email sent successfully to {recipient_email}")
+            logger.info(f"Admin email sent successfully to {recipient_email}")
         except Exception as e:
-            logger.error(f"❌ Failed to send admin email to {recipient_email}: {str(e)}")
+            logger.error(f"Failed to send admin email to {recipient_email}: {str(e)}")
     
     # Start email sending in background thread
     thread = threading.Thread(target=send, daemon=True)
     thread.start()
-    logger.info(f"📧 Admin email queued for sending to {recipient_email}")
+    logger.info(f"Admin email queued for sending to {recipient_email}")
 
 
 def send_credentials_email(admin_user, temporary_password, created_by_admin):
@@ -147,7 +147,7 @@ def send_credentials_email(admin_user, temporary_password, created_by_admin):
         return True
         
     except Exception as e:
-        logger.error(f"❌ Failed to send credentials email to {admin_user.email}: {str(e)}")
+        logger.error(f"Failed to send credentials email to {admin_user.email}: {str(e)}")
         return False
 
 
@@ -220,7 +220,7 @@ def send_suspension_email(admin_user, suspended_by_admin, reason):
         return True
         
     except Exception as e:
-        logger.error(f"❌ Failed to send suspension email to {admin_user.email}: {str(e)}")
+        logger.error(f"Failed to send suspension email to {admin_user.email}: {str(e)}")
         return False
 
 
@@ -235,7 +235,6 @@ def send_lock_notification_email(admin_user):
         bool: True if email was sent successfully
     """
     try:
-        from django.utils import timezone
         lock_until = admin_user.account_locked_until
         
         subject = f'🔒 E-KOLEK Admin Account Locked'
@@ -300,7 +299,7 @@ def send_lock_notification_email(admin_user):
         return True
         
     except Exception as e:
-        logger.error(f"❌ Failed to send lock notification email to {admin_user.email}: {str(e)}")
+        logger.error(f"Failed to send lock notification email to {admin_user.email}: {str(e)}")
         return False
 
 
@@ -377,7 +376,7 @@ def send_reactivation_email(admin_user, reactivated_by_admin):
         return True
         
     except Exception as e:
-        logger.error(f"❌ Failed to send reactivation email to {admin_user.email}: {str(e)}")
+        logger.error(f"Failed to send reactivation email to {admin_user.email}: {str(e)}")
         return False
 
 
@@ -447,7 +446,7 @@ def send_unlock_notification_email(admin_user, unlocked_by_admin):
         return True
         
     except Exception as e:
-        logger.error(f"❌ Failed to send unlock notification email to {admin_user.email}: {str(e)}")
+        logger.error(f"Failed to send unlock notification email to {admin_user.email}: {str(e)}")
         return False
 
 
@@ -557,9 +556,9 @@ def send_password_reset_email(admin_user, temporary_password, reset_by_admin, re
         """
         
         send_email_async(subject, html_message, admin_user.email)
-        logger.info(f"📧 Password reset email sent to {admin_user.email}")
+        logger.info(f"Password reset email sent to {admin_user.email}")
         return True
         
     except Exception as e:
-        logger.error(f"❌ Failed to send password reset email to {admin_user.email}: {str(e)}")
+        logger.error(f"Failed to send password reset email to {admin_user.email}: {str(e)}")
         return False

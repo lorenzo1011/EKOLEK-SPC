@@ -1,131 +1,101 @@
 /**
- * Admin Login Page JavaScript
- * Handles message deduplication, auto-dismissal, and form submission states
+ * E-KOLEK Admin Login v2.1
+ * Alert cleanup, form handling, password toggle, micro-interactions
  */
 
-/**
- * Remove duplicate admin management messages and handle message cleanup
- */
-document.addEventListener('DOMContentLoaded', function() {
-  removeDuplicateMessages();
-  initLoginForm();
-  autoDismissMessages();
+document.addEventListener('DOMContentLoaded', () => {
+  cleanupAlerts();
+  initForm();
+  initPasswordToggle();
+  initInputFocus();
 });
 
-/**
- * Auto-dismiss messages after they're shown once
- * This prevents confusion where old messages persist on page refresh
- */
-function autoDismissMessages() {
-  const alerts = document.querySelectorAll('.alert');
-  
-  alerts.forEach((alert) => {
-    // Auto-remove after 5 seconds to prevent confusion on refresh
+/* ──── Alert cleanup & auto-dismiss ──── */
+function cleanupAlerts() {
+  const seen = new Set();
+  const adminKeywords = [
+    'Admin account "', 'created successfully', 'Password reset email sent',
+    'has been unlocked', 'has been reactivated', 'Updated barangay',
+    'barangay assignments for', 'now has access to all barangays',
+    'Barangay assignments updated', 'Family verified', 'User approved',
+    'User rejected', 'Schedule notification', 'Reward has been',
+    'Content has been', 'Quiz has been', 'Notification sent to'
+  ];
+
+  document.querySelectorAll('.alert').forEach((el, i) => {
+    const text = (el.textContent || '').trim();
+
+    if (seen.has(text)) { el.remove(); return; }
+    seen.add(text);
+
+    if (adminKeywords.some(kw => text.includes(kw))) { el.remove(); return; }
+
+    // Stagger entrance animation
+    el.style.animationDelay = `${i * 0.08}s`;
+
+    // Auto-dismiss after 6s (staggered)
     setTimeout(() => {
-      alert.style.opacity = '0';
-      alert.style.transition = 'opacity 0.5s ease-out';
-      setTimeout(() => alert.remove(), 500);
-    }, 5000);
+      el.style.transition = 'opacity 0.4s ease, transform 0.4s ease, max-height 0.3s ease 0.2s';
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(-8px) scale(0.98)';
+      el.style.maxHeight = '0';
+      el.style.overflow = 'hidden';
+      el.style.marginBottom = '0';
+      el.style.padding = '0';
+      setTimeout(() => el.remove(), 500);
+    }, 6000 + i * 300);
   });
 }
 
-/**
- * Remove duplicate alert messages and admin management messages
- */
-function removeDuplicateMessages() {
-  const alerts = document.querySelectorAll('.alert');
-  const seenMessages = new Set();
-  
-  alerts.forEach((alert) => {
-    const messageText = (alert.textContent || alert.innerText).trim();
-    
-    // Remove duplicate messages
-    if (seenMessages.has(messageText)) {
-      alert.remove();
-      return;
-    }
-    seenMessages.add(messageText);
-    
-    // Remove messages that are admin management related (not login-specific)
-    // These should never appear on the login page
-    const adminPanelKeywords = [
-      'Admin account "',              // "Admin account 'X' has been created/unlocked"
-      'created successfully',          // Account creation success
-      'Password reset email sent',     // Admin panel password reset action
-      'has been unlocked',            // Admin unlocking another admin
-      'has been reactivated',         // Admin reactivating another admin  
-      'Updated barangay',             // Barangay assignment changes
-      'barangay assignments for',     // Specific barangay assignment messages
-      'now has access to all barangays', // Barangay access message
-      'Barangay assignments updated',  // Generic barangay update
-      'Family verified',              // Family verification action
-      'User approved',                // User approval action
-      'User rejected',                // User rejection action
-      'Schedule notification',        // Schedule-related admin actions
-      'Reward has been',              // Reward management actions
-      'Content has been',             // Content management actions
-      'Quiz has been',                // Quiz management actions
-      'Notification sent to'          // Manual notification sending
-    ];
-    
-    const isAdminPanelMessage = adminPanelKeywords.some(keyword => 
-      messageText.includes(keyword)
-    );
-    
-    if (isAdminPanelMessage) {
-      alert.remove();
-      return;
-    }
-  });
-}
-
-/**
- * Initialize login form submission handling
- */
-function initLoginForm() {
+/* ──── Form submission with loading state ──── */
+function initForm() {
   const form = document.getElementById('loginForm');
   if (!form) return;
 
-  form.addEventListener('submit', function() {
+  form.addEventListener('submit', () => {
     const btn = document.getElementById('loginBtn');
-    const btnText = btn.querySelector('.btn-text');
-    const loading = btn.querySelector('.loading');
-    
-    if (btnText && loading) {
-      btnText.classList.add('hidden');
-      loading.classList.add('active');
+    if (btn) {
+      btn.classList.add('is-loading');
+      btn.disabled = true;
     }
-    
-    btn.disabled = true;
   });
-  
-  // Initialize password toggle
-  initPasswordToggle();
 }
 
-/**
- * Initialize password visibility toggle
- */
+/* ──── Password visibility toggle ──── */
 function initPasswordToggle() {
-  const passwordToggle = document.getElementById('passwordToggle');
-  const passwordInput = document.getElementById('password');
-  const toggleIcon = document.getElementById('toggleIcon');
-  
-  if (!passwordToggle || !passwordInput || !toggleIcon) return;
-  
-  passwordToggle.addEventListener('click', function() {
-    const isPassword = passwordInput.type === 'password';
-    
-    // Toggle input type
-    passwordInput.type = isPassword ? 'text' : 'password';
-    
-    // Toggle icon
-    toggleIcon.classList.remove(isPassword ? 'bx-show' : 'bx-hide');
-    toggleIcon.classList.add(isPassword ? 'bx-hide' : 'bx-show');
-    
-    // Update aria-label for accessibility
-    passwordToggle.setAttribute('aria-label', 
-      isPassword ? 'Hide password' : 'Show password'
+  const toggle = document.getElementById('passwordToggle');
+  const input  = document.getElementById('password');
+  const icon   = document.getElementById('toggleIcon');
+
+  if (!toggle || !input || !icon) return;
+
+  toggle.addEventListener('click', () => {
+    const show = input.type === 'password';
+    input.type = show ? 'text' : 'password';
+    icon.classList.replace(
+      show ? 'bx-show' : 'bx-hide',
+      show ? 'bx-hide' : 'bx-show'
     );
+    toggle.setAttribute('aria-label',
+      show ? 'Hide password' : 'Show password'
+    );
+
+    // Subtle bounce on toggle
+    toggle.style.transform = 'scale(0.85)';
+    requestAnimationFrame(() => {
+      toggle.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+      toggle.style.transform = 'scale(1)';
+    });
+  });
+}
+
+/* ──── Input focus ripple & filled state ──── */
+function initInputFocus() {
+  document.querySelectorAll('.form-input').forEach(input => {
+    // Add filled class for styling when input has value
+    const check = () => input.classList.toggle('is-filled', input.value.length > 0);
+    input.addEventListener('input', check);
+    input.addEventListener('change', check);
+    check(); // initial state
   });
 }

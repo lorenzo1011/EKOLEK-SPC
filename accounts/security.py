@@ -1,19 +1,18 @@
 """
-Enhanced login security features for E-KOLEK
+Enhanced login security features for E-KOLEK.
 """
 
+import hashlib
 import logging
 from datetime import datetime, timedelta
-from django.core.cache import cache
+
+from django.conf import settings
 from django.contrib.auth.signals import user_logged_in, user_login_failed
+from django.core.cache import cache
 from django.dispatch import receiver
 from django.utils import timezone
-from django.db import models
-from django.conf import settings
-import hashlib
-import json
-from eko.security_utils import get_client_ip, log_security_event
 
+from eko.security_utils import get_client_ip, log_security_event
 
 logger = logging.getLogger(__name__)
 

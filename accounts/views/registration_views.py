@@ -1,17 +1,17 @@
 """
-User registration views (family and member registration)
+User registration views (family and member registration).
 """
 
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.conf import settings
-from datetime import date
 import logging
+from datetime import date
 
-from accounts.models import Barangay, Users
+from django.conf import settings
+from django.contrib import messages
+from django.shortcuts import redirect, render
+
+from accounts.forms import FamilyMemberRegistrationForm, FamilyRegistrationForm
+from accounts.models import Barangay, UserConsent, Users
 from cenro.models import TermsAndConditions
-from accounts.models import UserConsent
-from accounts.forms import FamilyRegistrationForm, FamilyMemberRegistrationForm
 
 logger = logging.getLogger(__name__)
 

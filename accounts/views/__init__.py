@@ -63,7 +63,6 @@ __all__ = [
     'logout_view',
     'code_login',
     'qr_login',
-    'clear_registration_session',
     
     # Registration
     'register',

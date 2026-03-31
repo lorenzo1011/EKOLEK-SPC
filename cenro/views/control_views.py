@@ -2,25 +2,19 @@
 Control management views (waste types, barangays, reward categories)
 """
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_exempt
-from django.contrib import messages
-from django.utils import timezone
-from django.db import transaction, IntegrityError
 import logging
 import time
 
-from accounts.models import (
-    Users, Family, Barangay, PointsTransaction, Reward, GarbageSchedule, RewardCategory,
-    WasteType, WasteTransaction, Redemption, Notification, RewardHistory
-)
-from cenro.models import AdminActionHistory, TermsAndConditions
-from game.models import Question, Choice, WasteCategory, WasteItem
-from learn.models import LearningVideo, VideoWatchHistory
+from django.contrib import messages
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 
-from ..admin_auth import admin_required, role_required, permission_required
+from accounts.models import Barangay, RewardCategory, WasteType
+from cenro.models import TermsAndConditions
+
+from ..admin_auth import admin_required, permission_required
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +40,8 @@ def admincontrol(request):
 # adminpints - views for admin points
 
 
+@admin_required
+@permission_required('can_manage_controls')
 @require_POST
 def add_waste_type(request):
     from django.db import IntegrityError
@@ -61,6 +57,8 @@ def add_waste_type(request):
     return redirect('cenro:admincontrol')
 
 
+@admin_required
+@permission_required('can_manage_controls')
 @require_POST
 def edit_waste_type(request, waste_id):
     from django.db import IntegrityError
@@ -79,6 +77,8 @@ def edit_waste_type(request, waste_id):
     return redirect('cenro:admincontrol')
 
 
+@admin_required
+@permission_required('can_manage_controls')
 @require_POST
 def delete_waste_type(request, waste_id):
     waste = get_object_or_404(WasteType, id=waste_id)
@@ -86,6 +86,8 @@ def delete_waste_type(request, waste_id):
     return redirect('cenro:admincontrol')
 
 
+@admin_required
+@permission_required('can_manage_controls')
 @require_POST
 def add_barangay(request):
     from django.db import IntegrityError
@@ -100,6 +102,8 @@ def add_barangay(request):
     return redirect('cenro:admincontrol')
 
 
+@admin_required
+@permission_required('can_manage_controls')
 @require_POST
 def edit_barangay(request, barangay_id):
     from django.db import IntegrityError
@@ -116,6 +120,8 @@ def edit_barangay(request, barangay_id):
     return redirect('cenro:admincontrol')
 
 
+@admin_required
+@permission_required('can_manage_controls')
 @require_POST
 def delete_barangay(request, barangay_id):
     barangay = get_object_or_404(Barangay, id=barangay_id)
@@ -123,6 +129,8 @@ def delete_barangay(request, barangay_id):
     return redirect('cenro:admincontrol')
 
 
+@admin_required
+@permission_required('can_manage_controls')
 def add_reward_category(request):
     from django.db import IntegrityError
     from django.contrib import messages
@@ -138,6 +146,8 @@ def add_reward_category(request):
 
 
 # Edit Reward Category View
+@admin_required
+@permission_required('can_manage_controls')
 @require_POST
 def edit_reward_category(request, category_id):
     from django.db import IntegrityError
@@ -159,6 +169,8 @@ def edit_reward_category(request, category_id):
 # Redeem Reward API
 
 
+@admin_required
+@permission_required('can_manage_controls')
 def delete_reward_category(request, category_id):
     if request.method == "POST":
         RewardCategory.objects.filter(id=category_id).delete()
@@ -169,8 +181,6 @@ def delete_reward_category(request, category_id):
 # TERMS AND CONDITIONS MANAGEMENT
 # ========================================
 
-@admin_required
-@permission_required('can_manage_controls')
 @admin_required
 @permission_required('can_manage_controls')
 @require_POST

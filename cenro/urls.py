@@ -1,4 +1,15 @@
+from django.conf import settings
+from django.conf.urls.static import static
 from django.urls import path
+
+from eko.secure_views import (
+    secure_add_question,
+    secure_get_user_by_family_code,
+    secure_get_user_by_id,
+    secure_save_waste_transaction,
+)
+
+from . import admin_auth, analytics_views
 from .views import (
     # Dashboard views
     dashboard, admin_preview_user_dashboard, get_dashboard_metrics,
@@ -30,16 +41,6 @@ from .views import (
     # Notification views
     get_admin_notifications_unread_count, get_admin_notifications_list,
     mark_admin_notification_read, mark_all_admin_notifications_read,
-)
-from . import admin_auth
-from . import analytics_views
-from django.conf import settings
-from django.conf.urls.static import static
-from eko.secure_views import (
-    secure_save_waste_transaction, 
-    secure_get_user_by_id, 
-    secure_get_user_by_family_code,
-    secure_add_question
 )
 
 app_name = 'cenro'

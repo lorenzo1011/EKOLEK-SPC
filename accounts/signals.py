@@ -1,12 +1,15 @@
 """
-Signal handlers for the accounts app
-Handles automatic notification creation for admin users
+Signal handlers for the accounts app.
+
+Handles automatic notification creation for admin users.
 """
+
+import logging
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+
 from .models import Users
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -16,10 +19,7 @@ def create_admin_notification_on_user_registration(sender, instance, created, **
     """
     Create admin notification when a new user registers (status='pending')
     """
-    logger.warning(f"="*80)
-    logger.warning(f"[SIGNAL] ⚡⚡⚡ POST_SAVE TRIGGERED ⚡⚡⚡")
-    logger.warning(f"[SIGNAL] User: {instance.username} | Created: {created} | Status: {instance.status}")
-    logger.warning(f"="*80)
+    logger.debug(f"[SIGNAL] post_save triggered | User: {instance.username} | Created: {created} | Status: {instance.status}")
     
     # Only trigger for new users with pending status
     if created and instance.status == 'pending':
@@ -31,11 +31,9 @@ def create_admin_notification_on_user_registration(sender, instance, created, **
             # Create notifications for all admins with user management permission
             notifications = AdminNotification.create_new_registration_notification(instance)
             
-            logger.info(f"[SIGNAL] ✅ Created {len(notifications)} admin notifications for user: {instance.username}")
+            logger.info(f"[SIGNAL] Created {len(notifications)} admin notifications for user: {instance.username}")
             
         except Exception as e:
-            logger.error(f"[SIGNAL] ❌ Failed to create admin notification for user {instance.id}: {str(e)}")
-            import traceback
-            logger.error(traceback.format_exc())
+            logger.error(f"[SIGNAL] Failed to create admin notification for user {instance.id}: {str(e)}", exc_info=True)
     else:
-        logger.info(f"[SIGNAL] Skipping notification creation | Created: {created} | Status: {instance.status}")
+        logger.debug(f"[SIGNAL] Skipping notification creation | Created: {created} | Status: {instance.status}")

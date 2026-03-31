@@ -1,20 +1,25 @@
 """
-OAuth-based Google Drive Storage for Django
-This uses personal Google account instead of service account to avoid storage quota issues
+OAuth-based Google Drive Storage for Django.
+
+Uses personal Google account instead of service account to avoid storage quota issues.
 """
-import os
+
 import io
+import logging
 import mimetypes
+import os
 import pickle
+
+from django.conf import settings
+from django.core.files.base import ContentFile
+from django.core.files.storage import Storage
+from django.utils.deconstruct import deconstructible
 from google.auth.transport.requests import Request
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
-from django.core.files.storage import Storage
-from django.core.files.base import ContentFile
-from django.conf import settings
-from django.utils.deconstruct import deconstructible
-import logging
+
+from eko.google_drive_storage import GDRIVE_IMAGE_URL_TEMPLATE
 
 logger = logging.getLogger(__name__)
 
@@ -69,10 +74,9 @@ class GoogleDriveOAuthStorage(Storage):
         return self._service
     
     def _save(self, name, content):
-        """Save file to Google Drive using OAuth"""
+        """Save file to Google Drive using OAuth."""
         try:
             # Extract just the filename from the path (remove reward_images/ prefix)
-            import os
             clean_filename = os.path.basename(name)
             
             # Prepare file metadata
@@ -137,20 +141,17 @@ class GoogleDriveOAuthStorage(Storage):
         try:
             self.service.files().get(fileId=name).execute()
             return True
-        except:
+        except Exception:
             return False
     
     def url(self, name):
-        """Get public URL for full-size image that works with HTML img tags"""
-        # Use Google's content delivery URL which works best for images
-        # Format: https://lh3.googleusercontent.com/d/{file_id}
-        # This works with public files and is optimized for embedding
-        return f"https://lh3.googleusercontent.com/d/{name}"
+        """Get public URL for full-size image that works with HTML img tags."""
+        return GDRIVE_IMAGE_URL_TEMPLATE.format(file_id=name)
     
     def size(self, name):
         """Get file size"""
         try:
             file_info = self.service.files().get(fileId=name, fields='size').execute()
             return int(file_info.get('size', 0))
-        except:
+        except Exception:
             return 0

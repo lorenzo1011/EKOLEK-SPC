@@ -1,13 +1,14 @@
 """
-Smart Email Backend for Railway
-Automatically handles SMTP connection issues with multiple fallback strategies
+Smart Email Backend for Railway.
+
+Automatically handles SMTP connection issues with multiple fallback strategies.
 """
 
 import logging
 import smtplib
 import socket
+
 from django.core.mail.backends.smtp import EmailBackend as DjangoSMTPBackend
-from django.core.mail import EmailMessage
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ class ResilientSMTPBackend(DjangoSMTPBackend):
     def _try_connection(self, host, port, use_ssl, use_tls, timeout=None):
         """Try to connect with specific configuration"""
         try:
-            logger.info(f"🔌 Attempting SMTP connection: {host}:{port} (SSL={use_ssl}, TLS={use_tls})")
+            logger.info(f"Attempting SMTP connection: {host}:{port} (SSL={use_ssl}, TLS={use_tls})")
             
             if use_ssl:
                 # SSL connection (port 465)
@@ -42,11 +43,11 @@ class ResilientSMTPBackend(DjangoSMTPBackend):
             
             # Test connection
             connection.noop()
-            logger.info(f"✅ SMTP connection successful: {host}:{port}")
+            logger.info(f"SMTP connection successful: {host}:{port}")
             return connection
             
         except (socket.error, smtplib.SMTPException, OSError) as e:
-            logger.debug(f"❌ Connection failed: {host}:{port} - {str(e)}")
+            logger.debug(f"Connection failed: {host}:{port} - {str(e)}")
             return None
     
     def open(self):
@@ -87,7 +88,7 @@ class ResilientSMTPBackend(DjangoSMTPBackend):
                 unique_configs.append(config)
         
         # Try each configuration
-        logger.info(f"🔍 Trying {len(unique_configs)} SMTP configurations for {host}")
+        logger.info(f"Trying {len(unique_configs)} SMTP configurations for {host}")
         
         for i, config in enumerate(unique_configs, 1):
             port = config['port']
@@ -101,13 +102,13 @@ class ResilientSMTPBackend(DjangoSMTPBackend):
                 try:
                     if user and password:
                         connection.login(user, password)
-                        logger.info(f"✅ SMTP authentication successful")
+                        logger.info(f"SMTP authentication successful")
                     
                     self.connection = connection
                     
                     # Log successful configuration for admin reference
                     logger.info("="*70)
-                    logger.info("🎉 WORKING SMTP CONFIGURATION FOUND!")
+                    logger.info("WORKING SMTP CONFIGURATION FOUND!")
                     logger.info(f"   Host: {host}")
                     logger.info(f"   Port: {port}")
                     logger.info(f"   SSL: {use_ssl}")
@@ -117,18 +118,18 @@ class ResilientSMTPBackend(DjangoSMTPBackend):
                     return True
                     
                 except smtplib.SMTPAuthenticationError as e:
-                    logger.error(f"❌ SMTP authentication failed: {str(e)}")
+                    logger.error(f"SMTP authentication failed: {str(e)}")
                     connection.quit()
                 except Exception as e:
-                    logger.error(f"❌ SMTP error during auth: {str(e)}")
+                    logger.error(f"SMTP error during auth: {str(e)}")
                     try:
                         connection.quit()
-                    except:
+                    except Exception:
                         pass
         
         # All attempts failed - this shouldn't happen if Railway allows SMTP
         logger.error("="*70)
-        logger.error("❌ ALL SMTP CONNECTION ATTEMPTS FAILED")
+        logger.error("ALL SMTP CONNECTION ATTEMPTS FAILED")
         logger.error(f"   Tried {len(unique_configs)} different configurations")
         logger.error(f"   Host: {host}")
         logger.error("   Ports tried: 2525, 587, 465, 8025, 25")

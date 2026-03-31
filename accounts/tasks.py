@@ -1,7 +1,8 @@
-from celery import shared_task
-from django.core.mail import send_mail
-from django.conf import settings
 import logging
+
+from celery import shared_task
+from django.conf import settings
+from django.core.mail import send_mail
 
 logger = logging.getLogger(__name__)
 
@@ -27,13 +28,7 @@ def send_otp_email_task(self, email, subject, message, html_message):
     try:
         from_email = f"E-KOLEK System <{settings.DEFAULT_FROM_EMAIL}>"
         
-        logger.info(f"📧 [CELERY TASK] Sending OTP email to {email} | Task ID: {self.request.id}")
-        print(f"\n{'='*80}")
-        print(f"[CELERY TASK] Task ID: {self.request.id}")
-        print(f"[CELERY TASK] Email: {email}")
-        print(f"[CELERY TASK] Subject: {subject}")
-        print(f"[CELERY TASK] Sending via: {settings.EMAIL_BACKEND}")
-        print(f"{'='*80}\n")
+        logger.info(f"[CELERY TASK] Sending OTP email to {email} | Task ID: {self.request.id}")
         
         result = send_mail(
             subject=subject,
@@ -44,11 +39,7 @@ def send_otp_email_task(self, email, subject, message, html_message):
             fail_silently=False
         )
         
-        logger.info(f"✅ [CELERY TASK] Email sent successfully to {email} | Task ID: {self.request.id}")
-        print(f"\n{'='*80}")
-        print(f"[CELERY TASK] ✅ SUCCESS!")
-        print(f"[CELERY TASK] send_mail returned: {result}")
-        print(f"{'='*80}\n")
+        logger.info(f"[CELERY TASK] Email sent successfully to {email} | Task ID: {self.request.id}")
         
         return {
             'status': 'success',
@@ -58,17 +49,8 @@ def send_otp_email_task(self, email, subject, message, html_message):
         }
     
     except Exception as exc:
-        logger.error(f"❌ [CELERY TASK] Failed to send email to {email}: {str(exc)} | Task ID: {self.request.id}")
+        logger.error(f"[CELERY TASK] Failed to send email to {email}: {str(exc)} | Task ID: {self.request.id}")
         logger.error(f"   Retry #{self.request.retries + 1}/3")
-        
-        print(f"\n{'='*80}")
-        print(f"[CELERY TASK] ❌ EXCEPTION!")
-        print(f"[CELERY TASK] Error: {type(exc).__name__}: {str(exc)}")
-        print(f"[CELERY TASK] Retry: {self.request.retries + 1}/3")
-        print(f"{'='*80}\n")
-        
-        import traceback
-        print(traceback.format_exc())
         
         # Celery will automatically retry based on configuration above
         raise exc
@@ -77,7 +59,7 @@ def send_otp_email_task(self, email, subject, message, html_message):
 @shared_task(name='accounts.test_celery')
 def test_celery_task(message):
     """Test task to verify Celery is working"""
-    logger.info(f"🎉 Celery is working! Message: {message}")
+    logger.info(f"Celery is working! Message: {message}")
     return f"Task completed: {message}"
 
 
@@ -98,7 +80,7 @@ def send_schedule_notification_email(self, email, subject, message, html_message
     try:
         from_email = f"E-KOLEK System <{settings.DEFAULT_FROM_EMAIL}>"
         
-        logger.info(f"📧 Sending schedule notification to {email} | Task ID: {self.request.id}")
+        logger.info(f"Sending schedule notification to {email} | Task ID: {self.request.id}")
         
         result = send_mail(
             subject=subject,
@@ -109,7 +91,7 @@ def send_schedule_notification_email(self, email, subject, message, html_message
             fail_silently=False
         )
         
-        logger.info(f"✅ Schedule notification sent to {email}")
+        logger.info(f"Schedule notification sent to {email}")
         
         return {
             'status': 'success',
@@ -119,7 +101,7 @@ def send_schedule_notification_email(self, email, subject, message, html_message
         }
     
     except Exception as exc:
-        logger.error(f"❌ Failed to send schedule notification to {email}: {str(exc)}")
+        logger.error(f"Failed to send schedule notification to {email}: {str(exc)}")
         raise exc
 
 
@@ -141,7 +123,7 @@ def send_bulk_schedule_notifications(self, user_emails, schedule_data, action='a
         Dict with success count and failed emails
     """
     try:
-        logger.info(f"📧 Starting bulk schedule notification | Recipients: {len(user_emails)} | Action: {action}")
+        logger.info(f"Starting bulk schedule notification | Recipients: {len(user_emails)} | Action: {action}")
         
         success_count = 0
         failed_emails = []
@@ -329,10 +311,10 @@ E-KOLEK Team
                     html_message=html_message
                 )
                 success_count += 1
-                logger.info(f"✅ Queued notification for {email}")
+                logger.info(f"Queued notification for {email}")
                 
             except Exception as e:
-                logger.error(f"❌ Failed to queue notification for {email}: {str(e)}")
+                logger.error(f"Failed to queue notification for {email}: {str(e)}")
                 failed_emails.append(email)
         
         result = {
@@ -344,10 +326,10 @@ E-KOLEK Team
             'task_id': str(self.request.id)
         }
         
-        logger.info(f"✅ Bulk notification task completed | Success: {success_count}/{len(user_emails)}")
+        logger.info(f"Bulk notification task completed | Success: {success_count}/{len(user_emails)}")
         
         return result
         
     except Exception as exc:
-        logger.error(f"❌ Bulk schedule notification task failed: {str(exc)}")
+        logger.error(f"Bulk schedule notification task failed: {str(exc)}")
         raise exc

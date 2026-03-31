@@ -1,16 +1,18 @@
 """
-Session Encryption Utilities
-Provides encryption/decryption for sensitive session data
-Uses AES-256-GCM for authenticated encryption
+Session Encryption Utilities.
+
+Provides encryption/decryption for sensitive session data.
+Uses AES-256-GCM for authenticated encryption.
 """
+
+import base64
+import hashlib
+import logging
 
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from django.conf import settings
-import base64
-import hashlib
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -187,7 +189,7 @@ def test_encryption():
     >>> from accounts.encryption_utils import test_encryption
     >>> test_encryption()
     """
-    print("🔒 Testing Session Encryption...")
+    print("Testing Session Encryption...")
     
     # Test token encryption
     test_token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.test_payload"
@@ -199,8 +201,8 @@ def test_encryption():
     decrypted = decrypt_token(encrypted)
     print(f"3. Decrypted: {decrypted[:50]}...")
     
-    assert test_token == decrypted, "❌ Encryption/Decryption mismatch!"
-    print("✅ Token encryption: PASSED")
+    assert test_token == decrypted, "Encryption/Decryption mismatch!"
+    print("Token encryption: PASSED")
     
     # Test IP hashing
     test_ip = "192.168.1.100"
@@ -214,8 +216,8 @@ def test_encryption():
     print(f"\n6. Original UA: {test_ua[:50]}...")
     print(f"7. Hashed UA: {hashed_ua[:50]}...")
     
-    print("\n✅ All encryption tests PASSED!")
-    print("🔐 Session encryption is working correctly.")
+    print("\nAll encryption tests PASSED!")
+    print("Session encryption is working correctly.")
     
     return True
 

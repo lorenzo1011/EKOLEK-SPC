@@ -1,10 +1,11 @@
-
-		/* Reward Container - Premium Card Design */
+/* ==========================================
+   Reward Container — Card Design
+   ========================================== */
 .reward-container {
-    background: white;
+    background: #ffffff;
     padding: 28px;
     border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
     margin-top: 24px;
     border: 1px solid #e5e7eb;
 }
@@ -21,7 +22,7 @@
 .reward-container .reward-header h3 {
     color: #111827 !important;
     font-weight: 700;
-    font-size: 1.5rem;
+    font-size: 1.35rem;
     margin: 0;
     letter-spacing: -0.025em;
 }
@@ -29,7 +30,7 @@
 .reward-icons {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
 }
 
 .reward-icons i {
@@ -49,8 +50,8 @@
 .add-reward-btn {
     background: linear-gradient(135deg, #7e22ce 0%, #9333ea 100%);
     color: white;
-    padding: 10px 20px;
-    font-size: 0.9rem;
+    padding: 9px 18px;
+    font-size: 0.82rem;
     font-weight: 600;
     border: none;
     border-radius: 8px;
@@ -60,10 +61,12 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    white-space: nowrap;
+    text-decoration: none;
 }
 
 .add-reward-btn:hover {
-    transform: translateY(-2px);
+    transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(126, 34, 206, 0.3);
     background: linear-gradient(135deg, #6b21a8 0%, #7e22ce 100%);
 }
@@ -72,182 +75,299 @@
     transform: translateY(0);
 }
 
-/* Table Wrapper with Enhanced Styling */
+/* ==========================================
+   Reward Table — Fixed-height row design
+   ========================================== */
 .reward-table-wrapper {
     overflow-x: auto;
-    background: white;
+    overflow-y: auto;
+    max-height: 540px;
+    background: #ffffff;
     border-radius: 10px;
     border: 1px solid #e5e7eb;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* Custom scrollbar */
+.reward-table-wrapper::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+.reward-table-wrapper::-webkit-scrollbar-track {
+    background: #f9fafb;
+}
+.reward-table-wrapper::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
+}
+.reward-table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
 }
 
 .reward-table {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    background-color: white;
-    font-size: 0.9rem;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 0.875rem;
 }
 
-.reward-table th,
-.reward-table td {
-    padding: 16px 12px;
-    text-align: left;
-    border-bottom: 1px solid #e5e7eb;
-    vertical-align: middle;
-}
+/* Column width distribution */
+.reward-table colgroup .col-id       { width: 50px; }
+.reward-table colgroup .col-name     { width: 14%; }
+.reward-table colgroup .col-category { width: 10%; }
+.reward-table colgroup .col-points   { width: 8%; }
+.reward-table colgroup .col-stock    { width: 7%; }
+.reward-table colgroup .col-location { width: 15%; }
+.reward-table colgroup .col-desc     { width: 26%; }
+.reward-table colgroup .col-image    { width: 70px; }
+.reward-table colgroup .col-actions  { width: 96px; }
 
+/* Header */
 .reward-table thead {
-    background: linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%);
-}
-
-.reward-table th {
-    color: #374151;
-    font-weight: 700;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
     position: sticky;
     top: 0;
     z-index: 10;
-    background: linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%);
-    border-bottom: 2px solid #d1d5db;
 }
 
+.reward-table th {
+    padding: 12px 14px;
+    text-align: left;
+    vertical-align: middle;
+    color: #4b5563;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+/* Rows — fixed 56px height */
 .reward-table tbody tr {
-    transition: all 0.15s ease;
+    height: 56px;
+    transition: background-color 0.12s ease;
 }
 
 .reward-table tbody tr:hover {
-    background-color: #f9fafb;
-    transform: scale(1.001);
+    background-color: #f8f5ff;
 }
 
 .reward-table tbody tr:last-child td {
     border-bottom: none;
 }
 
+/* Cells — consistent height, truncated overflow */
 .reward-table td {
-    color: #1f2937;
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-/* ID Column - Accent Badge Style */
-.reward-table td:nth-child(1) {
-    font-weight: 700;
-    color: #7e22ce;
+    padding: 0 14px;
+    height: 56px;
+    max-height: 56px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f3f4f6;
+    color: #374151;
     font-size: 0.85rem;
+    font-weight: 450;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-/* Name Column - Bold & Prominent */
-.reward-table td:nth-child(2) {
+/* Column-specific styles */
+.reward-table .cell-id {
+    font-weight: 600;
+    color: #6b7280;
+    font-size: 0.8rem;
+    text-align: center;
+}
+
+.reward-table .cell-name {
     font-weight: 600;
     color: #111827;
-    font-size: 0.95rem;
 }
 
-/* Category Column - Badge Style */
-.reward-table td:nth-child(3) {
+.reward-table .cell-category .category-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.78rem;
     font-weight: 600;
+    background: #ecfdf5;
     color: #059669;
+    border: 1px solid #a7f3d0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
 }
 
-/* Points Column - Highlighted */
-.reward-table td:nth-child(4) {
+.reward-table .cell-points {
     font-weight: 700;
-    color: #2563eb;
-    font-size: 0.95rem;
+    color: #7e22ce;
+    font-variant-numeric: tabular-nums;
 }
 
-/* Stock Column - Status Badge */
-.reward-table td:nth-child(5) {
-    font-weight: 700;
-    color: #dc2626;
-}
-
-.reward-url {
-    color: #2563eb;
-    font-size: 0.875rem;
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.reward-url:hover {
-    text-decoration: underline;
-}
-
-.reward-actions {
-    text-align: left;
-    display: flex;
-    gap: 8px;
-}
-
-.reward-actions .reward-action-btn {
-    margin: 0;
-}
-
-.reward-action-btn {
-    background-color: white;
-    border: 1.5px solid #d1d5db;
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 1.1rem;
+.reward-table .cell-stock .stock-value {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 38px;
-    height: 38px;
-    transition: all 0.2s ease;
-    color: #4b5563;
+    min-width: 32px;
+    padding: 2px 10px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.8rem;
+}
+.reward-table .cell-stock .stock-value.in-stock {
+    background: #ecfdf5;
+    color: #059669;
+    border: 1px solid #a7f3d0;
+}
+.reward-table .cell-stock .stock-value.low-stock {
+    background: #fffbeb;
+    color: #d97706;
+    border: 1px solid #fde68a;
+}
+.reward-table .cell-stock .stock-value.out-of-stock {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
 }
 
-.reward-action-btn:hover {
-    background: linear-gradient(135deg, #7e22ce 0%, #9333ea 100%);
-    color: white;
+.reward-table .cell-location {
+    overflow: hidden;
+}
+
+.reward-table .cell-desc {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    color: #6b7280;
+    font-size: 0.82rem;
+    cursor: default;
+    position: relative;
+}
+
+/* Tooltip for truncated description */
+.reward-table .cell-desc .desc-text {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.reward-table .cell-desc:hover .desc-tooltip {
+    display: block;
+}
+
+.desc-tooltip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 0;
+    min-width: 260px;
+    max-width: 380px;
+    padding: 10px 14px;
+    background: #1f2937;
+    color: #f9fafb;
+    font-size: 0.8rem;
+    font-weight: 400;
+    line-height: 1.5;
+    border-radius: 8px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    white-space: normal;
+    word-wrap: break-word;
+    z-index: 100;
+    pointer-events: none;
+}
+
+.desc-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 16px;
+    border: 6px solid transparent;
+    border-top-color: #1f2937;
+}
+
+/* Image cell */
+.reward-table .cell-image {
+    text-align: center;
+    padding: 8px;
+}
+
+.reward-table .cell-image .reward-thumb {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    vertical-align: middle;
+}
+
+.reward-table .cell-image .reward-thumb:hover {
+    transform: scale(1.15);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     border-color: #7e22ce;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(126, 34, 206, 0.2);
+}
+
+.reward-table .cell-image .no-image {
+    color: #9ca3af;
+    font-size: 0.75rem;
+}
+
+/* Actions cell */
+.reward-table .cell-actions {
+    text-align: center;
+    padding: 0 8px;
+    white-space: nowrap;
+    overflow: visible;
+}
+
+.reward-actions {
+    display: inline-flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.reward-action-btn {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    padding: 0;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+    color: #6b7280;
+}
+
+.reward-action-btn.btn-edit:hover {
+    background: #ede9fe;
+    color: #7e22ce;
+    border-color: #c4b5fd;
+}
+
+.reward-action-btn.btn-delete:hover {
+    background: #fef2f2;
+    color: #dc2626;
+    border-color: #fecaca;
 }
 
 .reward-action-btn:active {
-    transform: translateY(0);
+    transform: scale(0.95);
 }
 
-/* Image column styling - Enhanced Preview */
-.reward-table td:nth-child(7) {
+/* Empty state */
+.reward-table .empty-row td {
     text-align: center;
-    width: 100px;
-    padding: 12px;
-}
-
-.reward-table td:nth-child(7) img {
-    width: 70px;
-    height: 70px;
-    object-fit: cover;
-    border-radius: 8px;
-    border: 2px solid #e5e7eb;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.reward-table td:nth-child(7) img:hover {
-    transform: scale(1.1);
-    border-color: #7e22ce;
-    box-shadow: 0 4px 12px rgba(126, 34, 206, 0.3);
-}
-
-.reward-table td:nth-child(7) a {
-    display: inline-block;
-}
-
-/* Actions column styling - Enhanced Layout */
-.reward-table td:nth-child(8) {
-    text-align: left;
-    width: 120px;
-    vertical-align: middle;
-    padding: 12px;
+    padding: 40px 14px;
+    color: #9ca3af;
+    font-size: 0.9rem;
+    white-space: normal;
 }
 
 /* OLD MODAL STYLES - REPLACED BY unified-modal.css */
@@ -423,15 +543,9 @@
     display: block;
 }
 
-/* Force black color for reward management heading */
-.reward-header h3,
-.reward-container .reward-header h3,
-#content .reward-container .reward-header h3,
-#content main .reward-container .reward-header h3 {
-    color: #111827 !important;
-}
-
-/* Action Badge Styles - Enhanced Design */
+/* ==========================================
+   Action Badges & Stock Change
+   ========================================== */
 .action-badge {
     padding: 6px 12px;
     border-radius: 6px;
@@ -498,55 +612,79 @@
     background: #fee2e2;
 }
 
-/* Recent Activity Section - Enhanced History Table */
+/* ==========================================
+   Recent Activity / History Table
+   ========================================== */
 .history-table-wrapper {
     max-height: 400px;
     overflow-y: auto;
     border: 1px solid #e5e7eb;
     border-radius: 10px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.history-table-wrapper::-webkit-scrollbar {
+    width: 6px;
+}
+.history-table-wrapper::-webkit-scrollbar-track {
+    background: #f9fafb;
+}
+.history-table-wrapper::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
 }
 
 .history-table {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
+    border-collapse: collapse;
+    table-layout: fixed;
+    font-size: 0.875rem;
 }
 
-.history-table thead tr {
-    background: linear-gradient(180deg, #f9fafb 0%, #f3f4f6 100%);
+.history-table colgroup .col-date    { width: 14%; }
+.history-table colgroup .col-reward  { width: 22%; }
+.history-table colgroup .col-action  { width: 18%; }
+.history-table colgroup .col-change  { width: 12%; }
+.history-table colgroup .col-by      { width: 18%; }
+
+.history-table thead {
     position: sticky;
     top: 0;
     z-index: 10;
 }
 
 .history-table th {
-    padding: 14px 12px;
+    padding: 12px 14px;
     text-align: left;
-    border-bottom: 2px solid #d1d5db;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
     white-space: nowrap;
-    color: #374151;
-    font-weight: 700;
-    font-size: 0.85rem;
+    color: #4b5563;
+    font-weight: 600;
+    font-size: 0.75rem;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
 }
 
 .history-table tbody tr {
-    transition: background-color 0.15s ease;
+    height: 48px;
+    transition: background-color 0.12s ease;
 }
 
 .history-table tbody tr:hover {
-    background-color: #f9fafb;
+    background-color: #f8f5ff;
 }
 
 .history-table td {
-    padding: 14px 12px;
-    border-bottom: 1px solid #e5e7eb;
+    padding: 0 14px;
+    height: 48px;
+    border-bottom: 1px solid #f3f4f6;
     white-space: nowrap;
-    color: #1f2937;
-    font-size: 0.9rem;
-    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #374151;
+    font-size: 0.85rem;
+    font-weight: 450;
+    vertical-align: middle;
 }
 
 .history-table tbody tr:last-child td {
@@ -646,17 +784,21 @@
     }
 }
 
-/* Barangay Badge Styles */
+/* ==========================================
+   Barangay Badges — compact for fixed rows
+   ========================================== */
 .barangay-badge {
-    display: inline-block;
-    padding: 6px 12px;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    white-space: nowrap;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .barangay-badge-global {

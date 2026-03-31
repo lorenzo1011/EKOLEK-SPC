@@ -1,14 +1,21 @@
 """
-Security utility functions for the EKO project
-Provides input validation and SQL injection prevention
+Security utility functions for the EKO project.
+
+Provides input validation, sanitization, and SQL injection prevention.
 """
 
-import re
 import html
-from django.core.exceptions import ValidationError
-from django.utils.html import strip_tags
-from django.db import models
+import logging
+import re
 import uuid
+
+from django.core.exceptions import ValidationError
+from django.db import models
+from django.shortcuts import get_object_or_404
+from django.utils.html import strip_tags
+from django_ratelimit.core import is_ratelimited
+
+logger = logging.getLogger('django.security')
 
 
 def validate_user_input(input_string, max_length=255, allow_special_chars=False):
@@ -103,7 +110,6 @@ def safe_get_object_or_404(model_class, **kwargs):
         if isinstance(field, models.UUIDField) and value:
             kwargs[field_name] = validate_uuid(value)
     
-    from django.shortcuts import get_object_or_404
     return get_object_or_404(model_class, **kwargs)
 
 
@@ -139,11 +145,8 @@ def validate_weight(weight):
 
 def log_security_event(event_type, user=None, ip_address=None, details=None):
     """
-    Logs security-related events for monitoring
+    Logs security-related events for monitoring.
     """
-    import logging
-    logger = logging.getLogger('django.security')
-    
     message = f"SECURITY_EVENT: {event_type}"
     if user:
         message += f" | User: {user.username if hasattr(user, 'username') else str(user)}"
@@ -151,7 +154,7 @@ def log_security_event(event_type, user=None, ip_address=None, details=None):
         message += f" | IP: {ip_address}"
     if details:
         message += f" | Details: {details}"
-    
+
     logger.warning(message)
 
 
@@ -169,9 +172,6 @@ def get_client_ip(request):
 
 def check_rate_limit(request, group, key, rate):
     """
-    Check if request exceeds rate limit
+    Check if request exceeds rate limit.
     """
-    from django_ratelimit.decorators import ratelimit
-    from django_ratelimit import is_ratelimited
-    
     return is_ratelimited(request, group=group, key=key, rate=rate, increment=True)

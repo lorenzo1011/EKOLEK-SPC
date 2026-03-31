@@ -6,172 +6,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Boxicons from multiple CDNs for reliability -->
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link href='https://cdn.jsdelivr.net/npm/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
-
     <link rel="stylesheet" href="{% static 'style.css' %}">
     <link rel="stylesheet" href="{% static 'css/admingames.css' %}?v={{ timestamp }}">
     <link rel="stylesheet" href="{% static 'css/unified-modal.css' %}?v={{ timestamp }}">
-    <title>Quiz Management</title>
+    <title>Games Management</title>
     <link rel="icon" type="image/png" href="{% static 'image/clogo.png' %}">
-    
 </head>
 <body>
 
-    <!-- SIDEBAR -->
-    <section id="sidebar">
-        <a href="#" class="brand">
-            <i class='bx bxs-group'></i>
-            <span class="text">CENRO Admin</span>
-        </a>
-        		<ul class="side-menu top">
-			<!-- Dashboard/Home -->
-			<li>
-				<a href="{% url 'cenro:dashboard' %}">
-					<i class='bx bxs-dashboard'></i>
-					<span class="text">Dashboard</span>
-				</a>
-			</li>
+    {% include 'includes/sidebar.html' with active_page='games' %}
 
-			{% if can_manage_users %}
-			<li>
-				<a href="{% url 'cenro:adminuser' %}">
-					<i class='bx bxs-user-detail'></i>
-					<span class="text">User Management</span>
-				</a>
-			</li>
-			{% endif %}
-
-            {% if admin_user.role == 'super_admin' %}
-			<li>
-				<a href="{% url 'cenro:admin_management' %}">
-					<i class='bx bxs-user-detail' ></i>
-					<span class="text">Admin Management</span>
-				</a>
-			</li>
-			{% endif %}
-			
-			{% if can_manage_controls %}
-			<li>
-				<a href="{% url 'cenro:admincontrol' %}">
-					<i class='bx bxs-component' ></i>
-					<span class="text">Controls Management</span>
-				</a>
-			</li>
-			{% endif %}
-			
-			{% if can_manage_points %}
-			<li>
-				<a href="{% url 'cenro:adminpoints' %}">
-					<i class='bx bxs-star' ></i>
-					<span class="text">Points Management</span>
-				</a>
-			</li>
-			{% endif %}
-			
-			{% if can_manage_rewards %}
-			<li>
-				<a href="{% url 'cenro:adminrewards' %}">
-					<i class='bx bxs-gift' ></i>
-					<span class="text">Rewards Management</span>
-				</a>
-			</li>
-			{% endif %}
-
-			{% if can_manage_schedules %}
-			<li>
-				<a href="{% url 'cenro:adminschedule' %}">
-					<i class='bx bxs-calendar' ></i>
-					<span class="text">Schedule Management</span>
-				</a>
-			</li>
-			{% endif %}
-
-			{% if can_manage_security %}
-			<li>
-<a href="{% url 'cenro:security_dashboard' %}">
-<i class='bx bxs-shield' ></i>
-<span class="text">Security Management</span>
-</a>
-</li>
-			{% endif %}
-
-			{% if can_manage_learning %}
-			<li>
-				<a href="{% url 'cenro:adminlearn' %}">
-					<i class='bx bxs-book-content' ></i>
-					<span class="text">Learning Management</span>
-				</a>
-			</li>
-			{% endif %}
-
-			{% if can_manage_games %}
-			<li class="active">
-				<a href="{% url 'cenro:admingames' %}">
-					<i class='bx bxs-game' ></i>
-					<span class="text">Games Management</span>
-				</a>      
-      <li>
-        <a href="{% url 'cenro:waste_analytics' %}">
-          <i class='bx bxs-bar-chart-alt-2' ></i>
-          <span class="text">Waste Analytics</span>
-        </a>
-      </li>
-      
-			</li>
-			{% endif %}
-			
-			<!-- Security Analyst Special Dashboard -->
-			{% if admin_role == 'security_analyst' %}
-			<li>
-				<a href="{% url 'cenro:adminsecurity' %}">
-					<i class='bx bxs-dashboard' ></i>
-					<span class="text">Security Dashboard</span>
-				</a>
-			</li>
-			{% endif %}
-			
-		</ul>
-        <ul class="side-menu">
-            <li>
-                <a href="{% url 'cenro:admin_logout' %}" class="logout">
-                    <i class='bx bxs-log-out-circle'></i>
-                    <span class="text">Logout</span>
-                </a>
-            </li>
-        </ul>
-    </section>
-
-    <!-- CONTENT -->
     <section id="content">
-        <!-- NAVBAR -->
-				<nav>
-			<i class='bx bx-menu' ></i>
-			
-			<!-- Admin User Profile Section -->
-			{% if is_admin_authenticated %}
-			<div class="profile" style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
-				<!-- Admin Notification Bell -->
-				{% include 'includes/notification_bell.html' %}
-				
-				<div class="admin-info" style="text-align: right; margin-right: 10px;">
-					<span style="display: block; font-weight: 600; color: #333;">{{ admin_full_name }}</span>
-					<span style="display: block; font-size: 0.8rem; color: #666;">{{ admin_role_display }}</span>
-				</div>
-				<i class='bx bxs-user-circle' style="font-size: 2rem; color: #667eea;"></i>
-			</div>
-			{% else %}
-			<div class="profile" style="margin-left: auto;">
-				<a href="{% url 'admin_login' %}" style="color: #667eea; text-decoration: none;">
-					<i class='bx bx-log-in' style="font-size: 1.5rem;"></i>
-					<span>Login</span>
-				</a>
-			</div>
-			{% endif %}
-		</nav>
+        {% include 'includes/navbar.html' %}
 
-        <!-- MAIN -->
         <main>
             <div class="head-title">
                 <div class="left">
@@ -185,266 +34,324 @@
             </div>
 
             <!-- Tab Navigation -->
-            <div style="margin-bottom: 2rem; margin-top: 2rem;">
-                <button class="tab-btn active" onclick="openTab(event, 'categoriesTab')">Waste Categories</button>
-                <button class="tab-btn" onclick="openTab(event, 'itemsTab')">Waste Items</button>
-                <button class="tab-btn" onclick="openTab(event, 'quizTab')">Quiz Questions</button>
-                <button class="tab-btn" onclick="openTab(event, 'cooldownTab')">Game Cooldown</button>
+            <div class="gm-tabs">
+                <button class="tab-btn active" onclick="openTab(event, 'categoriesTab')">
+                    <i class='bx bx-category'></i> Waste Categories
+                </button>
+                <button class="tab-btn" onclick="openTab(event, 'itemsTab')">
+                    <i class='bx bx-package'></i> Waste Items
+                </button>
+                <button class="tab-btn" onclick="openTab(event, 'quizTab')">
+                    <i class='bx bx-help-circle'></i> Quiz Questions
+                </button>
+                <button class="tab-btn" onclick="openTab(event, 'cooldownTab')">
+                    <i class='bx bx-time-five'></i> Game Cooldown
+                </button>
             </div>
 
-            <!-- Waste Categories Tab -->
+            <!-- ============================================================
+                 WASTE CATEGORIES TAB
+                 ============================================================ -->
             <div id="categoriesTab" class="tab-content" style="display: block;">
-                <!-- Excel Upload Section for Categories -->
-                <div class="excel-upload-section" style="background: #f3f4f6; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; border: 2px dashed #4CAF50;">
-                    <h3 style="margin-bottom: 1rem; color: #4CAF50;">
-                        <i class='bx bx-spreadsheet'></i> Bulk Upload Waste Categories
-                    </h3>
-                    <p style="color: #6b7280; margin-bottom: 1rem;">Upload an Excel file to create multiple waste categories at once.</p>
-                    
-                    <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-                        <a href="/category-excel/download-template/" class="btn-save" style="background: #10b981; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
-                            <i class='bx bx-download'></i> Download Category Template
-                        </a>
+
+                <!-- Bulk Upload -->
+                <div class="gm-upload">
+                    <div class="gm-upload-header">
+                        <i class='bx bx-spreadsheet'></i>
+                        <h4>Bulk Upload Categories</h4>
                     </div>
-                    
-                    <form id="categoryUploadForm" enctype="multipart/form-data" style="margin-top: 1rem;">
+                    <p>Upload an Excel file to create multiple waste categories at once.</p>
+                    <a href="/category-excel/download-template/" class="btn-outline" style="margin-bottom: 0.75rem;">
+                        <i class='bx bx-download'></i> Download Template
+                    </a>
+                    <form id="categoryUploadForm" enctype="multipart/form-data">
                         {% csrf_token %}
-                        <div style="margin-bottom: 1rem;">
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Select Excel File:</label>
-                            <input type="file" name="excel_file" id="categoryExcelFile" accept=".xlsx,.xls" required style="padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 4px; width: 100%; max-width: 400px;">
-                            <small style="color: #6b7280; display: block; margin-top: 0.25rem;">Accepted formats: .xlsx, .xls</small>
+                        <div class="gm-form-group">
+                            <label class="gm-label">Select Excel File</label>
+                            <input type="file" name="excel_file" id="categoryExcelFile" accept=".xlsx,.xls" required class="gm-file-input">
+                            <span class="gm-file-hint">Accepted formats: .xlsx, .xls</span>
                         </div>
-                        <button type="submit" class="btn-save" style="background: #4CAF50;">
+                        <button type="submit" class="btn-save btn-green">
                             <i class='bx bx-upload'></i> Upload Categories
                         </button>
                     </form>
-                    
-                    <div id="categoryUploadResults" style="display: none; margin-top: 1rem; padding: 1rem; border-radius: 4px;"></div>
+                    <div id="categoryUploadResults" class="gm-upload-results"></div>
                 </div>
 
                 <!-- Add Category Form -->
-                <div class="quiz-form">
-                    <h3 style="margin-bottom: 1rem;">Add New Waste Category</h3>
+                <div class="gm-card">
+                    <div class="gm-card-header">
+                        <div class="gm-icon" style="background: var(--gm-green);"><i class='bx bx-plus'></i></div>
+                        <div><h3>Add New Category</h3><p>Create a new waste classification</p></div>
+                    </div>
                     <form id="categoryForm">
                         {% csrf_token %}
-                        <div style="margin-bottom: 1rem;">
-                            <label>Category Name:</label>
-                            <input style="margin-top: 0.5rem;" type="text" id="categoryName" class="choice-input" placeholder="e.g., Recyclable, Organic" required>
+                        <div class="gm-form-group">
+                            <label class="gm-label">Category Name</label>
+                            <input type="text" id="categoryName" class="choice-input" placeholder="e.g., Recyclable, Organic" required>
                         </div>
-                        <div style="margin-bottom: 1rem;">
-                            <label>Color:</label>
+                        <div class="gm-form-group">
+                            <label class="gm-label">Color</label>
                             <div class="color-picker-wrapper">
                                 <div class="color-preview" id="categoryColorPreview"></div>
                                 <input type="color" id="categoryColor" class="color-input-hidden" value="#4CAF50">
                                 <input type="text" id="categoryColorText" class="color-text-input" value="#4CAF50" placeholder="#4CAF50" maxlength="7" pattern="^#[0-9A-Fa-f]{6}$">
                             </div>
                         </div>
-                        <div style="margin-bottom: 1rem;">
-                            <label>Icon Name:</label>
-                            <input style="margin-top: 0.5rem;" type="text" id="categoryIcon" class="choice-input" placeholder="e.g., recycling, delete, nature" value="delete">
+                        <div class="gm-form-group">
+                            <label class="gm-label">Icon Name</label>
+                            <input type="text" id="categoryIcon" class="choice-input" placeholder="e.g., recycling, delete, nature" value="delete">
                         </div>
-                        <div style="margin-bottom: 1rem;">
-                            <label>Description:</label>
-                            <textarea style="margin-top: 0.5rem;" id="categoryDescription" class="choice-input" placeholder="Description of this waste category" rows="3"></textarea>
+                        <div class="gm-form-group">
+                            <label class="gm-label">Description</label>
+                            <textarea id="categoryDescription" class="choice-input" placeholder="Description of this waste category" rows="3"></textarea>
                         </div>
-                        <button type="submit" class="btn-save">Save Category</button>
+                        <button type="submit" class="btn-save btn-green"><i class='bx bx-check'></i> Save Category</button>
                     </form>
                 </div>
 
                 <!-- Categories List -->
-                <div class="questions-list">
-                    <h3>Existing Categories</h3>
-                    <div id="categoriesList" style="max-height: 400px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px;">
+                <div class="gm-card">
+                    <div class="gm-card-header">
+                        <div class="gm-icon" style="background: var(--gm-primary);"><i class='bx bx-list-ul'></i></div>
+                        <div><h3>Existing Categories</h3><p>{{ categories|length }} total categories</p></div>
+                    </div>
+                    <div id="categoriesList" class="gm-list-container">
                         {% for category in categories %}
-                        <div class="question-item">
-                            <h4>{{ category.name }}</h4>
-                            <p style="display: flex; align-items: center; gap: 0.5rem;">
-                                <strong>Color:</strong> 
+                        <div class="gm-item">
+                            <div class="gm-item-icon">
                                 <span class="color-circle-display" data-color="{{ category.color_hex }}"></span>
-                                <span style="color: #6b7280; font-family: monospace;">{{ category.color_hex }}</span>
-                            </p>
-                            <p><strong>Icon:</strong> {{ category.icon_name }}</p>
-                            <p><strong>Description:</strong> {{ category.description }}</p>
-                            <p><strong>Items:</strong> {{ category.items.count }}</p>
-                            <button data-category-id="{{ category.id }}" class="btn-delete" onclick="deleteCategory(this.dataset.categoryId)">
-                                Delete
-                            </button>
+                            </div>
+                            <div class="gm-item-body">
+                                <h4>{{ category.name }}</h4>
+                                <div class="gm-item-meta">
+                                    <span><strong>Color:</strong> <code style="font-size:0.75rem;color:var(--gm-text-secondary);">{{ category.color_hex }}</code></span>
+                                    <span><strong>Icon:</strong> {{ category.icon_name }}</span>
+                                    <span><strong>Items:</strong> {{ category.items.count }}</span>
+                                </div>
+                                {% if category.description %}
+                                <span style="font-size:0.775rem;color:var(--gm-text-secondary);">{{ category.description|truncatewords:20 }}</span>
+                                {% endif %}
+                            </div>
+                            <div class="gm-item-actions">
+                                <button data-category-id="{{ category.id }}" class="btn-delete" onclick="deleteCategory(this.dataset.categoryId)">
+                                    <i class='bx bx-trash'></i> Delete
+                                </button>
+                            </div>
                         </div>
                         {% empty %}
-                        <p>No categories added yet.</p>
+                        <div class="gm-empty">
+                            <i class='bx bx-category'></i>
+                            <p>No categories added yet.</p>
+                        </div>
                         {% endfor %}
                     </div>
                 </div>
             </div>
 
-            <!-- Waste Items Tab -->
+            <!-- ============================================================
+                 WASTE ITEMS TAB
+                 ============================================================ -->
             <div id="itemsTab" class="tab-content" style="display: none;">
-                <!-- Excel Upload Section for Items -->
-                <div class="excel-upload-section" style="background: #f3f4f6; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; border: 2px dashed #2196F3;">
-                    <h3 style="margin-bottom: 1rem; color: #2196F3;">
-                        <i class='bx bx-spreadsheet'></i> Bulk Upload Waste Items
-                    </h3>
-                    <p style="color: #6b7280; margin-bottom: 1rem;">Upload an Excel file to create multiple waste items at once.</p>
-                    
-                    <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-                        <a href="/item-excel/download-template/" class="btn-save" style="background: #10b981; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
-                            <i class='bx bx-download'></i> Download Item Template
-                        </a>
+
+                <!-- Bulk Upload -->
+                <div class="gm-upload">
+                    <div class="gm-upload-header">
+                        <i class='bx bx-spreadsheet'></i>
+                        <h4>Bulk Upload Items</h4>
                     </div>
-                    
-                    <form id="itemUploadForm" enctype="multipart/form-data" style="margin-top: 1rem;">
+                    <p>Upload an Excel file to create multiple waste items at once.</p>
+                    <a href="/item-excel/download-template/" class="btn-outline" style="margin-bottom: 0.75rem;">
+                        <i class='bx bx-download'></i> Download Template
+                    </a>
+                    <form id="itemUploadForm" enctype="multipart/form-data">
                         {% csrf_token %}
-                        <div style="margin-bottom: 1rem;">
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Select Excel File:</label>
-                            <input type="file" name="excel_file" id="itemExcelFile" accept=".xlsx,.xls" required style="padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 4px; width: 100%; max-width: 400px;">
-                            <small style="color: #6b7280; display: block; margin-top: 0.25rem;">Accepted formats: .xlsx, .xls</small>
+                        <div class="gm-form-group">
+                            <label class="gm-label">Select Excel File</label>
+                            <input type="file" name="excel_file" id="itemExcelFile" accept=".xlsx,.xls" required class="gm-file-input">
+                            <span class="gm-file-hint">Accepted formats: .xlsx, .xls</span>
                         </div>
-                        <button type="submit" class="btn-save" style="background: #2196F3;">
+                        <button type="submit" class="btn-save" style="background:var(--gm-blue);">
                             <i class='bx bx-upload'></i> Upload Items
                         </button>
                     </form>
-                    
-                    <div id="itemUploadResults" style="display: none; margin-top: 1rem; padding: 1rem; border-radius: 4px;"></div>
+                    <div id="itemUploadResults" class="gm-upload-results"></div>
                 </div>
 
                 <!-- Add Item Form -->
-                <div class="quiz-form">
-                    <h3 style="margin-bottom: 1rem;">Add New Waste Item</h3>
+                <div class="gm-card">
+                    <div class="gm-card-header">
+                        <div class="gm-icon" style="background: var(--gm-blue);"><i class='bx bx-plus'></i></div>
+                        <div><h3>Add New Item</h3><p>Add a waste item to a category</p></div>
+                    </div>
                     <form id="itemForm">
                         {% csrf_token %}
-                        <div style="margin-bottom: 1rem;">
-                            <label>Item Name:</label>
-                            <input style="margin-top: 0.5rem;" type="text" id="itemName" class="choice-input" placeholder="e.g., Plastic Bottle" required>
+                        <div class="gm-form-group">
+                            <label class="gm-label">Item Name</label>
+                            <input type="text" id="itemName" class="choice-input" placeholder="e.g., Plastic Bottle" required>
                         </div>
-                        <div style="margin-bottom: 1rem;">
-                            <label>Emoji:</label>
-                            <input style="margin-top: 0.5rem;" type="text" id="itemEmoji" class="choice-input" placeholder="e.g., ♻️, 🥤, 🍎">
+                        <div class="gm-form-group">
+                            <label class="gm-label">Emoji</label>
+                            <input type="text" id="itemEmoji" class="choice-input" placeholder="e.g., ♻️, 🥤, 🍎">
                         </div>
-                        <div style="margin-bottom: 1rem;">
-                            <label>Category:</label>
-                            <select style="margin-top: 0.5rem;" id="itemCategory" class="choice-input" required>
+                        <div class="gm-form-group">
+                            <label class="gm-label">Category</label>
+                            <select id="itemCategory" class="choice-input" required>
                                 <option value="">Select Category</option>
                                 {% for category in categories %}
                                 <option value="{{ category.id }}">{{ category.name }}</option>
                                 {% endfor %}
                             </select>
                         </div>
-                        <div style="margin-bottom: 1rem;">
-                            <label>Points:</label>
-                            <input style="margin-top: 0.5rem;" type="number" id="itemPoints" class="choice-input points-input" value="0" min="0" step="0.01" required>
+                        <div class="gm-form-group">
+                            <label class="gm-label">Points</label>
+                            <input type="number" id="itemPoints" class="choice-input points-input" value="0" min="0" step="0.01" required>
                         </div>
-                        <div style="margin-bottom: 1rem;">
-                            <label>Difficulty Level:</label>
-                            <select style="margin-top: 0.5rem;" id="itemDifficulty" class="choice-input" required>
+                        <div class="gm-form-group">
+                            <label class="gm-label">Difficulty Level</label>
+                            <select id="itemDifficulty" class="choice-input" required>
                                 <option value="easy">Easy</option>
                                 <option value="medium">Medium</option>
                                 <option value="hard">Hard</option>
                             </select>
                         </div>
-                        <div style="margin-bottom: 1rem;">
-                            <label>
-                                <input type="checkbox" id="itemActive" checked> Is Active
+                        <div class="gm-form-group">
+                            <label class="gm-checkbox">
+                                <input type="checkbox" id="itemActive" checked> Active
                             </label>
                         </div>
-                        <button type="submit" class="btn-save">Save Item</button>
+                        <button type="submit" class="btn-save" style="background:var(--gm-blue);"><i class='bx bx-check'></i> Save Item</button>
                     </form>
                 </div>
 
                 <!-- Items List -->
-                <div class="questions-list">
-                    <h3>Existing Items</h3>
-                    <div id="itemsList" style="max-height: 400px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px;">
+                <div class="gm-card">
+                    <div class="gm-card-header">
+                        <div class="gm-icon" style="background: var(--gm-primary);"><i class='bx bx-list-ul'></i></div>
+                        <div><h3>Existing Items</h3><p>{{ items|length }} total items</p></div>
+                    </div>
+                    <div id="itemsList" class="gm-list-container">
                         {% for item in items %}
-                        <div class="question-item">
-                            <h4>{{ item.emoji }} {{ item.name }}</h4>
-                            <p><strong>Category:</strong> {{ item.category.name }}</p>
-                            <p><strong>Points:</strong> {{ item.points|smart_points }}</p>
-                            <p><strong>Difficulty:</strong> {{ item.get_difficulty_level_display }}</p>
-                            <p><strong>Status:</strong> {% if item.is_active %}Active{% else %}Inactive{% endif %}</p>
-                            <button data-item-id="{{ item.id }}" class="btn-delete" onclick="deleteItem(this.dataset.itemId)">
-                                Delete
-                            </button>
+                        <div class="gm-item">
+                            <div class="gm-item-icon" style="background:var(--gm-surface-alt);font-size:1.3rem;">
+                                {{ item.emoji }}
+                            </div>
+                            <div class="gm-item-body">
+                                <h4>{{ item.name }}</h4>
+                                <div class="gm-item-meta">
+                                    <span><strong>Category:</strong> {{ item.category.name }}</span>
+                                    <span><strong>Points:</strong> {{ item.points|smart_points }}</span>
+                                    <span><strong>Difficulty:</strong>
+                                        {% if item.difficulty_level == 'easy' %}
+                                            <span class="gm-badge green">Easy</span>
+                                        {% elif item.difficulty_level == 'medium' %}
+                                            <span class="gm-badge amber">Medium</span>
+                                        {% else %}
+                                            <span class="gm-badge red">Hard</span>
+                                        {% endif %}
+                                    </span>
+                                    <span>
+                                        {% if item.is_active %}
+                                            <span class="gm-badge green">Active</span>
+                                        {% else %}
+                                            <span class="gm-badge red">Inactive</span>
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="gm-item-actions">
+                                <button data-item-id="{{ item.id }}" class="btn-delete" onclick="deleteItem(this.dataset.itemId)">
+                                    <i class='bx bx-trash'></i> Delete
+                                </button>
+                            </div>
                         </div>
                         {% empty %}
-                        <p>No items added yet.</p>
+                        <div class="gm-empty">
+                            <i class='bx bx-package'></i>
+                            <p>No items added yet.</p>
+                        </div>
                         {% endfor %}
                     </div>
                 </div>
             </div>
 
-            <!-- Quiz Questions Tab -->
+            <!-- ============================================================
+                 QUIZ QUESTIONS TAB
+                 ============================================================ -->
             <div id="quizTab" class="tab-content" style="display: none;">
-                <!-- Excel Upload Section -->
-                <div class="excel-upload-section" style="background: #f3f4f6; padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem; border: 2px dashed #667eea;">
-                    <h3 style="margin-bottom: 1rem; color: #667eea;">
-                        <i class='bx bx-spreadsheet'></i> Bulk Upload Game Questions
-                    </h3>
-                    <p style="color: #6b7280; margin-bottom: 1rem;">Upload an Excel file to create multiple game questions at once.</p>
-                    
-                    <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-                        <a href="/game-excel/download-template/" class="btn-save" style="background: #10b981; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
-                            <i class='bx bx-download'></i> Download Game Template
-                        </a>
+
+                <!-- Bulk Upload -->
+                <div class="gm-upload">
+                    <div class="gm-upload-header">
+                        <i class='bx bx-spreadsheet'></i>
+                        <h4>Bulk Upload Questions</h4>
                     </div>
-                    
-                    <form id="gameUploadForm" enctype="multipart/form-data" style="margin-top: 1rem;">
+                    <p>Upload an Excel file to create multiple game questions at once.</p>
+                    <a href="/game-excel/download-template/" class="btn-outline" style="margin-bottom: 0.75rem;">
+                        <i class='bx bx-download'></i> Download Template
+                    </a>
+                    <form id="gameUploadForm" enctype="multipart/form-data">
                         {% csrf_token %}
-                        <div style="margin-bottom: 1rem;">
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Select Excel File:</label>
-                            <input type="file" name="excel_file" id="gameExcelFile" accept=".xlsx,.xls" required style="padding: 0.5rem; border: 1px solid #d1d5db; border-radius: 4px; width: 100%; max-width: 400px;">
-                            <small style="color: #6b7280; display: block; margin-top: 0.25rem;">Accepted formats: .xlsx, .xls</small>
+                        <div class="gm-form-group">
+                            <label class="gm-label">Select Excel File</label>
+                            <input type="file" name="excel_file" id="gameExcelFile" accept=".xlsx,.xls" required class="gm-file-input">
+                            <span class="gm-file-hint">Accepted formats: .xlsx, .xls</span>
                         </div>
-                        <button type="submit" class="btn-save" style="background: #667eea;">
-                            <i class='bx bx-upload'></i> Upload Game Questions
+                        <button type="submit" class="btn-save">
+                            <i class='bx bx-upload'></i> Upload Questions
                         </button>
                     </form>
-                    
-                    <div id="gameUploadResults" style="display: none; margin-top: 1rem; padding: 1rem; border-radius: 4px;"></div>
+                    <div id="gameUploadResults" class="gm-upload-results"></div>
                 </div>
 
                 <!-- Add Question Form -->
-                <div class="quiz-form">
-                    <h3 style="margin-bottom: 1rem;">Add New Question</h3>
+                <div class="gm-card">
+                    <div class="gm-card-header">
+                        <div class="gm-icon" style="background: var(--gm-primary);"><i class='bx bx-plus'></i></div>
+                        <div><h3>Add New Question</h3><p>Create a quiz question with choices</p></div>
+                    </div>
                     <form id="questionForm">
                         {% csrf_token %}
-                        <div style="margin-bottom: 1rem;">
-                            <label >Question Text:</label>
-                            <input style="margin-top: 0.5rem;" type="text" id="questionText" class="choice-input" placeholder="Enter your question here..." required>
+                        <div class="gm-form-group">
+                            <label class="gm-label">Question Text</label>
+                            <input type="text" id="questionText" class="choice-input" placeholder="Enter your question here..." required>
                         </div>
-                        
-                        <div style="margin-bottom: 1rem;">
-                            <label>Points:</label>
-                            <input style="margin-top: 0.5rem;" type="number" id="questionPoints" class="choice-input points-input" value="0" min="0" step="0.01" required>
+                        <div class="gm-form-group">
+                            <label class="gm-label">Points</label>
+                            <input type="number" id="questionPoints" class="choice-input points-input" value="0" min="0" step="0.01" required>
                         </div>
-                        
                         <div id="choicesContainer">
-                            <label>Choices:</label>
+                            <label class="gm-label">Choices</label>
                             <div class="choice-group">
                                 <input type="text" class="choice-input choice-text" placeholder="Choice 1" required>
                                 <label>
                                     <input type="radio" name="correctChoice" value="0" class="correct-checkbox" required>
-                                    Mark as correct answer
+                                    Correct
                                 </label>
                             </div>
                             <div class="choice-group">
                                 <input type="text" class="choice-input choice-text" placeholder="Choice 2" required>
                                 <label>
                                     <input type="radio" name="correctChoice" value="1" class="correct-checkbox" required>
-                                    Mark as correct answer
+                                    Correct
                                 </label>
                             </div>
                         </div>
-                        
-                        <button type="button" class="btn-add-choice" onclick="addChoice()">Add Another Choice</button>
+                        <button type="button" class="btn-add-choice" onclick="addChoice()">
+                            <i class='bx bx-plus'></i> Add Choice
+                        </button>
                         <br>
-                        <button type="submit" class="btn-save">Save Question</button>
+                        <button type="submit" class="btn-save"><i class='bx bx-check'></i> Save Question</button>
                     </form>
                 </div>
 
                 <!-- Questions List -->
-                <div class="questions-list">
-                    <h3>Existing Questions</h3>
-                    <div id="questionsList" style="max-height: 400px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px;">
+                <div class="gm-card">
+                    <div class="gm-card-header">
+                        <div class="gm-icon" style="background: var(--gm-primary);"><i class='bx bx-list-ul'></i></div>
+                        <div><h3>Existing Questions</h3><p>{{ questions|length }} total questions</p></div>
+                    </div>
+                    <div id="questionsList" class="gm-list-container">
                         {% for question in questions %}
                         <div class="question-item">
                             <h4>{{ question.text }}</h4>
@@ -455,355 +362,245 @@
                                 {% if choice.is_correct %}<i class='bx bx-check'></i>{% endif %}
                             </div>
                             {% endfor %}
-                            <button data-question-id="{{ question.id }}" class="btn-delete" onclick="deleteQuestion(this.dataset.questionId)">
-                                Delete
+                            <button data-question-id="{{ question.id }}" class="btn-delete" onclick="deleteQuestion(this.dataset.questionId)" style="margin-top:0.5rem;">
+                                <i class='bx bx-trash'></i> Delete
                             </button>
                         </div>
                         {% empty %}
-                        <p>No questions added yet.</p>
+                        <div class="gm-empty">
+                            <i class='bx bx-help-circle'></i>
+                            <p>No questions added yet.</p>
+                        </div>
                         {% endfor %}
                     </div>
                 </div>
             </div>
 
-                        <!-- Game Cooldown Configuration Tab -->
+            <!-- ============================================================
+                 GAME COOLDOWN TAB  —  Toggle-Based Redesign
+                 ============================================================ -->
             <div id="cooldownTab" class="tab-content" style="display: none;">
-                
-                <div class="card mt-4">
-                    <div class="card-header" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 1.5rem; border-radius: 8px 8px 0 0; margin-bottom: 0;">
-                        <h2 style="margin: 0; font-size: 1.5rem; display: flex; align-items: center; gap: 10px;">
-                            <i class='bx bx-time-five'></i>
-                            Game Cooldown Settings
-                        </h2>
-                        <p style="margin: 0.5rem 0 0 0; opacity: 0.9; font-size: 0.9rem;">Control how often users can play games to earn points</p>
-                    </div>
-                    <div class="card-body" style="padding: 2rem; background: #f9fafb;">
-                        <!-- Cooldown Configurations Grid -->
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 2rem; max-width: 1400px; margin: 0 auto;">
-                            
-                            <!-- Quiz Game Cooldown -->
-                            <div class="cooldown-config-card" style="background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 2px solid #e5e7eb;">
-                                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid #f3f4f6;">
-                                    <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                                        <i class='bx bx-brain' style="font-size: 24px; color: white;"></i>
-                                    </div>
-                                    <div>
-                                        <h3 style="margin: 0; font-size: 1.1rem; color: #1f2937;">Quiz Game</h3>
-                                        <p style="margin: 0; font-size: 0.85rem; color: #6b7280;">Question & Answer challenges</p>
-                                    </div>
+
+                <div class="cooldown-grid">
+
+                    <!-- ── Quiz Game ── -->
+                    <div class="cd-card">
+                        <div class="cd-card-head">
+                            <div class="cd-title-group">
+                                <div class="cd-icon" style="background: var(--gm-primary);"><i class='bx bx-brain'></i></div>
+                                <div>
+                                    <h3>Quiz Game</h3>
+                                    <p>Question &amp; Answer challenges</p>
                                 </div>
-                                
-                                <form id="quiz-cooldown-form">
-                                    {% csrf_token %}
-                                    
-                                    <!-- Preset Buttons -->
-                                    <div style="margin-bottom: 1.5rem;">
-                                        <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.75rem; font-size: 0.9rem;">
-                                            <i class='bx bx-calendar-check'></i> Quick Presets
-                                        </label>
-                                        <div class="preset-buttons" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;">
-                                            <button type="button" onclick="setCooldown('quiz', 1)" class="preset-btn" style="padding: 0.6rem; border: 2px solid #e5e7eb; background: white; border-radius: 8px; font-weight: 600; color: #374151; cursor: pointer; transition: all 0.2s; font-size: 0.85rem;">
-                                                1 Day
-                                            </button>
-                                            <button type="button" onclick="setCooldown('quiz', 3)" class="preset-btn" style="padding: 0.6rem; border: 2px solid #e5e7eb; background: white; border-radius: 8px; font-weight: 600; color: #374151; cursor: pointer; transition: all 0.2s; font-size: 0.85rem;">
-                                                3 Days
-                                            </button>
-                                            <button type="button" onclick="setCooldown('quiz', 7)" class="preset-btn" style="padding: 0.6rem; border: 2px solid #e5e7eb; background: white; border-radius: 8px; font-weight: 600; color: #374151; cursor: pointer; transition: all 0.2s; font-size: 0.85rem;">
-                                                1 Week
-                                            </button>
-                                            <button type="button" onclick="setCooldown('quiz', 14)" class="preset-btn" style="padding: 0.6rem; border: 2px solid #e5e7eb; background: white; border-radius: 8px; font-weight: 600; color: #374151; cursor: pointer; transition: all 0.2s; font-size: 0.85rem;">
-                                                2 Weeks
-                                            </button>
-                                            <button type="button" onclick="setCooldown('quiz', 30)" class="preset-btn" style="padding: 0.6rem; border: 2px solid #e5e7eb; background: white; border-radius: 8px; font-weight: 600; color: #374151; cursor: pointer; transition: all 0.2s; font-size: 0.85rem;">
-                                                1 Month
-                                            </button>
-                                            <button type="button" onclick="setCooldown('quiz', 0)" class="preset-btn" style="padding: 0.6rem; border: 2px solid #e5e7eb; background: white; border-radius: 8px; font-weight: 600; color: #374151; cursor: pointer; transition: all 0.2s; font-size: 0.85rem;">
-                                                None
-                                            </button>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Custom Days Input -->
-                                    <div style="margin-bottom: 1.5rem;">
-                                        <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.75rem; font-size: 0.9rem;">
-                                            <i class='bx bx-customize'></i> Custom Duration
-                                        </label>
-                                        <div style="display: flex; gap: 0.75rem; align-items: center;">
-                                            <div style="flex: 1;">
-                                                <input type="number" id="quiz-days" min="0" max="30" value="{{ game_configs.quiz.cooldown_hours|floatformat:0|add:'0'|divisibleby:24|yesno:'3,3' }}" 
-                                                       onchange="updateCooldownFromDays('quiz')"
-                                                       style="width: 100%; padding: 0.75rem; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1rem; font-weight: 600; color: #1f2937;">
-                                                <small style="display: block; margin-top: 0.25rem; color: #6b7280; font-size: 0.8rem;">Days (0-30)</small>
-                                            </div>
-                                            <input type="hidden" name="cooldown_hours" id="quiz-cooldown_hours" value="{{ game_configs.quiz.cooldown_hours|default:0 }}">
-                                            <input type="hidden" name="cooldown_minutes" id="quiz-cooldown_minutes" value="{{ game_configs.quiz.cooldown_minutes|default:0 }}">
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Display Calculated Time -->
-                                    <div style="background: #f0f9ff; border: 2px solid #bae6fd; border-radius: 10px; padding: 1rem; margin-bottom: 1.5rem;">
-                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem;">
-                                            <i class='bx bx-time' style="font-size: 1.2rem; color: #0284c7;"></i>
-                                            <span style="font-weight: 600; color: #0c4a6e; font-size: 0.9rem;">Cooldown Duration</span>
-                                        </div>
-                                        <p id="quiz-duration-display" style="margin: 0; color: #075985; font-size: 1.1rem; font-weight: 700;">
-                                            {{ game_configs.quiz.get_formatted_duration|default:"Not configured" }}
-                                        </p>
-                                    </div>
-                                    
-                                    <!-- Active Toggle -->
-                                    <div style="background: #fef3c7; border: 2px solid #fcd34d; border-radius: 10px; padding: 1rem; margin-bottom: 1.5rem;">
-                                        <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
-                                            <input type="checkbox" name="is_active" id="quiz-is_active" {% if game_configs.quiz.is_active %}checked{% endif %}
-                                                   style="width: 20px; height: 20px; cursor: pointer; accent-color: #f59e0b;">
-                                            <div>
-                                                <span style="font-weight: 600; color: #92400e; display: block; font-size: 0.9rem;">
-                                                    <i class='bx bx-shield-quarter'></i> Enable Cooldown Restriction
-                                                </span>
-                                                <small style="color: #78350f; font-size: 0.8rem;">Uncheck to allow unlimited plays</small>
-                                            </div>
-                                        </label>
-                                    </div>
-                                    
-                                    <!-- Status Badge -->
-                                    <div class="status-badge {% if game_configs.quiz.is_active %}status-active{% else %}status-inactive{% endif %}">
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <i class='bx bx-info-circle status-icon'></i>
-                                            <span class="status-text">
-                                                Status: <span id="quiz-status">{% if game_configs.quiz.is_active %}Active - {{ game_configs.quiz.get_formatted_duration }}{% else %}Not configured - Games unrestricted{% endif %}</span>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Submit Button -->
-                                    <button type="submit" class="btn-save" style="width: 100%; padding: 0.9rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1rem; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3); transition: all 0.2s;">
-                                        <i class='bx bx-save'></i> Update Quiz Cooldown
-                                    </button>
-                                </form>
                             </div>
-                            
-                            <!-- Drag & Drop Game Cooldown -->
-                            <div class="cooldown-config-card" style="background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 2px solid #e5e7eb;">
-                                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid #f3f4f6;">
-                                    <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                                        <i class='bx bx-move' style="font-size: 24px; color: white;"></i>
-                                    </div>
-                                    <div>
-                                        <h3 style="margin: 0; font-size: 1.1rem; color: #1f2937;">Drag & Drop Game</h3>
-                                        <p style="margin: 0; font-size: 0.85rem; color: #6b7280;">Waste sorting challenges</p>
-                                    </div>
-                                </div>
-                                
-                                <form id="dragdrop-cooldown-form">
-                                    {% csrf_token %}
-                                    
-                                    <!-- Preset Buttons -->
-                                    <div style="margin-bottom: 1.5rem;">
-                                        <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.75rem; font-size: 0.9rem;">
-                                            <i class='bx bx-calendar-check'></i> Quick Presets
-                                        </label>
-                                        <div class="preset-buttons" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;">
-                                            <button type="button" onclick="setCooldown('dragdrop', 1)" class="preset-btn" style="padding: 0.6rem; border: 2px solid #e5e7eb; background: white; border-radius: 8px; font-weight: 600; color: #374151; cursor: pointer; transition: all 0.2s; font-size: 0.85rem;">
-                                                1 Day
-                                            </button>
-                                            <button type="button" onclick="setCooldown('dragdrop', 3)" class="preset-btn" style="padding: 0.6rem; border: 2px solid #e5e7eb; background: white; border-radius: 8px; font-weight: 600; color: #374151; cursor: pointer; transition: all 0.2s; font-size: 0.85rem;">
-                                                3 Days
-                                            </button>
-                                            <button type="button" onclick="setCooldown('dragdrop', 7)" class="preset-btn" style="padding: 0.6rem; border: 2px solid #e5e7eb; background: white; border-radius: 8px; font-weight: 600; color: #374151; cursor: pointer; transition: all 0.2s; font-size: 0.85rem;">
-                                                1 Week
-                                            </button>
-                                            <button type="button" onclick="setCooldown('dragdrop', 14)" class="preset-btn" style="padding: 0.6rem; border: 2px solid #e5e7eb; background: white; border-radius: 8px; font-weight: 600; color: #374151; cursor: pointer; transition: all 0.2s; font-size: 0.85rem;">
-                                                2 Weeks
-                                            </button>
-                                            <button type="button" onclick="setCooldown('dragdrop', 30)" class="preset-btn" style="padding: 0.6rem; border: 2px solid #e5e7eb; background: white; border-radius: 8px; font-weight: 600; color: #374151; cursor: pointer; transition: all 0.2s; font-size: 0.85rem;">
-                                                1 Month
-                                            </button>
-                                            <button type="button" onclick="setCooldown('dragdrop', 0)" class="preset-btn" style="padding: 0.6rem; border: 2px solid #e5e7eb; background: white; border-radius: 8px; font-weight: 600; color: #374151; cursor: pointer; transition: all 0.2s; font-size: 0.85rem;">
-                                                None
-                                            </button>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Custom Days Input -->
-                                    <div style="margin-bottom: 1.5rem;">
-                                        <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.75rem; font-size: 0.9rem;">
-                                            <i class='bx bx-customize'></i> Custom Duration
-                                        </label>
-                                        <div style="display: flex; gap: 0.75rem; align-items: center;">
-                                            <div style="flex: 1;">
-                                                <input type="number" id="dragdrop-days" min="0" max="30" value="0" 
-                                                       onchange="updateCooldownFromDays('dragdrop')"
-                                                       style="width: 100%; padding: 0.75rem; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1rem; font-weight: 600; color: #1f2937;">
-                                                <small style="display: block; margin-top: 0.25rem; color: #6b7280; font-size: 0.8rem;">Days (0-30)</small>
-                                            </div>
-                                            <input type="hidden" name="cooldown_hours" id="dragdrop-cooldown_hours" value="{{ game_configs.drag_drop.cooldown_hours|default:0 }}">
-                                            <input type="hidden" name="cooldown_minutes" id="dragdrop-cooldown_minutes" value="{{ game_configs.drag_drop.cooldown_minutes|default:0 }}">
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Display Calculated Time -->
-                                    <div style="background: #f0f9ff; border: 2px solid #bae6fd; border-radius: 10px; padding: 1rem; margin-bottom: 1.5rem;">
-                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem;">
-                                            <i class='bx bx-time' style="font-size: 1.2rem; color: #0284c7;"></i>
-                                            <span style="font-weight: 600; color: #0c4a6e; font-size: 0.9rem;">Cooldown Duration</span>
-                                        </div>
-                                        <p id="dragdrop-duration-display" style="margin: 0; color: #075985; font-size: 1.1rem; font-weight: 700;">
-                                            {{ game_configs.drag_drop.get_formatted_duration|default:"Not configured" }}
-                                        </p>
-                                    </div>
-                                    
-                                    <!-- Active Toggle -->
-                                    <div style="background: #fef3c7; border: 2px solid #fcd34d; border-radius: 10px; padding: 1rem; margin-bottom: 1.5rem;">
-                                        <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
-                                            <input type="checkbox" name="is_active" id="dragdrop-is_active" {% if game_configs.drag_drop.is_active %}checked{% endif %}
-                                                   style="width: 20px; height: 20px; cursor: pointer; accent-color: #f59e0b;">
-                                            <div>
-                                                <span style="font-weight: 600; color: #92400e; display: block; font-size: 0.9rem;">
-                                                    <i class='bx bx-shield-quarter'></i> Enable Cooldown Restriction
-                                                </span>
-                                                <small style="color: #78350f; font-size: 0.8rem;">Uncheck to allow unlimited plays</small>
-                                            </div>
-                                        </label>
-                                    </div>
-                                    
-                                    <!-- Status Badge -->
-                                    <div class="status-badge {% if game_configs.drag_drop.is_active %}status-active{% else %}status-inactive{% endif %}">
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <i class='bx bx-info-circle status-icon'></i>
-                                            <span class="status-text">
-                                                Status: <span id="dragdrop-status">{% if game_configs.drag_drop.is_active %}Active - {{ game_configs.drag_drop.get_formatted_duration }}{% else %}Not configured - Games unrestricted{% endif %}</span>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Submit Button -->
-                                    <button type="submit" class="btn-save" style="width: 100%; padding: 0.9rem; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1rem; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); transition: all 0.2s;">
-                                        <i class='bx bx-save'></i> Update Drag & Drop Cooldown
-                                    </button>
-                                </form>
-                            </div>
-                            
-                            <!-- Default (All Games) Cooldown -->
-                            <div class="cooldown-config-card" style="background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 2px solid #e5e7eb;">
-                                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 2px solid #f3f4f6;">
-                                    <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
-                                        <i class='bx bx-game' style="font-size: 24px; color: white;"></i>
-                                    </div>
-                                    <div>
-                                        <h3 style="margin: 0; font-size: 1.1rem; color: #1f2937;">Default (All Games)</h3>
-                                        <p style="margin: 0; font-size: 0.85rem; color: #6b7280;">Fallback for all game types</p>
-                                    </div>
-                                </div>
-                                
-                                <form id="default-cooldown-form">
-                                    {% csrf_token %}
-                                    
-                                    <!-- Preset Buttons -->
-                                    <div style="margin-bottom: 1.5rem;">
-                                        <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.75rem; font-size: 0.9rem;">
-                                            <i class='bx bx-calendar-check'></i> Quick Presets
-                                        </label>
-                                        <div class="preset-buttons" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;">
-                                            <button type="button" onclick="setCooldown('default', 1)" class="preset-btn" style="padding: 0.6rem; border: 2px solid #e5e7eb; background: white; border-radius: 8px; font-weight: 600; color: #374151; cursor: pointer; transition: all 0.2s; font-size: 0.85rem;">
-                                                1 Day
-                                            </button>
-                                            <button type="button" onclick="setCooldown('default', 3)" class="preset-btn" style="padding: 0.6rem; border: 2px solid #e5e7eb; background: white; border-radius: 8px; font-weight: 600; color: #374151; cursor: pointer; transition: all 0.2s; font-size: 0.85rem;">
-                                                3 Days
-                                            </button>
-                                            <button type="button" onclick="setCooldown('default', 7)" class="preset-btn" style="padding: 0.6rem; border: 2px solid #e5e7eb; background: white; border-radius: 8px; font-weight: 600; color: #374151; cursor: pointer; transition: all 0.2s; font-size: 0.85rem;">
-                                                1 Week
-                                            </button>
-                                            <button type="button" onclick="setCooldown('default', 14)" class="preset-btn" style="padding: 0.6rem; border: 2px solid #e5e7eb; background: white; border-radius: 8px; font-weight: 600; color: #374151; cursor: pointer; transition: all 0.2s; font-size: 0.85rem;">
-                                                2 Weeks
-                                            </button>
-                                            <button type="button" onclick="setCooldown('default', 30)" class="preset-btn" style="padding: 0.6rem; border: 2px solid #e5e7eb; background: white; border-radius: 8px; font-weight: 600; color: #374151; cursor: pointer; transition: all 0.2s; font-size: 0.85rem;">
-                                                1 Month
-                                            </button>
-                                            <button type="button" onclick="setCooldown('default', 0)" class="preset-btn" style="padding: 0.6rem; border: 2px solid #e5e7eb; background: white; border-radius: 8px; font-weight: 600; color: #374151; cursor: pointer; transition: all 0.2s; font-size: 0.85rem;">
-                                                None
-                                            </button>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Custom Days Input -->
-                                    <div style="margin-bottom: 1.5rem;">
-                                        <label style="display: block; font-weight: 600; color: #374151; margin-bottom: 0.75rem; font-size: 0.9rem;">
-                                            <i class='bx bx-customize'></i> Custom Duration
-                                        </label>
-                                        <div style="display: flex; gap: 0.75rem; align-items: center;">
-                                            <div style="flex: 1;">
-                                                <input type="number" id="default-days" min="0" max="30" value="0" 
-                                                       onchange="updateCooldownFromDays('default')"
-                                                       style="width: 100%; padding: 0.75rem; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1rem; font-weight: 600; color: #1f2937;">
-                                                <small style="display: block; margin-top: 0.25rem; color: #6b7280; font-size: 0.8rem;">Days (0-30)</small>
-                                            </div>
-                                            <input type="hidden" name="cooldown_hours" id="default-cooldown_hours" value="{{ game_configs.all.cooldown_hours|default:0 }}">
-                                            <input type="hidden" name="cooldown_minutes" id="default-cooldown_minutes" value="{{ game_configs.all.cooldown_minutes|default:0 }}">
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Display Calculated Time -->
-                                    <div style="background: #f0f9ff; border: 2px solid #bae6fd; border-radius: 10px; padding: 1rem; margin-bottom: 1.5rem;">
-                                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem;">
-                                            <i class='bx bx-time' style="font-size: 1.2rem; color: #0284c7;"></i>
-                                            <span style="font-weight: 600; color: #0c4a6e; font-size: 0.9rem;">Cooldown Duration</span>
-                                        </div>
-                                        <p id="default-duration-display" style="margin: 0; color: #075985; font-size: 1.1rem; font-weight: 700;">
-                                            {{ game_configs.all.get_formatted_duration|default:"Not configured" }}
-                                        </p>
-                                    </div>
-                                    
-                                    <!-- Active Toggle -->
-                                    <div style="background: #fef3c7; border: 2px solid #fcd34d; border-radius: 10px; padding: 1rem; margin-bottom: 1.5rem;">
-                                        <label style="display: flex; align-items: center; gap: 12px; cursor: pointer;">
-                                            <input type="checkbox" name="is_active" id="default-is_active" {% if game_configs.all.is_active %}checked{% endif %}
-                                                   style="width: 20px; height: 20px; cursor: pointer; accent-color: #f59e0b;">
-                                            <div>
-                                                <span style="font-weight: 600; color: #92400e; display: block; font-size: 0.9rem;">
-                                                    <i class='bx bx-shield-quarter'></i> Enable Cooldown Restriction
-                                                </span>
-                                                <small style="color: #78350f; font-size: 0.8rem;">Uncheck to allow unlimited plays</small>
-                                            </div>
-                                        </label>
-                                    </div>
-                                    
-                                    <!-- Status Badge -->
-                                    <div class="status-badge {% if game_configs.all.is_active %}status-active{% else %}status-inactive{% endif %}">
-                                        <div style="display: flex; align-items: center; gap: 8px;">
-                                            <i class='bx bx-info-circle status-icon'></i>
-                                            <span class="status-text">
-                                                Status: <span id="default-status">{% if game_configs.all.is_active %}Active - {{ game_configs.all.get_formatted_duration }}{% else %}Not configured - Games unrestricted{% endif %}</span>
-                                            </span>
-                                        </div>
-                                    </div>
-                                    
-                                    <!-- Submit Button -->
-                                    <button type="submit" class="btn-save" style="width: 100%; padding: 0.9rem; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1rem; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3); transition: all 0.2s;">
-                                        <i class='bx bx-save'></i> Update Default Cooldown
-                                    </button>
-                                </form>
-                            </div>
-                            
+                            <label class="toggle-switch" title="Enable / Disable Cooldown">
+                                <input type="checkbox" name="is_active" id="quiz-is_active" {% if game_configs.quiz.is_active %}checked{% endif %}>
+                                <span class="toggle-slider"></span>
+                            </label>
                         </div>
-                        
-                        <!-- Info Section -->
-                        <div style="margin-top: 2rem; padding: 1.5rem; background: #eff6ff; border-left: 4px solid #3b82f6; border-radius: 6px;">
-                            <h5 style="color: #1e40af; margin-bottom: 0.75rem;">
-                                <i class='bx bx-info-circle'></i> How It Works
-                            </h5>
-                            <ul style="color: #1e40af; margin: 0; padding-left: 1.5rem; line-height: 1.6;">
-                                <li>Click preset buttons for quick setup (1 day, 3 days, 1 week, etc.)</li>
-                                <li>Or enter a custom duration in the days field (0-30 days)</li>
-                                <li>Days are automatically converted to hours for backend storage</li>
-                                <li>The Default cooldown applies to all games without specific configuration</li>
-                                <li>Enable the checkbox to activate cooldown restrictions</li>
-                                <li>Changes take effect immediately for new game sessions</li>
-                            </ul>
+                        <div class="cd-card-body">
+                            <form id="quiz-cooldown-form">
+                                {% csrf_token %}
+
+                                <div class="cd-status {% if game_configs.quiz.is_active %}active{% else %}inactive{% endif %}" id="quiz-status-badge">
+                                    <span class="cd-status-dot"></span>
+                                    <span id="quiz-status">{% if game_configs.quiz.is_active %}Active — {{ game_configs.quiz.get_formatted_duration }}{% else %}Disabled — Unlimited plays{% endif %}</span>
+                                </div>
+
+                                <div class="cd-presets-label">Quick Presets</div>
+                                <div class="cd-presets">
+                                    <button type="button" onclick="setCooldown('quiz', 0, 6)" class="preset-btn" data-total-hours="6">6 Hours</button>
+                                    <button type="button" onclick="setCooldown('quiz', 0, 12)" class="preset-btn" data-total-hours="12">12 Hours</button>
+                                    <button type="button" onclick="setCooldown('quiz', 1, 0)" class="preset-btn" data-total-hours="24">1 Day</button>
+                                    <button type="button" onclick="setCooldown('quiz', 3, 0)" class="preset-btn" data-total-hours="72">3 Days</button>
+                                    <button type="button" onclick="setCooldown('quiz', 7, 0)" class="preset-btn" data-total-hours="168">1 Week</button>
+                                    <button type="button" onclick="setCooldown('quiz', 14, 0)" class="preset-btn" data-total-hours="336">2 Weeks</button>
+                                    <button type="button" onclick="setCooldown('quiz', 30, 0)" class="preset-btn" data-total-hours="720">1 Month</button>
+                                    <button type="button" onclick="setCooldown('quiz', 0, 0)" class="preset-btn" data-total-hours="0">None</button>
+                                </div>
+
+                                <div class="cd-custom">
+                                    <label>Custom Duration</label>
+                                    <div class="cd-duration-inputs">
+                                        <div class="cd-input-group">
+                                            <input type="number" id="quiz-days" min="0" max="30" value="0" onchange="updateCooldownFromInputs('quiz')">
+                                            <span class="cd-unit">days</span>
+                                        </div>
+                                        <span class="cd-input-sep">+</span>
+                                        <div class="cd-input-group">
+                                            <input type="number" id="quiz-hours" min="0" max="23" value="0" onchange="updateCooldownFromInputs('quiz')">
+                                            <span class="cd-unit">hours</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <input type="hidden" name="cooldown_hours" id="quiz-cooldown_hours" value="{{ game_configs.quiz.cooldown_hours|default:0 }}">
+                                <input type="hidden" name="cooldown_minutes" id="quiz-cooldown_minutes" value="{{ game_configs.quiz.cooldown_minutes|default:0 }}">
+
+                                <div class="cd-duration">
+                                    <i class='bx bx-time'></i>
+                                    <span class="cd-duration-text" id="quiz-duration-display">
+                                        {{ game_configs.quiz.get_formatted_duration|default:"Not configured" }}
+                                    </span>
+                                </div>
+
+                                <button type="submit" class="cd-save-btn purple">
+                                    <i class='bx bx-save'></i> Save Quiz Cooldown
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- ── Drag & Drop Game ── -->
+                    <div class="cd-card">
+                        <div class="cd-card-head">
+                            <div class="cd-title-group">
+                                <div class="cd-icon" style="background: var(--gm-green);"><i class='bx bx-move'></i></div>
+                                <div>
+                                    <h3>Drag &amp; Drop Game</h3>
+                                    <p>Waste sorting challenges</p>
+                                </div>
+                            </div>
+                            <label class="toggle-switch" title="Enable / Disable Cooldown">
+                                <input type="checkbox" name="is_active" id="dragdrop-is_active" {% if game_configs.drag_drop.is_active %}checked{% endif %}>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="cd-card-body">
+                            <form id="dragdrop-cooldown-form">
+                                {% csrf_token %}
+
+                                <div class="cd-status {% if game_configs.drag_drop.is_active %}active{% else %}inactive{% endif %}" id="dragdrop-status-badge">
+                                    <span class="cd-status-dot"></span>
+                                    <span id="dragdrop-status">{% if game_configs.drag_drop.is_active %}Active — {{ game_configs.drag_drop.get_formatted_duration }}{% else %}Disabled — Unlimited plays{% endif %}</span>
+                                </div>
+
+                                <div class="cd-presets-label">Quick Presets</div>
+                                <div class="cd-presets">
+                                    <button type="button" onclick="setCooldown('dragdrop', 0, 6)" class="preset-btn" data-total-hours="6">6 Hours</button>
+                                    <button type="button" onclick="setCooldown('dragdrop', 0, 12)" class="preset-btn" data-total-hours="12">12 Hours</button>
+                                    <button type="button" onclick="setCooldown('dragdrop', 1, 0)" class="preset-btn" data-total-hours="24">1 Day</button>
+                                    <button type="button" onclick="setCooldown('dragdrop', 3, 0)" class="preset-btn" data-total-hours="72">3 Days</button>
+                                    <button type="button" onclick="setCooldown('dragdrop', 7, 0)" class="preset-btn" data-total-hours="168">1 Week</button>
+                                    <button type="button" onclick="setCooldown('dragdrop', 14, 0)" class="preset-btn" data-total-hours="336">2 Weeks</button>
+                                    <button type="button" onclick="setCooldown('dragdrop', 30, 0)" class="preset-btn" data-total-hours="720">1 Month</button>
+                                    <button type="button" onclick="setCooldown('dragdrop', 0, 0)" class="preset-btn" data-total-hours="0">None</button>
+                                </div>
+
+                                <div class="cd-custom">
+                                    <label>Custom Duration</label>
+                                    <div class="cd-duration-inputs">
+                                        <div class="cd-input-group">
+                                            <input type="number" id="dragdrop-days" min="0" max="30" value="0" onchange="updateCooldownFromInputs('dragdrop')">
+                                            <span class="cd-unit">days</span>
+                                        </div>
+                                        <span class="cd-input-sep">+</span>
+                                        <div class="cd-input-group">
+                                            <input type="number" id="dragdrop-hours" min="0" max="23" value="0" onchange="updateCooldownFromInputs('dragdrop')">
+                                            <span class="cd-unit">hours</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <input type="hidden" name="cooldown_hours" id="dragdrop-cooldown_hours" value="{{ game_configs.drag_drop.cooldown_hours|default:0 }}">
+                                <input type="hidden" name="cooldown_minutes" id="dragdrop-cooldown_minutes" value="{{ game_configs.drag_drop.cooldown_minutes|default:0 }}">
+
+                                <div class="cd-duration">
+                                    <i class='bx bx-time'></i>
+                                    <span class="cd-duration-text" id="dragdrop-duration-display">
+                                        {{ game_configs.drag_drop.get_formatted_duration|default:"Not configured" }}
+                                    </span>
+                                </div>
+
+                                <button type="submit" class="cd-save-btn green">
+                                    <i class='bx bx-save'></i> Save Drag &amp; Drop Cooldown
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- ── Default (All Games) ── -->
+                    <div class="cd-card">
+                        <div class="cd-card-head">
+                            <div class="cd-title-group">
+                                <div class="cd-icon" style="background: var(--gm-amber);"><i class='bx bx-game'></i></div>
+                                <div>
+                                    <h3>Default (All Games)</h3>
+                                    <p>Fallback for all game types</p>
+                                </div>
+                            </div>
+                            <label class="toggle-switch" title="Enable / Disable Cooldown">
+                                <input type="checkbox" name="is_active" id="default-is_active" {% if game_configs.all.is_active %}checked{% endif %}>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="cd-card-body">
+                            <form id="default-cooldown-form">
+                                {% csrf_token %}
+
+                                <div class="cd-status {% if game_configs.all.is_active %}active{% else %}inactive{% endif %}" id="default-status-badge">
+                                    <span class="cd-status-dot"></span>
+                                    <span id="default-status">{% if game_configs.all.is_active %}Active — {{ game_configs.all.get_formatted_duration }}{% else %}Disabled — Unlimited plays{% endif %}</span>
+                                </div>
+
+                                <div class="cd-presets-label">Quick Presets</div>
+                                <div class="cd-presets">
+                                    <button type="button" onclick="setCooldown('default', 0, 6)" class="preset-btn" data-total-hours="6">6 Hours</button>
+                                    <button type="button" onclick="setCooldown('default', 0, 12)" class="preset-btn" data-total-hours="12">12 Hours</button>
+                                    <button type="button" onclick="setCooldown('default', 1, 0)" class="preset-btn" data-total-hours="24">1 Day</button>
+                                    <button type="button" onclick="setCooldown('default', 3, 0)" class="preset-btn" data-total-hours="72">3 Days</button>
+                                    <button type="button" onclick="setCooldown('default', 7, 0)" class="preset-btn" data-total-hours="168">1 Week</button>
+                                    <button type="button" onclick="setCooldown('default', 14, 0)" class="preset-btn" data-total-hours="336">2 Weeks</button>
+                                    <button type="button" onclick="setCooldown('default', 30, 0)" class="preset-btn" data-total-hours="720">1 Month</button>
+                                    <button type="button" onclick="setCooldown('default', 0, 0)" class="preset-btn" data-total-hours="0">None</button>
+                                </div>
+
+                                <div class="cd-custom">
+                                    <label>Custom Duration</label>
+                                    <div class="cd-duration-inputs">
+                                        <div class="cd-input-group">
+                                            <input type="number" id="default-days" min="0" max="30" value="0" onchange="updateCooldownFromInputs('default')">
+                                            <span class="cd-unit">days</span>
+                                        </div>
+                                        <span class="cd-input-sep">+</span>
+                                        <div class="cd-input-group">
+                                            <input type="number" id="default-hours" min="0" max="23" value="0" onchange="updateCooldownFromInputs('default')">
+                                            <span class="cd-unit">hours</span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <input type="hidden" name="cooldown_hours" id="default-cooldown_hours" value="{{ game_configs.all.cooldown_hours|default:0 }}">
+                                <input type="hidden" name="cooldown_minutes" id="default-cooldown_minutes" value="{{ game_configs.all.cooldown_minutes|default:0 }}">
+
+                                <div class="cd-duration">
+                                    <i class='bx bx-time'></i>
+                                    <span class="cd-duration-text" id="default-duration-display">
+                                        {{ game_configs.all.get_formatted_duration|default:"Not configured" }}
+                                    </span>
+                                </div>
+
+                                <button type="submit" class="cd-save-btn amber">
+                                    <i class='bx bx-save'></i> Save Default Cooldown
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>
-            </div>
 
+                <!-- Info Banner -->
+                <div class="cd-info">
+                    <i class='bx bx-info-circle'></i>
+                    <div>
+                        <ul>
+                            <li>Use the <strong>toggle</strong> in each card header to enable or disable cooldowns.</li>
+                            <li>Click a preset pill or set a custom duration using <strong>days</strong> and <strong>hours</strong>.</li>
+                            <li>The <strong>Default</strong> cooldown applies to any game without its own setting.</li>
+                            <li>Changes take effect immediately for new game sessions.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
 
     </section>
 
@@ -822,217 +619,134 @@
         window.CSRF_TOKEN = '{{ csrf_token }}';
     </script>
     
-        
     <script src="{% static 'js/tab-persistence.js' %}?v={{ timestamp }}"></script>
     <script src="{% static 'js/cooldown-presets.js' %}?v={{ timestamp }}"></script>
     <script src="{% static 'js/admingames.js' %}?v={{ timestamp }}"></script>
     <script src="{% static 'js/games-excel-upload.js' %}?v={{ timestamp }}"></script>
     <script src="{% static 'js/points-input-handler.js' %}?v={{ timestamp }}"></script>
-	<script src="{% static 'js/admin_notifications.js' %}"></script>
+    <script src="{% static 'js/admin_notifications.js' %}"></script>
     
-    <!-- Game Cooldown Configuration Script -->
+    <!-- Cooldown form submission + toggle logic -->
     <script>
-        // Handle cooldown form submissions
-        function setupCooldownForm(formId, gameType, buttonColor) {
+        // Map gameType keys to the toggle checkbox IDs
+        const TOGGLE_MAP = {
+            quiz:     'quiz-is_active',
+            drag_drop:'dragdrop-is_active',
+            all:      'default-is_active'
+        };
+
+        function setupCooldownForm(formId, gameType) {
             const form = document.getElementById(formId);
             if (!form) return;
-            
+
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                
+
                 const formData = new FormData(e.target);
                 formData.append('game_type', gameType);
-                
-                // Get CSRF token from hidden input or cookies
-                let csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
-                if (!csrftoken) {
-                    // Try to get from cookie (ekolek_csrftoken is the actual cookie name)
-                    const cookies = document.cookie.split('; ');
-                    csrftoken = cookies.find(row => row.startsWith('ekolek_csrftoken='))?.split('=')[1];
-                    if (!csrftoken) {
-                        // Fallback to standard csrftoken name
-                        csrftoken = cookies.find(row => row.startsWith('csrftoken='))?.split('=')[1];
+
+                // Toggle lives outside the form — inject is_active manually
+                const toggleId = TOGGLE_MAP[gameType];
+                const toggle = document.getElementById(toggleId);
+                if (toggle) {
+                    if (toggle.checked) {
+                        formData.set('is_active', 'on');
+                    } else {
+                        formData.delete('is_active');
                     }
                 }
-                
-                // Get the submit button
+
+                let csrftoken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+                if (!csrftoken) {
+                    const cookies = document.cookie.split('; ');
+                    csrftoken = cookies.find(r => r.startsWith('ekolek_csrftoken='))?.split('=')[1]
+                             || cookies.find(r => r.startsWith('csrftoken='))?.split('=')[1];
+                }
+
                 const submitBtn = form.querySelector('button[type="submit"]');
-                const originalText = submitBtn.innerHTML;
-                
-                // Show loading state
+                const originalHTML = submitBtn.innerHTML;
                 submitBtn.disabled = true;
-                submitBtn.innerHTML = '<i class="bx bx-loader bx-spin"></i> Updating...';
-                
+                submitBtn.innerHTML = '<i class="bx bx-loader bx-spin"></i> Saving…';
+
                 try {
                     const response = await fetch('{% url "cenro:update_game_cooldown" %}', {
                         method: 'POST',
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'X-CSRFToken': csrftoken
-                        },
+                        headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': csrftoken },
                         credentials: 'same-origin',
                         body: formData
                     });
-                    
-                    // Handle 401 Unauthorized
-                    if (response.status === 401) {
-                        throw new Error('Session expired. Please login again at /cenro/admin/login/');
-                    }
-                    
-                    // Check if response is JSON
-                    const contentType = response.headers.get('content-type');
-                    if (!contentType || !contentType.includes('application/json')) {
+
+                    if (response.status === 401) throw new Error('Session expired. Please log in again.');
+
+                    const ct = response.headers.get('content-type');
+                    if (!ct || !ct.includes('application/json')) {
                         const text = await response.text();
-                        
-                        // Check for common error patterns
-                        if (text.includes('CSRF') || text.includes('csrf')) {
-                            throw new Error('CSRF verification failed. Please refresh the page and try again.');
-                        } else if (text.includes('login') || text.includes('authentication')) {
-                            throw new Error('Session expired. Please login again.');
-                        } else if (response.status === 403) {
-                            throw new Error('Permission denied. Please ensure you have admin access.');
-                        } else if (response.status === 404) {
-                            throw new Error('API endpoint not found. Please contact support.');
-                        } else {
-                            throw new Error(`Server error (${response.status}). Please check the console for details.`);
-                        }
+                        if (text.includes('CSRF') || text.includes('csrf'))
+                            throw new Error('CSRF verification failed. Refresh and retry.');
+                        if (text.includes('login') || text.includes('authentication'))
+                            throw new Error('Session expired. Please log in again.');
+                        throw new Error(`Server error (${response.status}).`);
                     }
-                    
+
                     const data = await response.json();
-                    
+
                     if (data.success) {
-                        const successMsg = document.createElement('div');
-                        successMsg.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #10b981; color: white; padding: 1rem 1.5rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 9999; animation: slideIn 0.3s ease-out;';
-                        successMsg.innerHTML = '<i class="bx bx-check-circle"></i> Game cooldown updated successfully!';
-                        document.body.appendChild(successMsg);
-                        
-                        // Remove success message after 3 seconds
-                        setTimeout(() => {
-                            successMsg.style.animation = 'slideOut 0.3s ease-out';
-                            setTimeout(() => successMsg.remove(), 300);
-                        }, 3000);
-                        
-                        // Reload page to show updated values
-                        setTimeout(() => location.reload(), 1500);
+                        showToast('success', 'Cooldown updated successfully!');
+                        setTimeout(() => location.reload(), 1200);
                     } else {
-                        // Show error notification
-                        const errorMsg = document.createElement('div');
-                        errorMsg.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #ef4444; color: white; padding: 1rem 1.5rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 9999; animation: slideIn 0.3s ease-out;';
-                        errorMsg.innerHTML = '<i class="bx bx-error-circle"></i> Error: ' + (data.error || 'Failed to update cooldown');
-                        document.body.appendChild(errorMsg);
-                        setTimeout(() => {
-                            errorMsg.style.animation = 'slideOut 0.3s ease-out';
-                            setTimeout(() => errorMsg.remove(), 300);
-                        }, 3000);
+                        showToast('error', data.error || 'Failed to update cooldown');
                         submitBtn.disabled = false;
-                        submitBtn.innerHTML = originalText;
+                        submitBtn.innerHTML = originalHTML;
                     }
-                } catch (error) {
-                    const errorMsg = document.createElement('div');
-                    errorMsg.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #ef4444; color: white; padding: 1rem 1.5rem; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); z-index: 9999; animation: slideIn 0.3s ease-out;';
-                    errorMsg.innerHTML = '<i class="bx bx-error-circle"></i> Failed to update cooldown: ' + error.message;
-                    document.body.appendChild(errorMsg);
-                    setTimeout(() => {
-                        errorMsg.style.animation = 'slideOut 0.3s ease-out';
-                        setTimeout(() => errorMsg.remove(), 300);
-                    }, 3000);
+                } catch (err) {
+                    showToast('error', err.message);
                     submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalText;
+                    submitBtn.innerHTML = originalHTML;
                 }
             });
         }
-        
-        // Add CSS animations and status badge styles
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideIn {
-                from {
-                    transform: translateX(400px);
-                    opacity: 0;
-                }
-                to {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-            }
-            @keyframes slideOut {
-                from {
-                    transform: translateX(0);
-                    opacity: 1;
-                }
-                to {
-                    transform: translateX(400px);
-                    opacity: 0;
-                }
-            }
-            .btn-save:hover {
-                opacity: 0.9;
-                transform: translateY(-1px);
-                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-            }
-            .cooldown-config-card {
-                transition: transform 0.2s, box-shadow 0.2s;
-            }
-            .cooldown-config-card:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
-            }
-            .status-badge {
-                border-radius: 10px;
-                padding: 0.75rem 1rem;
-                margin-bottom: 1.5rem;
-            }
-            .status-badge.status-active {
-                background: #dcfce7;
-                border: 2px solid #86efac;
-            }
-            .status-badge.status-inactive {
-                background: #fee2e2;
-                border: 2px solid #fca5a5;
-            }
-            .status-badge.status-active .status-icon {
-                color: #16a34a;
-                font-size: 1.1rem;
-            }
-            .status-badge.status-inactive .status-icon {
-                color: #dc2626;
-                font-size: 1.1rem;
-            }
-            .status-badge.status-active .status-text {
-                color: #166534;
-                font-size: 0.85rem;
-                font-weight: 600;
-            }
-            .status-badge.status-inactive .status-text {
-                color: #991b1b;
-                font-size: 0.85rem;
-                font-weight: 600;
-            }
-            .preset-btn {
-                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-            .preset-btn:hover {
-                border-color: #cbd5e1 !important;
-                background: #f8fafc !important;
-                transform: translateY(-1px);
-                box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            }
-            .preset-btn:active {
-                transform: translateY(0);
-            }
-            @media (max-width: 768px) {
-                .cooldown-config-card {
-                    padding: 1rem !important;
-                }
-            }
-        `;
-        document.head.appendChild(style);
-        
-        // Initialize forms when DOM is ready
+
+        /* Lightweight toast helper */
+        function showToast(type, msg) {
+            const el = document.createElement('div');
+            el.style.cssText = `position:fixed;top:20px;right:20px;padding:.85rem 1.25rem;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.12);z-index:9999;display:flex;align-items:center;gap:10px;font-weight:600;font-size:.875rem;color:#fff;animation:slideIn .3s ease-out;background:${type === 'success' ? 'var(--gm-green,#059669)' : 'var(--gm-red,#dc2626)'};`;
+            el.innerHTML = `<i class='bx ${type === 'success' ? 'bx-check-circle' : 'bx-error-circle'}' style="font-size:1.3rem;"></i><span>${msg}</span>`;
+            document.body.appendChild(el);
+            setTimeout(() => { el.style.animation = 'slideOut .3s ease-out'; setTimeout(() => el.remove(), 300); }, 3000);
+        }
+
+        /* Toggle → update status badge in real-time */
+        function initToggleSync() {
+            const pairs = [
+                { toggle: 'quiz-is_active',    badge: 'quiz-status-badge',    status: 'quiz-status' },
+                { toggle: 'dragdrop-is_active', badge: 'dragdrop-status-badge', status: 'dragdrop-status' },
+                { toggle: 'default-is_active',  badge: 'default-status-badge',  status: 'default-status' },
+            ];
+            pairs.forEach(({ toggle, badge, status }) => {
+                const cb = document.getElementById(toggle);
+                if (!cb) return;
+                cb.addEventListener('change', () => {
+                    const badgeEl = document.getElementById(badge);
+                    const statusEl = document.getElementById(status);
+                    const durationEl = document.getElementById(toggle.replace('-is_active', '-duration-display'));
+                    if (cb.checked) {
+                        badgeEl.classList.remove('inactive');
+                        badgeEl.classList.add('active');
+                        statusEl.textContent = 'Active — ' + (durationEl?.textContent || '');
+                    } else {
+                        badgeEl.classList.remove('active');
+                        badgeEl.classList.add('inactive');
+                        statusEl.textContent = 'Disabled — Unlimited plays';
+                    }
+                });
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
-            setupCooldownForm('quiz-cooldown-form', 'quiz', '#667eea');
-            setupCooldownForm('dragdrop-cooldown-form', 'drag_drop', '#10b981');
-            setupCooldownForm('default-cooldown-form', 'all', '#f59e0b');
+            setupCooldownForm('quiz-cooldown-form', 'quiz');
+            setupCooldownForm('dragdrop-cooldown-form', 'drag_drop');
+            setupCooldownForm('default-cooldown-form', 'all');
+            initToggleSync();
         });
     </script>
 

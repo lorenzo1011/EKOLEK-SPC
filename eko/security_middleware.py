@@ -1,13 +1,17 @@
 """
-Security middleware for additional protection
+Security middleware for additional protection.
+
+Provides brute-force prevention, admin access control,
+and input sanitization (SQL injection / XSS detection).
 """
 
+import hashlib
+
+from django.core.cache import cache
 from django.http import JsonResponse
 from django.utils.deprecation import MiddlewareMixin
-from django.core.cache import cache
-from django.conf import settings
-import time
-import hashlib
+
+from eko.constants import LOGIN_ATTEMPT_WINDOW_MINUTES, MAX_LOGIN_ATTEMPTS
 from eko.security_utils import get_client_ip, log_security_event
 
 
@@ -33,25 +37,25 @@ class BruteForceProtectionMiddleware(MiddlewareMixin):
     Protects against brute force attacks on login endpoints
     """
     def process_request(self, request):
+        """Block requests from IPs that exceed the login attempt threshold."""
         if request.path in ['/accounts/login/', '/accounts/qr_login/']:
             ip = get_client_ip(request)
             cache_key = f"login_attempts_{hashlib.md5(ip.encode()).hexdigest()}"
-            
+
             attempts = cache.get(cache_key, 0)
-            
-            # Block if too many attempts
-            if attempts >= 5:
+
+            if attempts >= MAX_LOGIN_ATTEMPTS:
                 log_security_event(
                     'BRUTE_FORCE_BLOCKED',
                     ip_address=ip,
                     details=f'Path: {request.path}'
                 )
                 return JsonResponse({'error': 'Too many login attempts. Try again later.'}, status=429)
-            
-            # Increment attempts on POST
+
             if request.method == 'POST':
-                cache.set(cache_key, attempts + 1, timeout=900)  # 15 minutes
-        
+                timeout = LOGIN_ATTEMPT_WINDOW_MINUTES * 60
+                cache.set(cache_key, attempts + 1, timeout=timeout)
+
         return None
 
 
@@ -101,19 +105,15 @@ class AdminAccessControlMiddleware(MiddlewareMixin):
         # Check if accessing admin page (HTML pages)
         for admin_path in self.ADMIN_PATHS:
             if request.path.startswith(admin_path):
-                # For HTML pages, check custom admin session
-                # (The @admin_required decorator will handle detailed validation)
+                # Log unauthorized access attempts for monitoring.
+                # The @admin_required decorator handles blocking/redirect.
                 if not request.session.get('admin_user_id'):
                     log_security_event(
                         'UNAUTHORIZED_ADMIN_ACCESS',
                         ip_address=get_client_ip(request),
                         details=f'Path: {request.path} - No admin session'
                     )
-                    # Don't block here - let the decorator handle it with proper redirect
-                    pass
-                
-                # Log admin access
-                if request.method == 'POST':
+                elif request.method == 'POST':
                     log_security_event(
                         'ADMIN_ACTION',
                         ip_address=get_client_ip(request),
@@ -123,9 +123,9 @@ class AdminAccessControlMiddleware(MiddlewareMixin):
         return None
 
 
-class SQLInjectionDetectionMiddleware(MiddlewareMixin):
+class InputSanitizationMiddleware(MiddlewareMixin):
     """
-    Detects potential SQL injection attempts
+    Detects potential SQL injection and XSS attempts in request parameters.
     """
     SUSPICIOUS_PATTERNS = [
         'union select', 'drop table', 'delete from', 'insert into',

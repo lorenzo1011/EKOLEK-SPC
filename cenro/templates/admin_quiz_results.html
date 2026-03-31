@@ -8,151 +8,19 @@
     <meta name="csrf-token" content="{{ csrf_token }}">
     <link href='https://unpkg.com/boxicons@2.0.9/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="{% static 'style.css' %}">
-    <link rel="stylesheet" href="{% static 'css/adminlearn.css' %}?v={{ timestamp }}">
-    <link rel="stylesheet" href="{% static 'admin/css/quiz_admin.css' %}?v={{ timestamp }}">
+    <link rel="stylesheet" href="{% static 'css/adminquiz.css' %}?v={{ timestamp }}">
     <link rel="stylesheet" href="{% static 'css/admin_quiz_results.css' %}?v={{ timestamp }}">
     <title>Quiz Results & Analytics</title>
     <link rel="icon" type="image/png" href="{% static 'image/clogo.png' %}">
 </head>
 <body>
     <!-- SIDEBAR -->
-    <section id="sidebar">
-        <a href="#" class="brand">
-            <i class='bx bxs-smile'></i>
-            <span class="text">CENRO Admin</span>
-        </a>
-        <ul class="side-menu top">
-            {% if can_manage_users %}
-            <li>
-                <a href="{% url 'cenro:adminuser' %}">
-                    <i class='bx bxs-user-detail'></i>
-                    <span class="text">User Management</span>
-                </a>
-            </li>
-            {% endif %}
-
-            {% if admin_user.role == 'super_admin' %}
-            <li>
-                <a href="{% url 'cenro:admin_management' %}">
-                    <i class='bx bxs-user-detail' ></i>
-                    <span class="text">Admin Management</span>
-                </a>
-            </li>
-            {% endif %}
-            
-            {% if can_manage_controls %}
-            <li>
-                <a href="{% url 'cenro:admincontrol' %}">
-                    <i class='bx bxs-component' ></i>
-                    <span class="text">Controls Management</span>
-                </a>
-            </li>
-            {% endif %}
-            
-            {% if can_manage_points %}
-            <li>
-                <a href="{% url 'cenro:adminpoints' %}">
-                    <i class='bx bxs-star' ></i>
-                    <span class="text">Points Management</span>
-                </a>
-            </li>
-            {% endif %}
-            
-            {% if can_manage_rewards %}
-            <li>
-                <a href="{% url 'cenro:adminrewards' %}">
-                    <i class='bx bxs-gift' ></i>
-                    <span class="text">Rewards Management</span>
-                </a>
-            </li>
-            {% endif %}
-
-            {% if can_manage_schedules %}
-            <li>
-                <a href="{% url 'cenro:adminschedule' %}">
-                    <i class='bx bxs-calendar' ></i>
-                    <span class="text">Schedule Management</span>
-                </a>
-            </li>
-            {% endif %}
-
-            {% if can_manage_security %}
-            <li>
-<a href="{% url 'cenro:security_dashboard' %}">
-<i class='bx bxs-shield' ></i>
-<span class="text">Security Management</span>
-</a>
-</li>
-            {% endif %}
-
-            {% if can_manage_learning %}
-            <li class="active">
-                <a href="{% url 'cenro:adminlearn' %}">
-                    <i class='bx bxs-book-content' ></i>
-                    <span class="text">Learning Management</span>
-                </a>
-            </li>
-            {% endif %}
-
-            {% if can_manage_games %}
-            <li>
-                <a href="{% url 'cenro:admingames' %}">
-                    <i class='bx bxs-game' ></i>
-                    <span class="text">Games Management</span>
-                </a>      
-      <li>
-        <a href="{% url 'cenro:waste_analytics' %}">
-          <i class='bx bxs-bar-chart-alt-2' ></i>
-          <span class="text">Waste Analytics</span>
-        </a>
-      </li>
-      
-            </li>
-            {% endif %}
-            
-            <!-- Security Analyst Special Dashboard -->
-            {% if admin_role == 'security_analyst' %}
-            <li>
-                <a href="{% url 'cenro:adminsecurity' %}">
-                    <i class='bx bxs-dashboard' ></i>
-                    <span class="text">Security Dashboard</span>
-                </a>
-            </li>
-            {% endif %}
-            
-        </ul>
-        <ul class="side-menu">
-            <li>
-                <a href="#" style="visibility: hidden;">
-                    <i class='bx bxs-cog' ></i>
-                    <span class="text">Settings</span>
-                </a>
-            </li>
-            <li>
-                <a href="{% url 'cenro:admin_logout' %}" class="logout">
-                    <i class='bx bxs-log-out-circle' ></i>
-                    <span class="text">Logout</span>
-                </a>
-            </li>
-        </ul>
-    </section>
+    {% include 'includes/sidebar.html' with active_page='learning' %}
 
     <!-- CONTENT -->
     <section id="content">
-        <nav>
-            <i class='bx bx-menu' ></i>
-            
-            <!-- Admin User Profile Section -->
-            {% if is_admin_authenticated %}
-            <div class="profile" style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
-                <div class="admin-info" style="text-align: right; margin-right: 10px;">
-                    <span style="display: block; font-weight: 600; color: #333;">{{ admin_full_name }}</span>
-                    <span style="display: block; font-size: 0.8rem; color: #666;">{{ admin_role_display }}</span>
-                </div>
-                <i class='bx bxs-user-circle' style="font-size: 2rem; color: #667eea;"></i>
-            </div>
-            {% endif %}
-        </nav>
+        <!-- NAVBAR -->
+        {% include 'includes/navbar.html' %}
 
         <!-- MAIN -->
         <main>
@@ -161,25 +29,26 @@
                     <h1>Quiz Results & Analytics</h1>
                     <ul class="breadcrumb">
                         <li><a href="{% url 'cenro:adminlearn' %}">Learning</a></li>
-                        <li><i class='bx bx-chevron-right' ></i></li>
+                        <li><i class='bx bx-chevron-right'></i></li>
                         <li><a class="active" href="#">Quiz Results</a></li>
                     </ul>
                 </div>
                 <div>
-                    <a href="{% url 'cenro:adminlearn' %}" class="button">
+                    <a href="{% url 'cenro:adminlearn' %}" class="qz-btn qz-btn-ghost">
                         <i class='bx bx-arrow-back'></i> Back to Learning
                     </a>
-                    <a href="{% url 'cenro:quiz_management' %}" class="button">
+                    <a href="{% url 'cenro:quiz_management' %}" class="qz-btn qz-btn-primary">
                         <i class='bx bx-brain'></i> Quiz Management
                     </a>
                 </div>
             </div>
 
             <!-- Filter Section -->
-            <div class="filter-section">
-                <form method="get" id="filterForm">
+            <div class="qz-filter-bar">
+                <i class='bx bx-filter-alt' style="font-size: 1.2rem; color: var(--qz-primary);"></i>
+                <form method="get" id="filterForm" style="display: flex; align-items: center; gap: 12px; flex: 1;">
                     <label for="video-filter">Filter by Video:</label>
-                    <select name="video_id" id="video-filter" onchange="this.form.submit()">
+                    <select name="video_id" id="video-filter" class="qz-select" style="max-width: 320px;" onchange="this.form.submit()">
                         <option value="">All Videos</option>
                         {% for video in videos %}
                         <option value="{{ video.id }}" {% if request.GET.video_id == video.id|stringformat:"s" %}selected{% endif %}>
@@ -191,106 +60,131 @@
             </div>
 
             <!-- Statistics Grid -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3>Total Quiz Attempts</h3>
-                    <div class="stat-value primary">{{ total_attempts }}</div>
+            <div class="qz-stats-grid">
+                <div class="qz-stat-card primary">
+                    <div class="qz-stat-icon primary"><i class='bx bx-edit'></i></div>
+                    <div class="qz-stat-value">{{ total_attempts }}</div>
+                    <div class="qz-stat-label">Total Attempts</div>
                 </div>
                 
-                <div class="stat-card">
-                    <h3>Passed (≥70%)</h3>
-                    <div class="stat-value success">{{ passed_attempts }}</div>
+                <div class="qz-stat-card green">
+                    <div class="qz-stat-icon green"><i class='bx bx-check-circle'></i></div>
+                    <div class="qz-stat-value">{{ passed_attempts }}</div>
+                    <div class="qz-stat-label">Passed (≥70%)</div>
                 </div>
                 
-                <div class="stat-card">
-                    <h3>Failed (<70%)</h3>
-                    <div class="stat-value danger">{{ failed_attempts }}</div>
+                <div class="qz-stat-card red">
+                    <div class="qz-stat-icon red"><i class='bx bx-x-circle'></i></div>
+                    <div class="qz-stat-value">{{ failed_attempts }}</div>
+                    <div class="qz-stat-label">Failed (&lt;70%)</div>
                 </div>
                 
-                <div class="stat-card">
-                    <h3>Pass Rate</h3>
-                    <div class="stat-value warning">{{ pass_rate|floatformat:1 }}%</div>
+                <div class="qz-stat-card amber">
+                    <div class="qz-stat-icon amber"><i class='bx bx-trending-up'></i></div>
+                    <div class="qz-stat-value">{{ pass_rate|floatformat:1 }}%</div>
+                    <div class="qz-stat-label">Pass Rate</div>
                 </div>
             </div>
 
             <!-- Score Distribution -->
-            <div class="results-table" style="margin-bottom: 20px;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th colspan="2" style="text-align: center; background: #3498db; color: white;">Score Distribution</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for range, count in score_ranges.items %}
-                        <tr>
-                            <td><strong>{{ range }}</strong></td>
-                            <td>{{ count }} attempts</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <div class="qz-card" style="margin-bottom: 20px;">
+                <div class="qz-card-header">
+                    <h3><i class='bx bx-bar-chart-alt-2'></i> Score Distribution</h3>
+                </div>
+                <div class="qz-card-body" style="padding: 0;">
+                    <table class="qz-table">
+                        <thead>
+                            <tr>
+                                <th>Score Range</th>
+                                <th>Attempts</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for range, count in score_ranges.items %}
+                            <tr>
+                                <td><strong>{{ range }}</strong></td>
+                                <td>
+                                    <span class="qz-badge muted">{{ count }} attempt{{ count|pluralize }}</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             <!-- Recent Results -->
-            <div class="results-table">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>User</th>
-                            <th>Video</th>
-                            <th>Score</th>
-                            <th>Percentage</th>
-                            <th>Date</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for result in results %}
-                        <tr>
-                            <td>{{ result.user.full_name }}</td>
-                            <td>{{ result.video.title }}</td>
-                            <td>{{ result.correct_answers }}/{{ result.total_questions }}</td>
-                            <td>
-                                {% if result.score_percentage >= 90 %}
-                                <span class="score-badge score-excellent">{{ result.score_percentage|floatformat:1 }}%</span>
-                                {% elif result.score_percentage >= 80 %}
-                                <span class="score-badge score-good">{{ result.score_percentage|floatformat:1 }}%</span>
-                                {% elif result.score_percentage >= 70 %}
-                                <span class="score-badge score-fair">{{ result.score_percentage|floatformat:1 }}%</span>
-                                {% else %}
-                                <span class="score-badge score-poor">{{ result.score_percentage|floatformat:1 }}%</span>
-                                {% endif %}
-                            </td>
-                            <td>{{ result.created_at|date:"M d, Y H:i" }}</td>
-                            <td>
-                                {% if result.score_percentage >= 70 %}
-                                <span style="color: #27ae60; font-weight: bold;">✓ Passed</span>
-                                {% else %}
-                                <span style="color: #e74c3c; font-weight: bold;">✗ Failed</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="6" style="text-align: center; color: #666; padding: 40px;">
-                                <i class='bx bx-chart' style="font-size: 3rem; display: block; margin-bottom: 10px;"></i>
-                                No quiz results found.
-                                {% if selected_video %}
-                                <br><small>Try selecting a different video or view all results.</small>
-                                {% else %}
-                                <br><small>Users haven't taken any quizzes yet.</small>
-                                {% endif %}
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <div class="qz-card">
+                <div class="qz-card-header">
+                    <h3><i class='bx bx-table'></i> Recent Results</h3>
+                </div>
+                <div class="qz-card-body" style="padding: 0;">
+                    <table class="qz-table">
+                        <thead>
+                            <tr>
+                                <th>User</th>
+                                <th>Video</th>
+                                <th>Score</th>
+                                <th>Percentage</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for result in results %}
+                            <tr>
+                                <td>
+                                    <strong>{{ result.user.full_name }}</strong>
+                                </td>
+                                <td>{{ result.video.title }}</td>
+                                <td>
+                                    <span class="qz-badge muted">{{ result.correct_answers }}/{{ result.total_questions }}</span>
+                                </td>
+                                <td>
+                                    {% if result.score_percentage >= 90 %}
+                                    <span class="qz-score excellent">{{ result.score_percentage|floatformat:1 }}%</span>
+                                    {% elif result.score_percentage >= 80 %}
+                                    <span class="qz-score good">{{ result.score_percentage|floatformat:1 }}%</span>
+                                    {% elif result.score_percentage >= 70 %}
+                                    <span class="qz-score fair">{{ result.score_percentage|floatformat:1 }}%</span>
+                                    {% else %}
+                                    <span class="qz-score poor">{{ result.score_percentage|floatformat:1 }}%</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ result.created_at|date:"M d, Y H:i" }}</td>
+                                <td>
+                                    {% if result.score_percentage >= 70 %}
+                                    <span class="qz-badge green"><i class='bx bx-check'></i> Passed</span>
+                                    {% else %}
+                                    <span class="qz-badge red"><i class='bx bx-x'></i> Failed</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6">
+                                    <div class="qz-empty-state">
+                                        <i class='bx bx-chart'></i>
+                                        <p>
+                                            No quiz results found.
+                                            {% if selected_video %}
+                                            <br>Try selecting a different video or view all results.
+                                            {% else %}
+                                            <br>Users haven't taken any quizzes yet.
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
             {% if results.count == 50 %}
-            <div style="text-align: center; margin-top: 20px; padding: 20px; background: white; border-radius: 10px;">
-                <p style="color: #666;">Showing recent 50 results. Use filters to find specific results.</p>
+            <div class="qz-pagination-note">
+                <p><i class='bx bx-info-circle'></i> Showing recent 50 results. Use filters to find specific results.</p>
             </div>
             {% endif %}
 

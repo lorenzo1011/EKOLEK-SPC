@@ -2,40 +2,30 @@
 Security monitoring and reporting views
 """
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_exempt
-from django.contrib import messages
-from django.utils import timezone
-from django.db import transaction, IntegrityError
+import csv
 import logging
+import time
+from datetime import datetime, timedelta
+from io import BytesIO
 
-from accounts.models import (
-    Users, Family, Barangay, PointsTransaction, Reward, GarbageSchedule, RewardCategory,
-    WasteType, WasteTransaction, Redemption, Notification, RewardHistory
-)
+from django.db.models import Count
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import render
+from django.utils import timezone
+
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import inch
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+
+from accounts.models import LoginAttempt, PointsTransaction, Redemption, Users
 from cenro.models import AdminActionHistory
-from game.models import Question, Choice, WasteCategory, WasteItem
-from learn.models import LearningVideo, VideoWatchHistory
 
-from ..admin_auth import admin_required, role_required, permission_required
+from ..admin_auth import admin_required, permission_required
 
 logger = logging.getLogger(__name__)
-
-import time
-import csv
-from datetime import datetime, timedelta
-from django.http import HttpResponse
-from accounts.models import LoginAttempt
-from io import BytesIO
-from reportlab.lib import colors
-from reportlab.lib.pagesizes import letter, A4
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.units import inch
-from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
-from django.db.models import Count
 
 
 # Security Dashboard - Admin Security Management
@@ -43,10 +33,6 @@ from django.db.models import Count
 @permission_required('can_manage_security')
 def adminsecurity(request):
     """Security monitoring dashboard for admin users"""
-    from datetime import timedelta
-    from django.db.models import Count
-    from accounts.models import LoginAttempt
-    
     # Get time periods
     now = timezone.now()
     last_24h = now - timedelta(hours=24)
@@ -157,19 +143,6 @@ def generate_security_report(request):
     For Security Analyst role
     Handles GET requests from the report form
     """
-    import csv
-    from datetime import datetime, timedelta
-    from django.http import HttpResponse
-    from accounts.models import LoginAttempt, Users, Redemption, PointsTransaction
-    from cenro.models import AdminActionHistory
-    from io import BytesIO
-    from reportlab.lib import colors
-    from reportlab.lib.pagesizes import letter, A4
-    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer, PageBreak
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-    from reportlab.lib.units import inch
-    from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_RIGHT
-    
     # Accept GET request (from form submission)
     if request.method != 'GET':
         return JsonResponse({'error': 'Method not allowed'}, status=405)
@@ -800,9 +773,7 @@ def generate_security_report(request):
         return JsonResponse({'error': 'Invalid report type'}, status=400)
         
     except Exception as e:
-        logger.error(f"Error generating report: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        logger.error("Error generating report", exc_info=True)
         return JsonResponse({'error': f'Report generation failed: {str(e)}'}, status=500)
 
 

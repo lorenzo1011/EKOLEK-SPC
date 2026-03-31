@@ -1,21 +1,22 @@
 """
 Dashboard views for CENRO admin panel
 """
-from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse
-from django.contrib import messages
-from django.utils import timezone
-from django.db.models import Sum
 from datetime import datetime, timedelta
 
+from django.contrib import messages
+from django.db.models import Sum
+from django.http import JsonResponse
+from django.shortcuts import redirect, render
+from django.utils import timezone
+
 from accounts.models import (
-    Users, Family, Barangay, PointsTransaction, Reward, GarbageSchedule,
-    WasteType, WasteTransaction, Redemption, Notification, RewardHistory
+    Family, GarbageSchedule, Notification, PointsTransaction,
+    Redemption, Reward, Users, WasteTransaction, WasteType
 )
 from cenro.models import AdminActionHistory
 from learn.models import LearningVideo
 
-from ..admin_auth import admin_required, permission_required
+from ..admin_auth import admin_required
 
 
 @admin_required

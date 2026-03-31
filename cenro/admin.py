@@ -1,7 +1,7 @@
 from django.contrib import admin
-from .models import AdminUser, AdminActionHistory, AdminNotification
-from django.utils.html import format_html
 from django.utils import timezone
+
+from .models import AdminUser, AdminActionHistory, AdminNotification
 
 
 @admin.register(AdminUser)

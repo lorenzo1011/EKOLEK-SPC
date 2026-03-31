@@ -2,31 +2,20 @@
 Learning videos and quiz management views
 """
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_exempt
-from django.contrib import messages
-from django.utils import timezone
-from django.db import transaction, IntegrityError
+import json
 import logging
+import time
 
-from accounts.models import (
-    Users, Family, Barangay, PointsTransaction, Reward, GarbageSchedule, RewardCategory,
-    WasteType, WasteTransaction, Redemption, Notification, RewardHistory
-)
-from cenro.models import AdminActionHistory
-from game.models import Question, Choice, WasteCategory, WasteItem
-from learn.models import LearningVideo, VideoWatchHistory
+from django.db import models
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, render
+from django.views.decorators.http import require_POST
 
-from ..admin_auth import admin_required, role_required, permission_required
+from learn.models import LearningVideo, QuizQuestion, QuizResult
+
+from ..admin_auth import admin_required, permission_required
 
 logger = logging.getLogger(__name__)
-
-import json
-import time
-from django.db import models
-from learn.models import QuizQuestion, QuizResult, QuizAnswer
 
 
 # Learning Videos Management Views
@@ -38,6 +27,8 @@ def adminlearn(request):
     return render(request, 'adminlearn.html', {'videos': videos, 'timestamp': int(time.time()),})
 
 
+@admin_required
+@permission_required('can_manage_learning')
 def add_video(request):
     """Add a new learning video"""
     if request.method == 'POST':
@@ -69,6 +60,8 @@ def add_video(request):
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 
+@admin_required
+@permission_required('can_manage_learning')
 def edit_video(request):
     """Edit an existing learning video"""
     if request.method == 'POST':
@@ -102,6 +95,8 @@ def edit_video(request):
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 
+@admin_required
+@permission_required('can_manage_learning')
 def toggle_video(request):
     """Toggle video active status"""
     if request.method == 'POST':
@@ -122,6 +117,8 @@ def toggle_video(request):
     return JsonResponse({'success': False, 'error': 'Invalid request method'})
 
 
+@admin_required
+@permission_required('can_manage_learning')
 def delete_video(request):
     """Delete a learning video"""
     if request.method == 'POST':

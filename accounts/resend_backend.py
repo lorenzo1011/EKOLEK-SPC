@@ -29,13 +29,13 @@ class ResendEmailBackend(BaseEmailBackend):
         if not self.api_key:
             if not self.fail_silently:
                 raise ValueError("RESEND_API_KEY not configured in settings")
-            logger.error("❌ RESEND_API_KEY not configured")
+            logger.error("RESEND_API_KEY not configured")
         else:
             if resend:
                 resend.api_key = self.api_key
-                logger.info("✅ Resend API configured successfully")
+                logger.info("Resend API configured successfully")
             else:
-                logger.error("❌ Resend package not installed")
+                logger.error("Resend package not installed")
     
     def send_messages(self, email_messages):
         """
@@ -46,7 +46,7 @@ class ResendEmailBackend(BaseEmailBackend):
             return 0
         
         if not self.api_key:
-            logger.error("❌ Cannot send emails - RESEND_API_KEY not configured")
+            logger.error("Cannot send emails - RESEND_API_KEY not configured")
             return 0
         
         num_sent = 0
@@ -56,7 +56,7 @@ class ResendEmailBackend(BaseEmailBackend):
                 if sent:
                     num_sent += 1
             except Exception as e:
-                logger.error(f"❌ Failed to send email via Resend: {str(e)}")
+                logger.error(f"Failed to send email via Resend: {str(e)}")
                 if not self.fail_silently:
                     raise
         
@@ -65,7 +65,7 @@ class ResendEmailBackend(BaseEmailBackend):
     def _send(self, message):
         """Send a single EmailMessage via Resend API"""
         if not message.recipients():
-            logger.warning("⚠️ Email message has no recipients")
+            logger.warning("Email message has no recipients")
             return False
         
         try:
@@ -105,7 +105,7 @@ class ResendEmailBackend(BaseEmailBackend):
                     email_data['html'] = content
             
             # Send via Resend API
-            logger.info(f"📧 Sending email via Resend to: {', '.join(message.to)}")
+            logger.info(f"Sending email via Resend to: {', '.join(message.to)}")
             logger.info(f"   Subject: {message.subject}")
             
             if not resend:
@@ -113,11 +113,11 @@ class ResendEmailBackend(BaseEmailBackend):
             
             response = resend.Emails.send(email_data)
             
-            logger.info(f"✅ Email sent successfully via Resend | ID: {response.get('id', 'N/A')}")
+            logger.info(f"Email sent successfully via Resend | ID: {response.get('id', 'N/A')}")
             return True
             
         except Exception as e:
-            logger.error(f"❌ Resend API error: {str(e)}")
+            logger.error(f"Resend API error: {str(e)}")
             if not self.fail_silently:
                 raise
             return False

@@ -24,159 +24,14 @@
 
 
 	<!-- SIDEBAR -->
-	<section id="sidebar">
-		<a href="#" class="brand">
-			<i class='bx bxs-group' ></i>
-			<span class="text">CENRO Admin</span>
-		</a>
-		<ul class="side-menu top">
-			<!-- Dashboard/Home -->
-			<li>
-				<a href="{% url 'cenro:dashboard' %}">
-					<i class='bx bxs-dashboard'></i>
-					<span class="text">Dashboard</span>
-				</a>
-			</li>
-
-			{% if can_manage_users %}
-			<li>
-				<a href="{% url 'cenro:adminuser' %}">
-					<i class='bx bxs-user-detail' ></i>
-					<span class="text">User Management</span>
-				</a>
-			</li>
-			{% endif %}
-
-			{% if admin_user.role == 'super_admin' %}
-			<li>
-				<a href="{% url 'cenro:admin_management' %}">
-					<i class='bx bxs-user-detail' ></i>
-					<span class="text">Admin Management</span>
-				</a>
-			</li>
-			{% endif %}
-			
-			{% if can_manage_controls %}
-			<li>
-				<a href="{% url 'cenro:admincontrol' %}">
-					<i class='bx bxs-component' ></i>
-					<span class="text">Controls Management</span>
-				</a>
-			</li>
-			{% endif %}
-			
-			{% if can_manage_points %}
-			<li>
-				<a href="{% url 'cenro:adminpoints' %}">
-					<i class='bx bxs-star'  ></i>
-					<span class="text">Points Management</span>
-				</a>
-			</li>
-			{% endif %}
-			
-			{% if can_manage_rewards %}
-			<li class="active">
-				<a href="{% url 'cenro:adminrewards' %}">
-					<i class='bx bxs-gift'></i>
-					<span class="text">Rewards Management</span>
-				</a>
-			</li>
-			{% endif %}
-
-			{% if can_manage_schedules %}
-			<li>
-				<a href="{% url 'cenro:adminschedule' %}">
-					<i class='bx bxs-calendar' ></i>
-					<span class="text">Schedule Management</span>
-				</a>
-			</li>
-			{% endif %}
-			
-			{% if can_manage_security %}
-			<li>
-<a href="{% url 'cenro:security_dashboard' %}">
-<i class='bx bxs-shield' ></i>
-<span class="text">Security Management</span>
-</a>
-</li>
-			{% endif %}
-			
-			{% if can_manage_learning %}
-			<li>
-				<a href="{% url 'cenro:adminlearn' %}">
-					<i class='bx bxs-book-content' ></i>
-					<span class="text">Learning Management</span>
-				</a>
-			</li>
-			{% endif %}
-			
-			{% if can_manage_games %}
-			<li>
-				<a href="{% url 'cenro:admingames' %}">
-				<i class='bx bxs-game' ></i>
-				<span class="text">Games Management</span>
-				</a>      
-      <li>
-        <a href="{% url 'cenro:waste_analytics' %}">
-          <i class='bx bxs-bar-chart-alt-2' ></i>
-          <span class="text">Waste Analytics</span>
-        </a>
-      </li>
-      
-			</li>
-			{% endif %}
-			
-			<!-- Security Analyst Special Dashboard -->
-			{% if admin_role == 'security_analyst' %}
-			<li>
-				<a href="{% url 'cenro:adminsecurity' %}">
-					<i class='bx bxs-dashboard' ></i>
-					<span class="text">Security Dashboard</span>
-				</a>
-			</li>
-			{% endif %}
-
-		</ul>
-		<ul class="side-menu">
-			<li>
-				<a href="{% url 'cenro:admin_logout' %}" class="logout">
-					<i class='bx bxs-log-out-circle' ></i>
-					<span class="text">Logout</span>
-				</a>
-			</li>
-		</ul>
-	</section>
-	<!-- SIDEBAR -->
+	{% include 'includes/sidebar.html' with active_page='rewards' %}
 
 
 
 	<!-- CONTENT -->
 	<section id="content">
 		<!-- NAVBAR -->
-		<nav>
-			<i class='bx bx-menu' ></i>
-			
-			<!-- Admin User Profile Section -->
-			{% if is_admin_authenticated %}
-			<div class="profile" style="margin-left: auto; display: flex; align-items: center; gap: 10px;">
-				<!-- Admin Notification Bell -->
-				{% include 'includes/notification_bell.html' %}
-				
-				<div class="admin-info" style="text-align: right; margin-right: 10px;">
-					<span style="display: block; font-weight: 600; color: #333;">{{ admin_full_name }}</span>
-					<span style="display: block; font-size: 0.8rem; color: #666;">{{ admin_role_display }}</span>
-				</div>
-				<i class='bx bxs-user-circle' style="font-size: 2rem; color: #667eea;"></i>
-			</div>
-			{% else %}
-			<div class="profile" style="margin-left: auto;">
-				<a href="{% url 'cenro:admin_login' %}" style="color: #667eea; text-decoration: none;">
-					<i class='bx bx-log-in' style="font-size: 1.5rem;"></i>
-					<span>Login</span>
-				</a>
-			</div>
-			{% endif %}
-		</nav>
+		{% include 'includes/navbar.html' %}
 		<!-- NAVBAR -->
 
 		<!-- MAIN -->
@@ -203,42 +58,61 @@
 
 			<div class="reward-container">
 				<div class="reward-header">
-					<h3 style="color: #000000 !important;">Reward Management</h3>
+					<h3>Reward Management</h3>
 					<div class="reward-icons">
-					<input type="text" id="rewardsSearchInput" placeholder="Search rewards..." style="padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; width: 250px; font-size: 0.9rem; margin-right: 10px;">
+					<input type="text" id="rewardsSearchInput" placeholder="Search rewards..." style="padding: 8px 14px; border: 1px solid #d1d5db; border-radius: 8px; width: 220px; font-size: 0.85rem; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='#7e22ce'" onblur="this.style.borderColor='#d1d5db'">
 					<button class="add-reward-btn" onclick="openAddRewardModal()">+ Add Reward</button>
-					<button class="add-reward-btn" onclick="openAddStockModal()" style="background-color: #10b981; margin-left: 10px;">+ Add Stock</button>
-					<button class="add-reward-btn" onclick="openRemoveStockModal()" style="background-color: #ef4444; margin-left: 10px;">- Remove Stock</button>
+					<button class="add-reward-btn" onclick="openAddStockModal()" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); box-shadow: 0 2px 4px rgba(16,185,129,0.2);">+ Add Stock</button>
+					<button class="add-reward-btn" onclick="openRemoveStockModal()" style="background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); box-shadow: 0 2px 4px rgba(239,68,68,0.2);">- Remove Stock</button>
 					</div>
 				</div>
 
-				<div class="reward-table-wrapper" style="max-height: 500px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px;">
+				<div class="reward-table-wrapper">
 					<table class="reward-table">
+					<colgroup>
+						<col class="col-id">
+						<col class="col-name">
+						<col class="col-category">
+						<col class="col-points">
+						<col class="col-stock">
+						<col class="col-location">
+						<col class="col-desc">
+						<col class="col-image">
+						<col class="col-actions">
+					</colgroup>
 					<thead>
-						<tr style="position: sticky; top: 0; z-index: 10; background: #f9fafb;">
-						<th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">ID</th>
-						<th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">Name</th>
-						<th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">Category</th>
-						<th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">Points</th>
-						<th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">Stock</th>
-						<th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">Available To</th>
-						<th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; max-width: 200px;">Description</th>
-						<th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">Image URL</th>
-						<th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">Actions</th>
+						<tr>
+						<th>ID</th>
+						<th>Name</th>
+						<th>Category</th>
+						<th>Points</th>
+						<th>Stock</th>
+						<th>Available To</th>
+						<th>Description</th>
+						<th>Image</th>
+						<th>Actions</th>
 						</tr>
 					</thead>
 					<tbody>
 					{% for reward in rewards %}
 					<tr>
-						<td style="padding: 12px; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">{{ forloop.counter }}</td>
-						<td style="padding: 12px; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">{{ reward.name }}</td>
-						<td style="padding: 12px; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">{{ reward.category }}</td>
-						<td style="padding: 12px; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">{{ reward.points_required|smart_points }}</td>
-						<td style="padding: 12px; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">{{ reward.stock }}</td>
-						<td style="padding: 12px; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">
+						<td class="cell-id">{{ forloop.counter }}</td>
+						<td class="cell-name" title="{{ reward.name }}">{{ reward.name }}</td>
+						<td class="cell-category"><span class="category-tag">{{ reward.category }}</span></td>
+						<td class="cell-points">{{ reward.points_required|smart_points }}</td>
+						<td class="cell-stock">
+							{% if reward.stock == 0 %}
+								<span class="stock-value out-of-stock">0</span>
+							{% elif reward.stock <= 5 %}
+								<span class="stock-value low-stock">{{ reward.stock }}</span>
+							{% else %}
+								<span class="stock-value in-stock">{{ reward.stock }}</span>
+							{% endif %}
+						</td>
+						<td class="cell-location">
 							{% if reward.is_global_reward %}
 								<span class="barangay-badge barangay-badge-global">
-									<i class='bx bx-globe'></i> {{ reward.get_barangay_names }}
+									<i class='bx bx-globe'></i> All
 								</span>
 							{% else %}
 								{% with barangay_count=reward.available_barangays.count %}
@@ -247,7 +121,7 @@
 									{% else %}
 										<div class="barangay-dropdown-wrapper">
 											<span class="barangay-badge barangay-badge-count" onclick="toggleBarangayDropdown(this)">
-												<i class='bx bx-buildings'></i> {{ barangay_count }} Barangays <i class='bx bx-chevron-down'></i>
+												<i class='bx bx-buildings'></i> {{ barangay_count }} Barangays <i class='bx bx-chevron-down' style="font-size:0.7rem"></i>
 											</span>
 											<div class="barangay-dropdown-menu">
 												{% for brgy in reward.available_barangays.all %}
@@ -261,27 +135,43 @@
 								{% endwith %}
 							{% endif %}
 						</td>
-						<td style="padding: 12px; border-bottom: 1px solid #e5e7eb; max-width: 200px; word-wrap: break-word;">{{ reward.description }}</td>
-						<td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
+						<td class="cell-desc">
+							<span class="desc-text">{{ reward.description }}</span>
+							{% if reward.description|length > 40 %}
+							<div class="desc-tooltip">{{ reward.description }}</div>
+							{% endif %}
+						</td>
+						<td class="cell-image">
 					{% if reward.image %}
-						<a href="https://drive.google.com/file/d/{{ reward.image }}/view" target="_blank" title="Click to view full size image">
-							<img src="{{ reward.image_url }}" alt="{{ reward.name }}" style="width:60px;height:60px;object-fit:cover;cursor:pointer;border:1px solid #e5e7eb;border-radius:4px;" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%27100%27 height=%27100%27%3E%3Crect fill=%27%23f3f4f6%27 width=%27100%27 height=%27100%27/%3E%3Ctext fill=%27%236b7280%27 font-family=%27Arial%27 font-size=%2714%27 x=%2750%25%27 y=%2750%25%27 text-anchor=%27middle%27 dy=%27.3em%27%3ENo Image%3C/text%3E%3C/svg%3E'; this.style.width='60px'; this.style.height='60px';">
+						<a href="https://drive.google.com/file/d/{{ reward.image }}/view" target="_blank" title="View full image">
+							<img class="reward-thumb" src="{{ reward.image_url }}" alt="{{ reward.name }}" onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2740%27 height=%2740%27%3E%3Crect fill=%27%23f3f4f6%27 width=%2740%27 height=%2740%27 rx=%276%27/%3E%3Ctext fill=%27%239ca3af%27 font-family=%27sans-serif%27 font-size=%2710%27 x=%2750%25%27 y=%2750%25%27 text-anchor=%27middle%27 dy=%27.3em%27%3ENo img%3C/text%3E%3C/svg%3E';">
 						</a>
 					{% else %}
-						<span style="color: #6b7280; font-size: 12px;">No image</span>
+						<span class="no-image">—</span>
 					{% endif %}
 					</td>
-						<td class="reward-actions" style="padding: 12px; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">
-						<button class="reward-action-btn edit-reward-btn"
+						<td class="cell-actions">
+						<div class="reward-actions">
+						<button class="reward-action-btn btn-edit edit-reward-btn"
+							title="Edit reward"
 							data-reward-id="{{ reward.id }}"
 							data-reward-name="{{ reward.name|escapejs }}"
 							data-reward-category="{{ reward.category.id }}"
 							data-reward-points="{{ reward.points_required }}"
 							data-reward-description="{{ reward.description|escapejs }}"
 							data-reward-image="{{ reward.image_url|escapejs }}"
-							data-reward-barangays="{% for brgy in reward.available_barangays.all %}{{ brgy.id }}{% if not forloop.last %},{% endif %}{% endfor %}">✎</button>
-						<button class="reward-action-btn" onclick="openDeleteRewardModal('{{ reward.id }}')">🗑</button>
+							data-reward-barangays="{% for brgy in reward.available_barangays.all %}{{ brgy.id }}{% if not forloop.last %},{% endif %}{% endfor %}">
+							<i class='bx bx-edit-alt'></i>
+						</button>
+						<button class="reward-action-btn btn-delete" title="Delete reward" onclick="openDeleteRewardModal('{{ reward.id }}')">
+							<i class='bx bx-trash'></i>
+						</button>
+						</div>
 						</td>
+					</tr>
+					{% empty %}
+					<tr class="empty-row">
+						<td colspan="9">No rewards found.</td>
 					</tr>
 					{% endfor %}
 					</tbody>
@@ -292,42 +182,49 @@
 			<!-- Recent History Section -->
 			<div class="reward-container" style="margin-top: 30px;">
 				<div class="reward-header">
-					<h3 style="color: #000000 !important;">Recent Activity</h3>
+					<h3>Recent Activity</h3>
 					<div class="reward-icons">
-						<a href="{% url 'cenro:reward_history' %}" class="add-reward-btn" style="background-color: #6366f1;">View Full History</a>
+						<a href="{% url 'cenro:reward_history' %}" class="add-reward-btn" style="background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); box-shadow: 0 2px 4px rgba(99,102,241,0.2);">View Full History</a>
 					</div>
 				</div>
-				<div class="history-table-wrapper" style="max-height: 400px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 8px;">
-					<table class="history-table" style="width: 100%; border-collapse: collapse;">
+				<div class="history-table-wrapper">
+					<table class="history-table">
+						<colgroup>
+							<col class="col-date">
+							<col class="col-reward">
+							<col class="col-action">
+							<col class="col-change">
+							<col class="col-by">
+						</colgroup>
 						<thead>
-							<tr style="background: #f9fafb; position: sticky; top: 0; z-index: 10;">
-								<th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">Date</th>
-								<th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">Reward</th>
-								<th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">Action</th>
-								<th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">Change</th>
-								<th style="padding: 12px; text-align: left; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">By</th>
+							<tr>
+								<th>Date</th>
+								<th>Reward</th>
+								<th>Action</th>
+								<th>Change</th>
+								<th>By</th>
 							</tr>
 						</thead>
 						<tbody>
 							{% for history in recent_history %}
 							<tr>
-								<td style="padding: 12px; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">{{ history.timestamp|date:"M d, H:i" }}</td>
-								<td style="padding: 12px; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">{{ history.reward.name }}</td>
-								<td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
+								<td>{{ history.timestamp|date:"M d, H:i" }}</td>
+								<td title="{{ history.reward.name }}">{{ history.reward.name }}</td>
+								<td>
 									<span class="action-badge action-{{ history.action }}">
 										{{ history.get_action_display }}
 									</span>
 								</td>
-								<td style="padding: 12px; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">
+								<td>
 									{% if history.stock_change != 0 %}
 										<span class="stock-change {% if history.stock_change > 0 %}positive{% else %}negative{% endif %}">
 											{% if history.stock_change > 0 %}+{% endif %}{{ history.stock_change }}
 										</span>
 									{% else %}
-										-
+										<span style="color: #9ca3af;">—</span>
 									{% endif %}
 								</td>
-								<td style="padding: 12px; border-bottom: 1px solid #e5e7eb; white-space: nowrap;">
+								<td>
 									{% if history.action == 'stock_redeemed' %}
 										{{ history.user.full_name|default:"Unknown User" }}
 									{% else %}
@@ -336,8 +233,8 @@
 								</td>
 							</tr>
 							{% empty %}
-							<tr>
-								<td colspan="5" style="padding: 20px; text-align: center; color: #6b7280;">
+							<tr class="empty-row">
+								<td colspan="5" style="text-align: center; padding: 40px 14px; color: #9ca3af;">
 									No recent activity found.
 								</td>
 							</tr>
@@ -988,7 +885,7 @@ document.addEventListener('DOMContentLoaded', function() {
 document.getElementById('rewardsSearchInput').addEventListener('input', function(e) {
   const searchTerm = e.target.value.toLowerCase();
   const table = document.querySelector('.reward-table tbody');
-  const rows = table.querySelectorAll('tr');
+  const rows = table.querySelectorAll('tr:not(.empty-row):not(.no-results-row)');
   let visibleCount = 0;
   
   rows.forEach(row => {
@@ -1007,7 +904,7 @@ document.getElementById('rewardsSearchInput').addEventListener('input', function
     if (!noResults) {
       noResults = document.createElement('tr');
       noResults.className = 'no-results-row';
-      noResults.innerHTML = '<td colspan="8" style="text-align: center; padding: 40px; color: #6b7280;">No rewards found matching your search.</td>';
+      noResults.innerHTML = '<td colspan="9" style="text-align: center; padding: 40px; color: #9ca3af;">No rewards found matching your search.</td>';
       table.appendChild(noResults);
     }
   } else {

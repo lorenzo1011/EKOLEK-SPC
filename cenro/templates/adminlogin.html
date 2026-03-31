@@ -1,155 +1,151 @@
 {% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="E-KOLEK Admin Portal - Environmental Management System">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="icon" type="image/png" href="{% static 'image/clogo.png' %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static 'css/adminlogin.css' %}">
-    <link rel="icon" type="image/png" href="{% static 'image/clogo.png' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <link rel="stylesheet" href="{% static 'css/adminlogin.css' %}?v=2.1">
     <title>Admin Login - E-KOLEK</title>
 </head>
 <body>
-    <!-- Animated Background -->
-    <div class="background-container">
-        <div class="background-gradient"></div>
-        <div class="background-pattern"></div>
-        <div class="floating-shapes">
-            <div class="shape shape-1"></div>
-            <div class="shape shape-2"></div>
-            <div class="shape shape-3"></div>
-            <div class="shape shape-4"></div>
-        </div>
+    <!-- Background -->
+    <div class="bg">
+        <div class="bg-noise"></div>
+        <div class="bg-grid"></div>
+        <div class="bg-orb bg-orb--emerald"></div>
+        <div class="bg-orb bg-orb--teal"></div>
+        <div class="bg-orb bg-orb--cyan"></div>
     </div>
 
     <!-- Login Card -->
     <div class="login-wrapper">
-        <div class="login-container">
-            <!-- Header Section -->
-            <div class="login-header">
-                <div class="logo-container">
-                    <div class="logo-wrapper">
-                        <img src="{% static 'images/clogo.png' %}" alt="E-KOLEK Logo" class="logo-image">
+        <div class="login-card">
+            <div class="card-accent"></div>
+
+            <!-- Brand -->
+            <header class="card-header">
+                <div class="brand">
+                    <div class="brand-logo">
+                        <img src="{% static 'images/clogo.png' %}" alt="E-KOLEK Logo">
                     </div>
-                    <div class="brand-info">
-                        <h1 class="brand-title">E-KOLEK</h1>
-                        <p class="brand-subtitle">Admin Portal</p>
+                    <div class="brand-text">
+                        <h1 class="brand-name">E-KOLEK</h1>
+                        <span class="brand-badge">Admin Portal</span>
                     </div>
                 </div>
-                <p class="system-description">Environmental Management System</p>
-            </div>
+                <p class="brand-tagline">Environmental Management System</p>
+            </header>
 
-            <!-- Form Section -->
-            <div class="login-body">
-                <!-- Alert Messages -->
+            <div class="divider"></div>
+
+            <!-- Body -->
+            <div class="card-body">
+                <div class="welcome">
+                    <h2 class="welcome-title">Welcome back</h2>
+                    <p class="welcome-sub">Sign in to access the admin dashboard</p>
+                </div>
+
                 {% if messages %}
-                    <div class="alerts-container">
-                        {% for message in messages %}
-                            <div class="alert alert-{{ message.tags }}" role="alert">
-                                <div class="alert-icon">
-                                    {% if message.tags == 'error' %}
-                                        <i class='bx bx-error-circle'></i>
-                                    {% elif message.tags == 'success' %}
-                                        <i class='bx bx-check-circle'></i>
-                                    {% elif message.tags == 'warning' %}
-                                        <i class='bx bx-error'></i>
-                                    {% else %}
-                                        <i class='bx bx-info-circle'></i>
-                                    {% endif %}
-                                </div>
-                                <div class="alert-content">
-                                    {{ message }}
-                                </div>
-                            </div>
-                        {% endfor %}
+                <div class="alerts">
+                    {% for message in messages %}
+                    <div class="alert alert--{{ message.tags }}" role="alert">
+                        <span class="alert-icon">
+                            {% if message.tags == 'error' %}
+                                <i class='bx bx-error-circle'></i>
+                            {% elif message.tags == 'success' %}
+                                <i class='bx bx-check-circle'></i>
+                            {% elif message.tags == 'warning' %}
+                                <i class='bx bx-error'></i>
+                            {% else %}
+                                <i class='bx bx-info-circle'></i>
+                            {% endif %}
+                        </span>
+                        <span class="alert-text">{{ message }}</span>
                     </div>
+                    {% endfor %}
+                </div>
                 {% endif %}
 
-                <!-- Login Form -->
-                <form method="POST" id="loginForm" class="login-form">
+                <form method="POST" id="loginForm" class="login-form" novalidate>
                     {% csrf_token %}
-                    
-                    <div class="form-group">
-                        <label for="username" class="form-label">
-                            <i class='bx bx-user'></i>
-                            <span>Username</span>
-                        </label>
-                        <div class="input-wrapper">
-                            <input 
-                                type="text" 
-                                id="username" 
-                                name="username" 
+
+                    <div class="field">
+                        <label for="username" class="field-label">Username</label>
+                        <div class="input-group">
+                            <span class="input-icon"><i class='bx bx-user'></i></span>
+                            <input
+                                type="text"
+                                id="username"
+                                name="username"
                                 class="form-input"
-                                placeholder="Enter your username" 
-                                required 
+                                placeholder="Enter your username"
+                                required
                                 autocomplete="username"
                                 autofocus>
-                            <div class="input-border"></div>
+                            <span class="input-accent"></span>
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label for="password" class="form-label">
-                            <i class='bx bx-lock-alt'></i>
-                            <span>Password</span>
-                        </label>
-                        <div class="input-wrapper">
-                            <input 
-                                type="password" 
-                                id="password" 
-                                name="password" 
-                                class="form-input"
-                                placeholder="Enter your password" 
-                                required 
+                    <div class="field">
+                        <label for="password" class="field-label">Password</label>
+                        <div class="input-group">
+                            <span class="input-icon"><i class='bx bx-lock-alt'></i></span>
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                class="form-input form-input--pw"
+                                placeholder="Enter your password"
+                                required
                                 autocomplete="current-password">
                             <button type="button" class="password-toggle" id="passwordToggle" aria-label="Toggle password visibility">
                                 <i class='bx bx-show' id="toggleIcon"></i>
                             </button>
-                            <div class="input-border"></div>
+                            <span class="input-accent"></span>
                         </div>
                     </div>
 
-                    <button type="submit" class="login-btn" id="loginBtn">
-                        <span class="btn-content">
+                    <button type="submit" class="submit-btn" id="loginBtn">
+                        <span class="btn-face">
                             <i class='bx bx-log-in'></i>
-                            <span class="btn-text">Sign In</span>
+                            <span>Sign In</span>
                         </span>
-                        <span class="btn-loading">
+                        <span class="btn-loader">
                             <i class='bx bx-loader-alt bx-spin'></i>
                             <span>Authenticating...</span>
                         </span>
                     </button>
                 </form>
 
-                <!-- Security Info -->
-                <div class="security-info">
-                    <div class="security-icon">
+                <div class="security-note">
+                    <div class="note-icon">
                         <i class='bx bx-shield-alt-2'></i>
                     </div>
-                    <div class="security-content">
-                        <p class="security-title">Secure Access</p>
-                        <p class="security-text">Admin accounts are created by Super Administrators only.</p>
+                    <div class="note-content">
+                        <p class="note-title">Secure Access</p>
+                        <p class="note-text">Admin accounts are created by Super Administrators only.</p>
                     </div>
                 </div>
             </div>
 
             <!-- Footer -->
-            <div class="login-footer">
-                <div class="footer-decoration">
+            <footer class="card-footer">
+                <div class="footer-icons">
                     <i class='bx bxs-leaf'></i>
                     <i class='bx bx-recycle'></i>
                     <i class='bx bxs-tree'></i>
                 </div>
                 <p class="footer-text">Powered by E-KOLEK</p>
-            </div>
+            </footer>
         </div>
     </div>
 
-    <script src="{% static 'js/adminlogin.js' %}"></script>
+    <script src="{% static 'js/adminlogin.js' %}?v=2.1"></script>
 </body>
 </html>

@@ -1,11 +1,11 @@
-from django.db import models
-import uuid
-import string
 import random
-from django.utils import timezone
-from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
+import string
+import uuid
+
 from django.conf import settings
-from django.core.files.storage import default_storage
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.db import models
+from django.utils import timezone
 
 # Import Google Drive storage if enabled
 if getattr(settings, 'USE_GOOGLE_DRIVE', False):
@@ -552,73 +552,34 @@ class Reward(models.Model):
     
     @property
     def image_url(self):
-        """Get the image URL for WEB DISPLAY (dashboard) - uses CDN with better CORS"""
-        if self.image:
-            if getattr(settings, 'USE_GOOGLE_DRIVE', False):
-                # Check if this is a Google Drive file ID or a local file path
-                if self.image.name.startswith('reward_images/'):
-                    # This is a local file path
-                    try:
-                        from django.conf import settings as django_settings
-                        return f"{django_settings.MEDIA_URL}{self.image.name}"
-                    except:
-                        return None
-                else:
-                    # This is a Google Drive file ID
-                    try:
-                        # Simple check: if it's a long alphanumeric string, treat as Google Drive ID
-                        if len(self.image.name) > 15 and self.image.name.replace('_', '').replace('-', '').isalnum():
-                            # Use Google CDN URL - has Access-Control-Allow-Origin: * header
-                            # Works best for web embedding in dashboards
-                            return f"https://lh3.googleusercontent.com/d/{self.image.name}"
-                        else:
-                            # Local file path
-                            from django.conf import settings as django_settings
-                            return f"{django_settings.MEDIA_URL}{self.image.name}"
-                    except Exception as e:
-                        return None
-            else:
-                # For local storage, use the normal URL
-                try:
-                    return self.image.url
-                except:
-                    return None
-        return None
-    
+        """Get the image URL for web display (dashboard) - uses CDN with better CORS."""
+        return self._get_image_url()
+
     @property
     def image_url_for_email(self):
-        """Get the image URL for EMAIL DISPLAY - uses CDN format with better CORS support"""
-        if self.image:
-            if getattr(settings, 'USE_GOOGLE_DRIVE', False):
-                # Check if this is a Google Drive file ID or a local file path
-                if self.image.name.startswith('reward_images/'):
-                    # This is a local file path
-                    try:
-                        from django.conf import settings as django_settings
-                        return f"{django_settings.MEDIA_URL}{self.image.name}"
-                    except:
-                        return None
-                else:
-                    # This is a Google Drive file ID
-                    try:
-                        # Simple check: if it's a long alphanumeric string, treat as Google Drive ID
-                        if len(self.image.name) > 15 and self.image.name.replace('_', '').replace('-', '').isalnum():
-                            # Use CDN URL - has Access-Control-Allow-Origin: * header
-                            # Testing: CDN might work better than direct view for emails
-                            return f"https://lh3.googleusercontent.com/d/{self.image.name}"
-                        else:
-                            # Local file path
-                            from django.conf import settings as django_settings
-                            return f"{django_settings.MEDIA_URL}{self.image.name}"
-                    except Exception as e:
-                        return None
-            else:
-                # For local storage, use the normal URL
-                try:
-                    return self.image.url
-                except:
-                    return None
-        return None
+        """Get the image URL for email display - uses CDN format with better CORS support."""
+        return self._get_image_url()
+
+    def _get_image_url(self):
+        """Resolve image URL from Google Drive or local storage."""
+        if not self.image:
+            return None
+
+        if getattr(settings, 'USE_GOOGLE_DRIVE', False):
+            name = self.image.name
+            if name.startswith('reward_images/'):
+                # Local file path
+                return f"{settings.MEDIA_URL}{name}"
+            # Check if it looks like a Google Drive file ID
+            if len(name) > 15 and name.replace('_', '').replace('-', '').isalnum():
+                return f"https://lh3.googleusercontent.com/d/{name}"
+            return f"{settings.MEDIA_URL}{name}"
+
+        # Local storage
+        try:
+            return self.image.url
+        except Exception:
+            return None
     
     def __str__(self):
         return self.name

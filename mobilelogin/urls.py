@@ -1,12 +1,15 @@
-from django.urls import path
+# Django
 from django.conf import settings
+from django.urls import path
+
+# Local apps
 from . import auth_views
-from . import user_views
-from . import debug_views
-from . import schedule_views
-from . import game_views
 from . import biometric_views
+from . import debug_views
+from . import game_views
 from . import notification_views
+from . import schedule_views
+from . import user_views
 
 urlpatterns = [
     # Authentication endpoints - JWT ONLY, NO OTP

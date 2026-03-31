@@ -1,17 +1,19 @@
 """
-Security monitoring views for admin users
+Security monitoring views for admin users.
 """
 
-from django.shortcuts import render
-from django.contrib.admin.views.decorators import staff_member_required
-from django.http import JsonResponse
-from django.utils import timezone
-from django.db.models import Count, Q
+import logging
 from datetime import timedelta
+
+from django.contrib.admin.views.decorators import staff_member_required
+from django.db.models import Count
+from django.http import JsonResponse
+from django.shortcuts import render
+from django.utils import timezone
+
 from accounts.models import LoginAttempt
 from accounts.security import UserLoginSecurity
 from eko.security_utils import log_security_event
-import logging
 
 logger = logging.getLogger(__name__)
 

@@ -1,13 +1,14 @@
 """
-SMS Service for E-KOLEK System
-Handles sending SMS notifications via iProg Tech SMS API
+SMS Service for E-KOLEK System.
+
+Handles sending SMS notifications via iProg Tech SMS API.
 """
 
-import requests
 import logging
+from typing import Any, Dict, Optional
+
+import requests
 from django.conf import settings
-from typing import Optional, Dict, Any
-import urllib.parse
 
 logger = logging.getLogger(__name__)
 
@@ -152,7 +153,7 @@ class SMSService:
             # Check if successful
             if response.status_code == 200 and response_data.get('status') == 200:
                 message_id = response_data.get('message_id', 'unknown')
-                logger.info(f"✅ SMS sent successfully to {formatted_phone}. Message ID: {message_id}")
+                logger.info(f"SMS sent successfully to {formatted_phone}. Message ID: {message_id}")
                 return {
                     'success': True,
                     'message_id': message_id,
@@ -160,7 +161,7 @@ class SMSService:
                 }
             else:
                 error_msg = response_data.get('message', 'Unknown error')
-                logger.error(f"❌ SMS failed to {formatted_phone}. Status: {response.status_code}, Error: {error_msg}")
+                logger.error(f"SMS failed to {formatted_phone}. Status: {response.status_code}, Error: {error_msg}")
                 return {
                     'success': False,
                     'error': error_msg,
@@ -169,7 +170,7 @@ class SMSService:
                 
         except requests.exceptions.Timeout:
             error_msg = f"SMS API timeout after {self.timeout} seconds"
-            logger.error(f"❌ {error_msg} for {formatted_phone}")
+            logger.error(f"{error_msg} for {formatted_phone}")
             return {
                 'success': False,
                 'error': error_msg,
@@ -178,7 +179,7 @@ class SMSService:
             
         except requests.exceptions.RequestException as e:
             error_msg = f"SMS API request failed: {str(e)}"
-            logger.error(f"❌ {error_msg} for {formatted_phone}")
+            logger.error(f"{error_msg} for {formatted_phone}")
             return {
                 'success': False,
                 'error': error_msg,
@@ -187,7 +188,7 @@ class SMSService:
             
         except Exception as e:
             error_msg = f"Unexpected error sending SMS: {str(e)}"
-            logger.exception(f"❌ {error_msg} for {formatted_phone}")
+            logger.exception(f"{error_msg} for {formatted_phone}")
             return {
                 'success': False,
                 'error': error_msg,

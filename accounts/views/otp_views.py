@@ -1,18 +1,19 @@
 """
-OTP verification views (SMS and Email OTP)
+OTP verification views (SMS and Email OTP).
 """
 
-from django.shortcuts import render, redirect
+import logging
+
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import login
 from django.http import JsonResponse
-from django.conf import settings
-import logging
+from django.shortcuts import redirect, render
 
-from accounts.models import Users, Family
+from accounts import otp_service
+from accounts.models import Family, Users
 from accounts.security import UserLoginSecurity
 from eko.security_utils import get_client_ip, log_security_event
-from accounts import otp_service
 from accounts import email_otp_service
 
 logger = logging.getLogger(__name__)

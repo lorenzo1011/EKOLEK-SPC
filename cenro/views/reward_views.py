@@ -2,29 +2,21 @@
 Reward management and redemption views
 """
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_exempt
-from django.contrib import messages
-from django.utils import timezone
-from django.db import transaction, IntegrityError
 import logging
+import time
+
+from django.core.paginator import Paginator
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, render
 
 from accounts.models import (
-    Users, Family, Barangay, PointsTransaction, Reward, GarbageSchedule, RewardCategory,
-    WasteType, WasteTransaction, Redemption, Notification, RewardHistory
+    Barangay, Notification, PointsTransaction, Redemption,
+    Reward, RewardCategory, RewardHistory, Users
 )
-from cenro.models import AdminActionHistory
-from game.models import Question, Choice, WasteCategory, WasteItem
-from learn.models import LearningVideo, VideoWatchHistory
 
-from ..admin_auth import admin_required, role_required, permission_required
+from ..admin_auth import admin_required, permission_required
 
 logger = logging.getLogger(__name__)
-
-import time
-from django.core.paginator import Paginator
 
 
 # adminrewards - views for admin rewards
@@ -75,7 +67,6 @@ def reward_history(request):
         history = history.filter(timestamp__date__lte=date_to_obj.date())
     
     # Pagination
-    from django.core.paginator import Paginator
     paginator = Paginator(history, 50)  # Show 50 entries per page
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -193,20 +184,20 @@ def add_reward(request):
                 from accounts.models import Barangay
                 barangays = Barangay.objects.filter(id__in=barangay_ids)
                 reward.available_barangays.set(barangays)
-                logger.info(f"✅ Reward assigned to {barangays.count()} barangay(s)")
+                logger.info(f"Reward assigned to {barangays.count()} barangay(s)")
             else:
-                logger.info(f"✅ Reward created as GLOBAL (available to all barangays)")
+                logger.info(f"Reward created as GLOBAL (available to all barangays)")
             
-            logger.info(f"✅ Reward created successfully: {reward.id}")
+            logger.info(f"Reward created successfully: {reward.id}")
             logger.info(f"Reward created! ID: {reward.id}")
             
             # Check if image was saved
             if reward.image:
-                logger.info(f"✅ Image saved: {reward.image.name}")
+                logger.info(f"Image saved: {reward.image.name}")
                 logger.info(f"Image saved to: {reward.image.name}")
                 logger.info(f"Image URL: {reward.image_url}")
             else:
-                logger.error("❌ Image field is NULL after save!")
+                logger.error("Image field is NULL after save!")
                 logger.warning("Image field is NULL after save!")
             
             # Create history record for reward creation
@@ -223,9 +214,9 @@ def add_reward(request):
                 notification_result = send_new_reward_notification(reward)
                 
                 if notification_result['success']:
-                    logger.info(f"✅ Notification sent to {notification_result['recipients_count']} users")
+                    logger.info(f"Notification sent to {notification_result['recipients_count']} users")
                 else:
-                    logger.warning(f"⚠️ Notification failed: {notification_result.get('error', 'Unknown error')}")
+                    logger.warning(f"Notification failed: {notification_result.get('error', 'Unknown error')}")
             except Exception as notif_error:
                 # Don't fail the reward creation if notification fails
                 logger.error(f"Failed to send reward notifications: {str(notif_error)}")
@@ -237,7 +228,7 @@ def add_reward(request):
             import logging
             import traceback
             logger = logging.getLogger(__name__)
-            logger.error(f"❌ Error creating reward: {str(e)}")
+            logger.error(f"Error creating reward: {str(e)}")
             logger.error(traceback.format_exc())
             logger.error(f"Error creating reward: {str(e)}")
             logger.debug(f"Full traceback: {traceback.format_exc()}")

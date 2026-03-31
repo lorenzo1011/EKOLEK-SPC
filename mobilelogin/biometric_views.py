@@ -3,33 +3,26 @@ Biometric authentication views for mobile API
 Handles device registration, biometric login, and device management
 Uses JWT authentication ONLY and secure challenge-response protocol - supports multi-device login
 """
-import json
+# Standard library
 import logging
-import hashlib
-import secrets
-from django.http import JsonResponse
-from django.utils import timezone
+
+# Django
 from django.db import transaction
+from django.utils import timezone
+
+# Django REST Framework
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from rest_framework_simplejwt.tokens import RefreshToken
-from accounts.models import Users
+
+# Local apps
+from cenro.admin_utils import get_client_ip
 from .models import BiometricDevice, BiometricLoginAttempt
 
 
 logger = logging.getLogger(__name__)
-
-
-def get_client_ip(request):
-    """Extract client IP address from request"""
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0]
-    else:
-        ip = request.META.get('REMOTE_ADDR')
-    return ip
 
 
 def validate_device_data(data):
@@ -325,8 +318,6 @@ def biometric_login_verify(request):
     Returns JWT access and refresh tokens on success.
     """
     try:
-        logger.info(f"Biometric login verify request received. Data: {request.data}")
-        
         device_id = request.data.get('device_id')
         credential_id = request.data.get('credential_id')
         challenge = request.data.get('challenge')

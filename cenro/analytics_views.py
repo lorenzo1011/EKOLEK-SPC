@@ -1,19 +1,22 @@
 """
-Waste Analytics Views for CENRO Admin
-Provides comprehensive analytics, Excel import/export, and PDF reporting
+Waste Analytics Views for CENRO Admin.
+
+Provides comprehensive analytics, Excel import/export, and PDF reporting.
 """
 
-from django.shortcuts import render, redirect
-from django.http import JsonResponse, HttpResponse, FileResponse
-from django.db.models import Sum, Count, Avg, Q, F
-from django.db.models.functions import TruncDate, TruncMonth, TruncWeek
-from django.utils import timezone
-from django.contrib import messages
-from datetime import datetime, timedelta
-from decimal import Decimal
-import json
 import io
-import os
+import json
+import logging
+from datetime import datetime, timedelta
+
+from django.contrib import messages
+from django.db.models import Avg, Count, Q, Sum
+from django.db.models.functions import TruncDate, TruncMonth, TruncWeek
+from django.http import HttpResponse, JsonResponse
+from django.shortcuts import redirect, render
+from django.utils import timezone
+
+logger = logging.getLogger(__name__)
 
 # Excel and PDF libraries
 try:
@@ -42,15 +45,12 @@ try:
     import matplotlib.patches as mpatches
     from matplotlib.backends.backend_pdf import PdfPages
     MATPLOTLIB_AVAILABLE = True
-    print(f"Matplotlib {matplotlib.__version__} loaded successfully")
 except ImportError as e:
     MATPLOTLIB_AVAILABLE = False
-    print(f"Matplotlib import failed: {e}")
-    print(f"Make sure you're running Django with the virtual environment Python:")
-    print(f"Use: env\\Scripts\\python.exe manage.py runserver 0.0.0.0:8000")
+    logger.warning("matplotlib not available: %s", e)
 except Exception as e:
     MATPLOTLIB_AVAILABLE = False
-    print(f"Matplotlib error: {e}")
+    logger.warning("matplotlib initialization error: %s", e)
 
 from accounts.models import (
     WasteTransaction, WasteType, Barangay, Users, Family
@@ -59,36 +59,30 @@ from cenro.models import AdminUser
 from .admin_auth import admin_required, permission_required
 from cenro.admin_utils import log_admin_action
 
-import logging
-import sys
-logger = logging.getLogger(__name__)
-
-# Print Python path for debugging
-print("=" * 80)
-print(f"Python executable: {sys.executable}")
-print(f"Python version: {sys.version}")
-print("=" * 80)
-
 
 def _fix_missing_barangays():
     """
-    Helper function to populate missing barangays in existing transactions
-    This runs once per dashboard load to ensure data consistency
+    Populate missing barangays in existing transactions using bulk_update.
+    Runs once per dashboard load to ensure data consistency.
     """
     try:
-        # Find transactions without barangay but user has family with barangay
-        transactions_to_fix = WasteTransaction.objects.filter(
-            barangay__isnull=True,
-            user__family__barangay__isnull=False
-        ).select_related('user__family__barangay')
-        
-        if transactions_to_fix.exists():
-            for transaction in transactions_to_fix:
-                transaction.barangay = transaction.user.family.barangay
-                transaction.save(update_fields=['barangay'])
-            logger.info(f"Fixed {transactions_to_fix.count()} transactions with missing barangays")
+        transactions_to_fix = list(
+            WasteTransaction.objects.filter(
+                barangay__isnull=True,
+                user__family__barangay__isnull=False
+            ).select_related('user__family__barangay')
+        )
+
+        if not transactions_to_fix:
+            return
+
+        for txn in transactions_to_fix:
+            txn.barangay = txn.user.family.barangay
+
+        WasteTransaction.objects.bulk_update(transactions_to_fix, ['barangay'], batch_size=500)
+        logger.info("Fixed %d transactions with missing barangays", len(transactions_to_fix))
     except Exception as e:
-        logger.error(f"Error fixing missing barangays: {str(e)}")
+        logger.error("Error fixing missing barangays: %s", e)
 
 
 def _calculate_year_comparison(year1, year2, barangay_id=None, waste_type_id=None):
@@ -166,16 +160,13 @@ def _calculate_year_comparison(year1, year2, barangay_id=None, waste_type_id=Non
         return None
 
 
-@admin_required
-def waste_analytics_dashboard(request):
+def _apply_common_filters(request):
     """
-    Main analytics dashboard for waste collection data
-    Shows comprehensive statistics, charts, and filters with year-based tracking
+    Extract and apply common filters (year, date range, barangay, waste_type)
+    from GET parameters.  Returns (queryset, filter_dict, year_comparison, available_years, current_year).
+    Shared by dashboard, export-excel, and export-pdf views so exports match
+    what the dashboard displays.
     """
-    # Fix any transactions with missing barangays
-    _fix_missing_barangays()
-    
-    # Get filter parameters
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
     barangay_id = request.GET.get('barangay')
@@ -183,60 +174,51 @@ def waste_analytics_dashboard(request):
     year_filter = request.GET.get('year_filter', '')
     compare_year1 = request.GET.get('compare_year1')
     compare_year2 = request.GET.get('compare_year2')
-    
-    # Base queryset
+
     transactions = WasteTransaction.objects.select_related(
-        'user', 'waste_type', 'barangay', 'processed_by'
+        'user', 'waste_type', 'barangay', 'processed_by', 'user__family'
     ).all()
-    
-    # Get available years from actual transaction data
-    available_years = list(
-        WasteTransaction.objects.dates('transaction_date', 'year', order='DESC')
-        .values_list('transaction_date__year', flat=True)
-        .distinct()
-    )
-    
-    # Handle year-based filtering
+
+    available_years = [
+        d.year for d in WasteTransaction.objects.dates('transaction_date', 'year', order='DESC')
+    ]
+
     current_year = timezone.now().year
     year_comparison = None
-    
-    # Default to current year if no year filter is specified
+
+    # Year-based filtering
     if not year_filter or year_filter == 'current':
         start_date = f'{current_year}-01-01'
         end_date = f'{current_year}-12-31'
-        year_filter = 'current'  # Set for template display
+        year_filter = 'current'
     elif year_filter == 'compare':
-        # Handle custom year comparison if years are specified
         if compare_year1 and compare_year2:
             try:
-                year1 = int(compare_year1)
-                year2 = int(compare_year2)
-                year_comparison = _calculate_year_comparison(year1, year2, barangay_id, waste_type_id)
+                y1, y2 = int(compare_year1), int(compare_year2)
+                year_comparison = _calculate_year_comparison(y1, y2, barangay_id, waste_type_id)
             except (ValueError, TypeError):
-                # If invalid years, fall back to current vs previous year
-                year_comparison = _calculate_year_comparison(current_year, current_year - 1, barangay_id, waste_type_id)
+                year_comparison = _calculate_year_comparison(
+                    current_year, current_year - 1, barangay_id, waste_type_id
+                )
         else:
-            # Default comparison: current year vs previous year
-            year_comparison = _calculate_year_comparison(current_year, current_year - 1, barangay_id, waste_type_id)
-        # Don't filter transactions for compare mode - show all data
+            year_comparison = _calculate_year_comparison(
+                current_year, current_year - 1, barangay_id, waste_type_id
+            )
         start_date = None
         end_date = None
     elif year_filter == 'all':
-        # Show all time data
         start_date = None
         end_date = None
-    elif year_filter and year_filter.isdigit():
-        # Handle any numeric year dynamically
+    elif year_filter.isdigit():
         year = int(year_filter)
         if year in available_years:
             start_date = f'{year}-01-01'
             end_date = f'{year}-12-31'
         else:
-            # Year not available, fallback to current year
             start_date = f'{current_year}-01-01'
             end_date = f'{current_year}-12-31'
             year_filter = 'current'
-    
+
     # Apply filters
     if start_date:
         transactions = transactions.filter(transaction_date__gte=start_date)
@@ -246,44 +228,71 @@ def waste_analytics_dashboard(request):
         transactions = transactions.filter(barangay_id=barangay_id)
     if waste_type_id:
         transactions = transactions.filter(waste_type_id=waste_type_id)
-    
-    # Calculate summary statistics
-    total_transactions = transactions.count()
-    total_weight = transactions.aggregate(total=Sum('waste_kg'))['total'] or 0
-    total_points = transactions.aggregate(total=Sum('total_points'))['total'] or 0
-    avg_weight = transactions.aggregate(avg=Avg('waste_kg'))['avg'] or 0
-    
-    # Waste type breakdown
-    waste_type_stats = transactions.values(
-        'waste_type__name'
-    ).annotate(
+
+    filters = {
+        'start_date': start_date,
+        'end_date': end_date,
+        'barangay_id': barangay_id,
+        'waste_type_id': waste_type_id,
+        'year_filter': year_filter,
+    }
+
+    return transactions, filters, year_comparison, available_years, current_year
+
+
+@admin_required
+def waste_analytics_dashboard(request):
+    """
+    Main analytics dashboard for waste collection data.
+    Shows comprehensive statistics, charts, and filters with year-based tracking.
+    """
+    # Fix any transactions with missing barangays
+    _fix_missing_barangays()
+
+    # Apply shared filters
+    transactions, filters, year_comparison, available_years, current_year = (
+        _apply_common_filters(request)
+    )
+
+    # Single aggregate query instead of 4 separate ones
+    summary = transactions.aggregate(
         total_weight=Sum('waste_kg'),
         total_points=Sum('total_points'),
-        count=Count('id')
-    ).order_by('-total_weight')
+        avg_weight=Avg('waste_kg'),
+        total_count=Count('id'),
+    )
+    total_transactions = summary['total_count'] or 0
+    total_weight = float(summary['total_weight'] or 0)
+    total_points = float(summary['total_points'] or 0)
+    avg_weight = float(summary['avg_weight'] or 0)
+
+    # Evaluate querysets once — avoids repeated SQL
+    waste_type_stats = list(
+        transactions.values('waste_type__name').annotate(
+            total_weight=Sum('waste_kg'),
+            total_points=Sum('total_points'),
+            count=Count('id'),
+        ).order_by('-total_weight')
+    )
+
+    barangay_stats = list(
+        transactions.filter(barangay__isnull=False).values('barangay__name').annotate(
+            total_weight=Sum('waste_kg'),
+            total_points=Sum('total_points'),
+            count=Count('id'),
+        ).order_by('-total_weight')
+    )
     
-    # Barangay breakdown
-    barangay_stats = transactions.values(
-        'barangay__name'
-    ).annotate(
-        total_weight=Sum('waste_kg'),
-        total_points=Sum('total_points'),
-        count=Count('id')
-    ).order_by('-total_weight')
-    
-    # Calculate insights
+    # Insights
     unique_users = transactions.values('user').distinct().count()
     unique_barangays = transactions.filter(barangay__isnull=False).values('barangay').distinct().count()
-    
-    # Find most popular waste type
-    most_popular_waste = waste_type_stats.first() if waste_type_stats else None
-    
-    # Find most active barangay
-    most_active_barangay = barangay_stats.first() if barangay_stats else None
-    
-    # Calculate environmental impact (example: 1kg waste = 0.5kg CO2 saved)
+
+    most_popular_waste = waste_type_stats[0] if waste_type_stats else None
+    most_active_barangay = barangay_stats[0] if barangay_stats else None
+
+    # Environmental impact estimates
     co2_saved = total_weight * 0.5
-    trees_equivalent = total_weight * 0.02  # 1kg waste = 0.02 trees planted equivalent
+    trees_equivalent = total_weight * 0.02
     
     # Top collectors (users)
     top_collectors = transactions.values(
@@ -310,10 +319,11 @@ def waste_analytics_dashboard(request):
     }
     
     # Prepare chart data for barangay distribution (horizontal bar)
+    # NULL barangays already excluded in barangay_stats queryset
     barangay_chart_data = {
-        'labels': [item['barangay__name'] for item in barangay_stats if item['barangay__name']],
-        'weights': [float(item['total_weight']) for item in barangay_stats if item['barangay__name']],
-        'counts': [item['count'] for item in barangay_stats if item['barangay__name']]
+        'labels': [item['barangay__name'] for item in barangay_stats],
+        'weights': [float(item['total_weight']) for item in barangay_stats],
+        'counts': [item['count'] for item in barangay_stats]
     }
     
     # Prepare chart data for waste type comparison (vertical bar chart)
@@ -368,7 +378,7 @@ def waste_analytics_dashboard(request):
         try:
             date_obj = datetime.strptime(month_str, '%Y-%m')
             formatted_months.append(date_obj.strftime('%b %Y'))
-        except:
+        except Exception:
             formatted_months.append(month_str)
     
     # Calculate monthly insights
@@ -458,16 +468,10 @@ def waste_analytics_dashboard(request):
         'waste_type_bar_data': json.dumps(waste_type_bar_data),
         'monthly_tracking_data': json.dumps(monthly_tracking_data),
         'monthly_insights': monthly_insights,
-        'year_comparison': year_comparison,  # NEW: Year-over-year comparison data
-        'available_years': available_years,  # NEW: Dynamic list of years with data
-        'current_year': current_year,  # NEW: Current year for template logic
-        'filters': {
-            'start_date': start_date,
-            'end_date': end_date,
-            'barangay_id': barangay_id,
-            'waste_type_id': waste_type_id,
-            'year_filter': year_filter,  # NEW: Year filter selection
-        },
+        'year_comparison': year_comparison,
+        'available_years': available_years,
+        'current_year': current_year,
+        'filters': filters,
         'admin_user': request.admin_user,
         'timestamp': int(timezone.now().timestamp()),
         # Permission context for sidebar
@@ -738,6 +742,9 @@ def upload_waste_data_excel(request):
                 total_points = weight_kg * waste_type.points_per_kg
                 
                 # Create transaction
+                # Note: auto_now_add fields (transaction_date, created_at)
+                # get overridden by Django during create(), so we update them
+                # in a separate save() call below.
                 transaction = WasteTransaction.objects.create(
                     user=user,
                     waste_type=waste_type,
@@ -746,12 +753,15 @@ def upload_waste_data_excel(request):
                     processed_by=request.admin_user,
                     barangay=barangay,
                     notes=notes,
-                    created_at=timezone.make_aware(datetime.combine(transaction_date, datetime.min.time()))
                 )
                 
-                # Manually set transaction_date
+                # Set the actual dates from Excel — save(update_fields=...)
+                # bypasses auto_now_add since add=False for existing objects
                 transaction.transaction_date = transaction_date
-                transaction.save(update_fields=['transaction_date'])
+                transaction.created_at = timezone.make_aware(
+                    datetime.combine(transaction_date, datetime.min.time())
+                )
+                transaction.save(update_fields=['transaction_date', 'created_at'])
                 
                 # Update user points
                 user.total_points += total_points
@@ -808,26 +818,8 @@ def export_waste_data_excel(request):
         messages.error(request, 'Excel support is not available. Please install openpyxl.')
         return redirect('cenro:waste_analytics')
     
-    # Get filter parameters
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
-    barangay_id = request.GET.get('barangay')
-    waste_type_id = request.GET.get('waste_type')
-    
-    # Base queryset
-    transactions = WasteTransaction.objects.select_related(
-        'user', 'waste_type', 'barangay', 'processed_by', 'user__family'
-    ).all()
-    
-    # Apply filters
-    if start_date:
-        transactions = transactions.filter(transaction_date__gte=start_date)
-    if end_date:
-        transactions = transactions.filter(transaction_date__lte=end_date)
-    if barangay_id:
-        transactions = transactions.filter(barangay_id=barangay_id)
-    if waste_type_id:
-        transactions = transactions.filter(waste_type_id=waste_type_id)
+    # Use shared filter logic so exports match the dashboard exactly
+    transactions, filters, *_ = _apply_common_filters(request)
     
     # Create workbook
     wb = Workbook()
@@ -892,21 +884,27 @@ def export_waste_data_excel(request):
     # Add summary sheet
     ws_summary = wb.create_sheet("Summary")
     
-    total_weight = transactions.aggregate(Sum('waste_kg'))['waste_kg__sum'] or 0
-    total_points = transactions.aggregate(Sum('total_points'))['total_points__sum'] or 0
-    total_transactions = transactions.count()
+    summary_agg = transactions.aggregate(
+        total_weight=Sum('waste_kg'),
+        total_points=Sum('total_points'),
+        total_count=Count('id'),
+    )
+    export_total_weight = float(summary_agg['total_weight'] or 0)
+    export_total_points = float(summary_agg['total_points'] or 0)
+    total_transactions = summary_agg['total_count'] or 0
     
     summary_data = [
         ["Waste Collection Summary Report"],
         [""],
         ["Report Generated:", timezone.now().strftime('%Y-%m-%d %H:%M:%S')],
         ["Total Transactions:", total_transactions],
-        ["Total Weight (kg):", round(total_weight, 2)],
-        ["Total Points:", round(total_points, 2)],
+        ["Total Weight (kg):", round(export_total_weight, 2)],
+        ["Total Points:", round(export_total_points, 2)],
         [""],
         ["Filters Applied:"],
-        ["Start Date:", start_date or 'All'],
-        ["End Date:", end_date or 'All'],
+        ["Start Date:", filters['start_date'] or 'All'],
+        ["End Date:", filters['end_date'] or 'All'],
+        ["Year Filter:", filters['year_filter'] or 'current'],
         ["Barangay:", request.GET.get('barangay_name', 'All')],
         ["Waste Type:", request.GET.get('waste_type_name', 'All')],
     ]
@@ -1334,48 +1332,38 @@ def export_waste_data_pdf(request):
         messages.error(request, 'PDF support is not available. Please install reportlab.')
         return redirect('cenro:waste_analytics')
     
-    # Get filter parameters
-    start_date = request.GET.get('start_date')
-    end_date = request.GET.get('end_date')
-    barangay_id = request.GET.get('barangay')
-    waste_type_id = request.GET.get('waste_type')
+    # Use shared filter logic so exports match the dashboard exactly
+    transactions, filters, *_ = _apply_common_filters(request)
     
-    # Base queryset
-    transactions = WasteTransaction.objects.select_related(
-        'user', 'waste_type', 'barangay', 'processed_by', 'user__family'
-    ).all()
-    
-    # Apply filters
-    if start_date:
-        transactions = transactions.filter(transaction_date__gte=start_date)
-    if end_date:
-        transactions = transactions.filter(transaction_date__lte=end_date)
-    if barangay_id:
-        transactions = transactions.filter(barangay_id=barangay_id)
-    if waste_type_id:
-        transactions = transactions.filter(waste_type_id=waste_type_id)
-    
-    # Calculate statistics
-    total_weight = transactions.aggregate(Sum('waste_kg'))['waste_kg__sum'] or 0
-    total_points = transactions.aggregate(Sum('total_points'))['total_points__sum'] or 0
-    total_transactions = transactions.count()
-    avg_weight = transactions.aggregate(Avg('waste_kg'))['waste_kg__avg'] or 0
+    # Calculate statistics — single aggregate query
+    pdf_summary = transactions.aggregate(
+        total_weight=Sum('waste_kg'),
+        total_points=Sum('total_points'),
+        avg_weight=Avg('waste_kg'),
+        total_count=Count('id'),
+    )
+    total_weight = float(pdf_summary['total_weight'] or 0)
+    total_points = float(pdf_summary['total_points'] or 0)
+    total_transactions = pdf_summary['total_count'] or 0
+    avg_weight = float(pdf_summary['avg_weight'] or 0)
     
     # Waste type breakdown
-    waste_type_stats = transactions.values(
+    waste_type_stats = list(transactions.values(
         'waste_type__name'
     ).annotate(
         total_weight=Sum('waste_kg'),
         count=Count('id')
-    ).order_by('-total_weight')
+    ).order_by('-total_weight'))
     
-    # Barangay breakdown
-    barangay_stats = transactions.values(
+    # Barangay breakdown — exclude NULL barangays
+    barangay_stats = list(transactions.filter(
+        barangay__isnull=False
+    ).values(
         'barangay__name'
     ).annotate(
         total_weight=Sum('waste_kg'),
         count=Count('id')
-    ).order_by('-total_weight')
+    ).order_by('-total_weight'))
     
     # Create PDF with better margins for landscape
     buffer = io.BytesIO()
@@ -1427,7 +1415,8 @@ def export_waste_data_pdf(request):
     )
     info_text = f"""
     <b>Report Generated:</b> {timezone.now().strftime('%B %d, %Y at %I:%M %p')}<br/>
-    <b>Date Range:</b> {start_date or 'All'} to {end_date or 'All'}<br/>
+    <b>Date Range:</b> {filters['start_date'] or 'All'} to {filters['end_date'] or 'All'}<br/>
+    <b>Year Filter:</b> {filters['year_filter'] or 'current'}<br/>
     <b>Generated By:</b> {request.admin_user.full_name}
     """
     elements.append(Paragraph(info_text, info_style))
@@ -1467,8 +1456,8 @@ def export_waste_data_pdf(request):
     logger.info(f"MATPLOTLIB_AVAILABLE: {MATPLOTLIB_AVAILABLE}")
     
     if MATPLOTLIB_AVAILABLE:
-        logger.info(f"Attempting to generate charts. waste_type_stats count: {len(list(waste_type_stats)) if waste_type_stats else 0}")
-        logger.info(f"barangay_stats count: {len(list(barangay_stats)) if barangay_stats else 0}")
+        logger.info("Attempting to generate charts. waste_type_stats count: %d, barangay_stats count: %d",
+                     len(waste_type_stats), len(barangay_stats))
         
         # Add page break before charts section for better layout
         elements.append(PageBreak())

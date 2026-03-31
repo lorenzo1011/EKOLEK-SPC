@@ -1,0 +1,252 @@
+<!-- Unified Sidebar Navigation -->
+<section id="sidebar">
+  <a href="{% url 'cenro:dashboard' %}" class="brand">
+    <i class='bx bxs-group'></i>
+    <span class="text">CENRO Admin</span>
+  </a>
+  <ul class="side-menu top">
+    <!-- Dashboard -->
+    <li{% if active_page == 'dashboard' %} class="active"{% endif %}>
+      <a href="{% url 'cenro:dashboard' %}">
+        <i class='bx bxs-dashboard'></i>
+        <span class="text">Dashboard</span>
+      </a>
+    </li>
+
+    <!-- User Management -->
+    {% if can_manage_users %}
+    <li{% if active_page == 'users' %} class="active"{% endif %}>
+      <a href="{% url 'cenro:adminuser' %}">
+        <i class='bx bxs-user-detail'></i>
+        <span class="text">User Management</span>
+      </a>
+    </li>
+    {% endif %}
+
+    <!-- Admin Management (super_admin only) -->
+    {% if admin_user.role == 'super_admin' %}
+    <li{% if active_page == 'admin_management' %} class="active"{% endif %}>
+      <a href="{% url 'cenro:admin_management' %}">
+        <i class='bx bxs-user-badge'></i>
+        <span class="text">Admin Management</span>
+      </a>
+    </li>
+    {% endif %}
+
+    <!-- Controls Management -->
+    {% if can_manage_controls %}
+    <li{% if active_page == 'controls' %} class="active"{% endif %}>
+      <a href="{% url 'cenro:admincontrol' %}">
+        <i class='bx bxs-component'></i>
+        <span class="text">Controls Management</span>
+      </a>
+    </li>
+    {% endif %}
+
+    <!-- Points Management -->
+    {% if can_manage_points %}
+    <li{% if active_page == 'points' %} class="active"{% endif %}>
+      <a href="{% url 'cenro:adminpoints' %}">
+        <i class='bx bxs-star'></i>
+        <span class="text">Points Management</span>
+      </a>
+    </li>
+    {% endif %}
+
+    <!-- Rewards Management -->
+    {% if can_manage_rewards %}
+    <li{% if active_page == 'rewards' %} class="active"{% endif %}>
+      <a href="{% url 'cenro:adminrewards' %}">
+        <i class='bx bxs-gift'></i>
+        <span class="text">Rewards Management</span>
+      </a>
+    </li>
+    {% endif %}
+
+    <!-- Schedule Management -->
+    {% if can_manage_schedules %}
+    <li{% if active_page == 'schedule' %} class="active"{% endif %}>
+      <a href="{% url 'cenro:adminschedule' %}">
+        <i class='bx bxs-calendar'></i>
+        <span class="text">Schedule Management</span>
+      </a>
+    </li>
+    {% endif %}
+
+    <!-- Learning Management -->
+    {% if can_manage_learning %}
+    <li{% if active_page == 'learning' %} class="active"{% endif %}>
+      <a href="{% url 'cenro:adminlearn' %}">
+        <i class='bx bxs-book-content'></i>
+        <span class="text">Learning Management</span>
+      </a>
+    </li>
+    {% endif %}
+
+    <!-- Games Management -->
+    {% if can_manage_games %}
+    <li{% if active_page == 'games' %} class="active"{% endif %}>
+      <a href="{% url 'cenro:admingames' %}">
+        <i class='bx bxs-game'></i>
+        <span class="text">Games Management</span>
+      </a>
+    </li>
+    {% endif %}
+
+    <!-- Waste Analytics -->
+    <li{% if active_page == 'analytics' %} class="active"{% endif %}>
+      <a href="{% url 'cenro:waste_analytics' %}">
+        <i class='bx bxs-bar-chart-alt-2'></i>
+        <span class="text">Waste Analytics</span>
+      </a>
+    </li>
+
+    <!-- Security Management (Dropdown) -->
+    {% if can_manage_security %}
+    <li class="has-dropdown{% if active_page == 'security' or active_page == 'security_dashboard' %} active dropdown-active{% endif %}">
+      <a href="{% url 'cenro:security_dashboard' %}" onclick="toggleDropdown(event, this)">
+        <i class='bx bxs-shield'></i>
+        <span class="text">Security Management</span>
+        <i class='bx bx-chevron-down dropdown-icon'></i>
+      </a>
+      <ul class="submenu">
+        <li>
+          <a href="{% url 'cenro:security_dashboard' %}">
+            <i class='bx bxs-dashboard'></i>
+            <span class="text">Security Overview</span>
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'cenro:security_dashboard' %}#security-logs">
+            <i class='bx bxs-lock-alt'></i>
+            <span class="text">Security Logs</span>
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'cenro:security_dashboard' %}#user-activity">
+            <i class='bx bxs-user-check'></i>
+            <span class="text">User Activities</span>
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'cenro:security_dashboard' %}#redemptions">
+            <i class='bx bxs-gift'></i>
+            <span class="text">Redemption History</span>
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'cenro:security_dashboard' %}#reports">
+            <i class='bx bxs-report'></i>
+            <span class="text">Generate Reports</span>
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'cenro:adminsecurity' %}">
+            <i class='bx bxs-cog'></i>
+            <span class="text">Security Settings</span>
+          </a>
+        </li>
+      </ul>
+    </li>
+    {% endif %}
+  </ul>
+
+  <ul class="side-menu">
+    <li>
+      <a href="{% url 'cenro:admin_logout' %}" class="logout">
+        <i class='bx bxs-log-out-circle'></i>
+        <span class="text">Logout</span>
+      </a>
+    </li>
+  </ul>
+</section>
+<!-- END SIDEBAR -->
+
+<script>
+function toggleDropdown(e, trigger) {
+  var li = trigger.closest('li.has-dropdown');
+  if (!li) return;
+
+  // Clicking the chevron: toggle only, no navigation
+  if (e.target.classList.contains('dropdown-icon')) {
+    e.preventDefault();
+    e.stopPropagation();
+    li.classList.toggle('dropdown-active');
+    return;
+  }
+
+  // If closed, expand and navigate; if open, just navigate
+  if (!li.classList.contains('dropdown-active')) {
+    li.classList.add('dropdown-active');
+  }
+}
+
+/**
+ * Update which submenu link is highlighted.
+ * Only ONE link gets .sub-active at a time.
+ */
+function updateSubActive() {
+  var links = document.querySelectorAll('#sidebar .submenu a');
+  if (!links.length) return;
+
+  var path = window.location.pathname;
+  var hash = window.location.hash; // e.g. "#security-logs" or ""
+
+  // Clear all first
+  links.forEach(function(l) { l.classList.remove('sub-active'); });
+
+  var matched = null;
+
+  if (hash) {
+    // If there's a hash, only match the link whose href ends with that hash
+    links.forEach(function(l) {
+      var href = l.getAttribute('href');
+      if (href && href.endsWith(hash)) {
+        matched = l;
+      }
+    });
+  }
+
+  if (!matched) {
+    // No hash or no hash match — highlight the first link that matches the path exactly
+    // ("Security Overview" for the dashboard, "Security Settings" for adminsecurity)
+    links.forEach(function(l) {
+      var href = l.getAttribute('href');
+      // Exact match: href equals path (no hash fragment in the href)
+      if (href && href === path && !matched) {
+        matched = l;
+      }
+    });
+  }
+
+  if (matched) {
+    matched.classList.add('sub-active');
+  }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  var path = window.location.pathname;
+
+  // Auto-expand dropdown if on a security-related page
+  if (path.includes('security') || path.includes('adminsecurity')) {
+    var dd = document.querySelector('#sidebar li.has-dropdown');
+    if (dd) dd.classList.add('dropdown-active');
+  }
+
+  // Set the correct sub-active link
+  updateSubActive();
+
+  // Listen for hash changes (e.g. when sec_analyst_dashboard sections switch)
+  window.addEventListener('hashchange', updateSubActive);
+
+  // Clicking a submenu link: immediately highlight it
+  document.querySelectorAll('#sidebar .submenu a').forEach(function(link) {
+    link.addEventListener('click', function() {
+      document.querySelectorAll('#sidebar .submenu a').forEach(function(l) {
+        l.classList.remove('sub-active');
+      });
+      this.classList.add('sub-active');
+    });
+  });
+});
+</script>

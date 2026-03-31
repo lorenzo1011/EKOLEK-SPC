@@ -2,30 +2,21 @@
 Points and waste transaction views
 """
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST
-from django.views.decorators.csrf import csrf_exempt
-from django.contrib import messages
-from django.utils import timezone
-from django.db import transaction, IntegrityError
 import logging
 import time
 
-from accounts.models import (
-    Users, Family, Barangay, PointsTransaction, Reward, GarbageSchedule, RewardCategory,
-    WasteType, WasteTransaction, Redemption, Notification, RewardHistory
-)
-from cenro.models import AdminActionHistory
-from game.models import Question, Choice, WasteCategory, WasteItem
-from learn.models import LearningVideo, VideoWatchHistory
+from django.db import transaction
+from django.http import JsonResponse
+from django.shortcuts import render
+from django.utils.timezone import now
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 
-from ..admin_auth import admin_required, role_required, permission_required
+from accounts.models import Notification, Reward, Users, WasteTransaction, WasteType
+
+from ..admin_auth import admin_required, permission_required
 
 logger = logging.getLogger(__name__)
-
-import uuid
-from django.utils.timezone import now
 
 
 # adminpints - views for admin points

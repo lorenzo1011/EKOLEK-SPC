@@ -1,19 +1,24 @@
-import os
+"""Google Drive Storage backend for Django file uploads."""
+
 import io
 import json
+import logging
 import mimetypes
-from google.oauth2.service_account import Credentials
-from google.oauth2.credentials import Credentials as OAuthCredentials
+import os
+
+from django.conf import settings
+from django.core.files.base import ContentFile
+from django.core.files.storage import Storage
+from django.utils.deconstruct import deconstructible
 from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials as OAuthCredentials
+from google.oauth2.service_account import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.http import MediaIoBaseUpload
-from django.core.files.storage import Storage
-from django.core.files.base import ContentFile
-from django.conf import settings
-from django.utils.deconstruct import deconstructible
-import logging
 
 logger = logging.getLogger(__name__)
+
+GDRIVE_IMAGE_URL_TEMPLATE = "https://lh3.googleusercontent.com/d/{file_id}"
 
 @deconstructible
 class GoogleDriveStorage(Storage):
@@ -22,10 +27,6 @@ class GoogleDriveStorage(Storage):
     """
     
     def __init__(self, credentials_file=None, folder_id=None):
-        print("\n" + "="*70)
-        print("🔧 GOOGLE DRIVE STORAGE INITIALIZING")
-        print("="*70)
-        
         self.credentials_file = credentials_file or getattr(settings, 'GOOGLE_DRIVE_CREDENTIALS_FILE', None)
         self.credentials_json = getattr(settings, 'GOOGLE_DRIVE_CREDENTIALS_JSON', None)
         
@@ -36,14 +37,6 @@ class GoogleDriveStorage(Storage):
         
         self.folder_id = folder_id or getattr(settings, 'GOOGLE_DRIVE_FOLDER_ID', None)
         self._service = None
-        
-        print(f"📋 Configuration Check:")
-        print(f"  - OAuth Refresh Token: {'✅ SET' if self.oauth_refresh_token else '❌ MISSING'}")
-        print(f"  - OAuth Client ID: {'✅ SET' if self.oauth_client_id else '❌ MISSING'}")
-        print(f"  - OAuth Client Secret: {'✅ SET' if self.oauth_client_secret else '❌ MISSING'}")
-        print(f"  - Folder ID: {'✅ SET' if self.folder_id else '❌ MISSING'} ({self.folder_id})")
-        print(f"  - Service Account JSON: {'✅ SET' if self.credentials_json else '❌ MISSING'}")
-        print("="*70 + "\n")
         
         logger.info(f"GoogleDriveStorage initialized | OAuth: {bool(self.oauth_refresh_token)} | Folder: {self.folder_id}")
         
@@ -56,7 +49,7 @@ class GoogleDriveStorage(Storage):
                 
                 # PREFERRED: Try OAuth first (more reliable than service accounts)
                 if self.oauth_refresh_token and self.oauth_client_id and self.oauth_client_secret:
-                    logger.info("🔐 Using OAuth credentials")
+                    logger.info("Using OAuth credentials")
                     try:
                         credentials = OAuthCredentials(
                             None,  # No access token initially
@@ -67,17 +60,16 @@ class GoogleDriveStorage(Storage):
                             scopes=['https://www.googleapis.com/auth/drive.file']
                         )
                         
-                        # Refresh to get a new access token
-                        logger.info("🔄 Refreshing OAuth access token...")
+                        logger.info("Refreshing OAuth access token...")
                         credentials.refresh(Request())
-                        logger.info("✅ OAuth credentials refreshed successfully")
+                        logger.info("OAuth credentials refreshed successfully")
                     except Exception as e:
-                        logger.error(f"❌ OAuth authentication failed: {e}")
+                        logger.error("OAuth authentication failed: %s", e)
                         credentials = None
                 
                 # FALLBACK: Try service account credentials JSON
                 if credentials is None and self.credentials_json:
-                    logger.info("🔧 Falling back to service account credentials")
+                    logger.info("Falling back to service account credentials")
                     try:
                         credentials_dict = json.loads(self.credentials_json)
                         
@@ -85,14 +77,14 @@ class GoogleDriveStorage(Storage):
                             credentials_dict,
                             scopes=['https://www.googleapis.com/auth/drive.file']
                         )
-                        logger.info("✅ Service account credentials created")
+                        logger.info("Service account credentials created")
                     except Exception as e:
-                        logger.error(f"❌ Service account authentication failed: {e}")
+                        logger.error("Service account authentication failed: %s", e)
                         credentials = None
                 
                 # FALLBACK: Try credentials file
                 if credentials is None and self.credentials_file and os.path.exists(self.credentials_file):
-                    logger.info(f"📁 Using credentials file: {self.credentials_file}")
+                    logger.info("Using credentials file: %s", self.credentials_file)
                     credentials = Credentials.from_service_account_file(
                         self.credentials_file,
                         scopes=['https://www.googleapis.com/auth/drive.file']
@@ -103,7 +95,7 @@ class GoogleDriveStorage(Storage):
                 
                 # Build the service
                 self._service = build('drive', 'v3', credentials=credentials)
-                logger.info("✅ Google Drive service initialized successfully")
+                logger.info("Google Drive service initialized successfully")
             except Exception as e:
                 logger.error(f"Error initializing Google Drive service: {e}")
                 raise
@@ -111,19 +103,15 @@ class GoogleDriveStorage(Storage):
     
     def _save(self, name, content):
         """Save file to Google Drive"""
-        print(f"\n📤 SAVE METHOD CALLED")
-        print(f"  - File name: {name}")
-        print(f"  - Content type: {type(content)}")
         logger.info(f"_save called for: {name}")
         
         try:
             # Ensure we have a folder ID
             if not self.folder_id:
                 error_msg = "Google Drive folder ID not configured"
-                print(f"  ❌ ERROR: {error_msg}")
                 raise Exception(error_msg)
             
-            # Prepare file metadata - make sure the file goes in YOUR folder
+            # Prepare file metadata
             file_metadata = {
                 'name': name,
                 'parents': [self.folder_id]  # This puts it in your shared folder
@@ -143,24 +131,17 @@ class GoogleDriveStorage(Storage):
             )
             
             # Upload file to your shared folder
-            print(f"  ⬆️  Uploading to Google Drive...")
             file = self.service.files().create(
                 body=file_metadata,
                 media_body=media,
                 fields='id,name,webViewLink,webContentLink,parents'
             ).execute()
             
-            print(f"  ✅ Upload successful!")
-            print(f"  📄 File ID: {file['id']}")
-            print(f"  📁 In folder: {file.get('parents', [])}")
-            
             # Verify the file was created in the correct folder
             if self.folder_id not in file.get('parents', []):
-                print(f"  ⚠️  WARNING: File may not be in correct folder!")
                 logger.warning(f"File may not be in the correct folder: {file}")
             
             # Set file permissions to be publicly viewable - CRITICAL for images to display
-            print(f"  🔓 Setting public permissions...")
             try:
                 permission = self.service.permissions().create(
                     fileId=file['id'],
@@ -172,14 +153,11 @@ class GoogleDriveStorage(Storage):
                     supportsAllDrives=True,
                     fields='id'
                 ).execute()
-                print(f"  ✅ PUBLIC PERMISSION SET! Permission ID: {permission.get('id')}")
-                logger.info(f"✅ Public permission set for file: {file['id']} (Permission ID: {permission.get('id')})")
+                logger.info("Public permission set for file: %s (Permission ID: %s)", file['id'], permission.get('id'))
             except Exception as perm_error:
-                print(f"  ❌ PERMISSION FAILED: {perm_error}")
-                logger.error(f"❌ Failed to set public permissions: {perm_error}")
+                logger.error("Failed to set public permissions: %s", perm_error)
                 # This is critical - if permissions fail, the image won't be viewable
             
-            print(f"  🔗 Google CDN URL: https://lh3.googleusercontent.com/d/{file['id']}")
             logger.info(f"File uploaded to Google Drive: {name} (ID: {file['id']}) in folder {self.folder_id}")
             logger.info(f"WebContentLink: {file.get('webContentLink', 'N/A')}")
             return file['id']  # Return file ID as the "name"
@@ -187,10 +165,8 @@ class GoogleDriveStorage(Storage):
         except Exception as e:
             logger.error(f"Error uploading file to Google Drive: {e}")
             # Instead of raising, fall back to local storage
-            from django.core.files.storage import default_storage
             from django.core.files.storage import FileSystemStorage
-            
-            # Use local storage as fallback
+
             local_storage = FileSystemStorage()
             content.seek(0)  # Reset file pointer
             local_name = local_storage._save(name, content)
@@ -221,7 +197,7 @@ class GoogleDriveStorage(Storage):
         try:
             self.service.files().get(fileId=name).execute()
             return True
-        except:
+        except Exception:
             return False
     
     def listdir(self, path):
@@ -233,25 +209,12 @@ class GoogleDriveStorage(Storage):
         try:
             file_metadata = self.service.files().get(fileId=name, fields='size').execute()
             return int(file_metadata.get('size', 0))
-        except:
+        except Exception:
             return 0
     
     def url(self, name):
-        """Get public URL for full-size image"""
-        try:
-            # Use Google Drive's file view URL format
-            # This works with public files and loads in img tags
-            # Format: https://drive.google.com/file/d/{file_id}/view
-            # Or use the uc format with id parameter which is more reliable for embedding
-            if name and len(name) > 10:  # Likely a file ID
-                # This format works best for embedding images
-                return f"https://lh3.googleusercontent.com/d/{name}"
-            
-            return f"https://lh3.googleusercontent.com/d/{name}"
-            
-        except Exception as e:
-            logger.error(f"Error getting URL for file {name}: {e}")
-            return f"https://lh3.googleusercontent.com/d/{name}"
+        """Get public URL for full-size image."""
+        return GDRIVE_IMAGE_URL_TEMPLATE.format(file_id=name)
     
     def get_available_name(self, name, max_length=None):
         """

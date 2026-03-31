@@ -4,12 +4,9 @@ Handles user points, profile data, and family information
 Uses JWT authentication ONLY for mobile apps - supports multi-device login
 """
 # Standard library
-import json
 import logging
 
 # Django
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
 from django.utils import timezone
 
 # Django REST Framework
@@ -134,12 +131,6 @@ def current_points(request):
 def current_user_data(request):
     """Enhanced user data endpoint with comprehensive error handling"""
     try:
-        # Debug authentication
-        auth_header = request.META.get('HTTP_AUTHORIZATION', 'Not provided')
-        logger.info(f"Auth header in current_user_data: {auth_header}")
-        logger.info(f"User authenticated: {request.user.is_authenticated}")
-        logger.info(f"User: {request.user}")
-        
         user = request.user
         
         # Initialize response with safe defaults

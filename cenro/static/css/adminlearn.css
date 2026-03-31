@@ -1,185 +1,595 @@
+/* ===================================================================
+   ADMINLEARN.CSS — Learning Videos Management Redesign
+   Design tokens + component system (consistent with admingames)
+   =================================================================== */
 
-        .video-form {
-            background: white;
-            padding: 2rem;
-            border-radius: 1rem;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            margin-bottom: 2rem;
-            margin-top: 1rem;
-        }
-        
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: #374151;
-        }
-        
-        .form-input {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.375rem;
-            font-size: 1rem;
-        }
-        
-        .form-input:focus {
-            outline: none;
-            border-color: #10b981;
-            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-        }
-        
-        .form-textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-        
-        .form-checkbox {
-            margin-right: 0.5rem;
-        }
-        
-        .btn-save {
-            background: #047857;
-            color: white;
-            padding: 0.75rem 2rem;
-            border: none;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 1rem;
-        }
-        
-        .btn-save:hover {
-            background: #065f46;
-        }
-        
-        .videos-list {
-            background: white;
-            padding: 2rem;
-            border-radius: 1rem;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-        }
-        
-        .video-item {
-            border: 1px solid #e5e7eb;
-            padding: 1.5rem;
-            margin: 1rem 0;
-            border-radius: 0.5rem;
-            display: flex;
-            gap: 1rem;
-        }
-        
-        .video-thumbnail {
-            width: 120px;
-            height: 90px;
-            border-radius: 0.5rem;
-            object-fit: cover;
-            background: #f3f4f6;
-        }
-        
-        .video-details {
-            flex: 1;
-        }
-        
-        .video-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: #111827;
-        }
-        
-        .video-description {
-            color: #6b7280;
-            margin-bottom: 0.5rem;
-            line-height: 1.5;
-        }
-        
-        .video-meta {
-            display: flex;
-            gap: 1rem;
-            align-items: center;
-            font-size: 0.875rem;
-            color: #6b7280;
-        }
-        
-        .video-points {
-            background: #dcfce7;
-            color: #047857;
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.25rem;
-            font-weight: 600;
-        }
-        
-        .video-status {
-            padding: 0.25rem 0.5rem;
-            border-radius: 0.25rem;
-            font-weight: 600;
-            font-size: 0.75rem;
-        }
-        
-        .status-active {
-            background: #dcfce7;
-            color: #047857;
-        }
-        
-        .status-inactive {
-            background: #fee2e2;
-            color: #dc2626;
-        }
-        
-        .video-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
-        }
-        
-        .btn-edit {
-            background: #f59e0b;
-            color: white;
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 0.25rem;
-            cursor: pointer;
-            font-size: 0.875rem;
-        }
-        
-        .btn-delete {
-            background: #ef4444;
-            color: white;
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 0.25rem;
-            cursor: pointer;
-            font-size: 0.875rem;
-        }
-        
-        .btn-toggle {
-            background: #6b7280;
-            color: white;
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 0.25rem;
-            cursor: pointer;
-            font-size: 0.875rem;
-        }
-        
-        .preview-thumbnail {
-            max-width: 200px;
-            height: auto;
-            border-radius: 0.375rem;
-            margin-top: 0.5rem;
-        }
-        
-        .url-preview {
-            margin-top: 0.5rem;
-            padding: 0.5rem;
-            background: #f9fafb;
-            border-radius: 0.375rem;
-            font-size: 0.875rem;
-            color: #6b7280;
-        }
+/* --- Design Tokens --- */
+:root {
+    --lv-primary: #4f46e5;
+    --lv-primary-light: #eef2ff;
+    --lv-primary-hover: #4338ca;
+    --lv-green: #059669;
+    --lv-green-light: #ecfdf5;
+    --lv-green-hover: #047857;
+    --lv-amber: #d97706;
+    --lv-amber-light: #fffbeb;
+    --lv-red: #dc2626;
+    --lv-red-light: #fef2f2;
+    --lv-blue: #2563eb;
+    --lv-blue-light: #eff6ff;
+    --lv-purple: #7c3aed;
+    --lv-purple-light: #f5f3ff;
+    --lv-surface: #ffffff;
+    --lv-surface-alt: #f9fafb;
+    --lv-border: #e5e7eb;
+    --lv-border-hover: #d1d5db;
+    --lv-text: #111827;
+    --lv-text-secondary: #6b7280;
+    --lv-text-muted: #9ca3af;
+    --lv-radius: 12px;
+    --lv-radius-sm: 8px;
+    --lv-radius-xs: 6px;
+    --lv-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --lv-shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -2px rgba(0,0,0,0.05);
+    --lv-shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -4px rgba(0,0,0,0.03);
+    --lv-shadow-focus: 0 0 0 3px rgba(79, 70, 229, 0.12);
+    --lv-transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- Page Header Buttons --- */
+.quiz-management-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.quiz-management-buttons .button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0.55rem 1.1rem;
+    background: var(--lv-surface);
+    color: var(--lv-primary);
+    border: 1.5px solid var(--lv-primary);
+    border-radius: var(--lv-radius-sm);
+    font-weight: 600;
+    font-size: 0.8125rem;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all var(--lv-transition);
+    white-space: nowrap;
+}
+
+.quiz-management-buttons .button:hover {
+    background: var(--lv-primary);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+    transform: translateY(-1px);
+}
+
+.quiz-management-buttons .button i {
+    font-size: 1.05rem;
+}
+
+/* --- Section Card --- */
+.lv-card {
+    background: var(--lv-surface);
+    border: 1px solid var(--lv-border);
+    border-radius: var(--lv-radius);
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+    transition: box-shadow var(--lv-transition);
+}
+
+.lv-card:hover {
+    box-shadow: var(--lv-shadow);
+}
+
+.lv-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--lv-border);
+}
+
+.lv-card-header .lv-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 1.2rem;
+    color: #fff;
+}
+
+.lv-card-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--lv-text);
+}
+
+.lv-card-header p {
+    margin: 2px 0 0;
+    font-size: 0.8rem;
+    color: var(--lv-text-secondary);
+}
+
+.lv-card-header .lv-count {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0.3rem 0.75rem;
+    background: var(--lv-primary-light);
+    color: var(--lv-primary);
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+/* --- Form Elements --- */
+.lv-form-group {
+    margin-bottom: 1rem;
+}
+
+.lv-label {
+    display: block;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--lv-text);
+    margin-bottom: 0.375rem;
+}
+
+.lv-input,
+.lv-select,
+.lv-textarea {
+    width: 100%;
+    padding: 0.6rem 0.75rem;
+    border: 1.5px solid var(--lv-border);
+    border-radius: var(--lv-radius-sm);
+    font-size: 0.875rem;
+    color: var(--lv-text);
+    background: var(--lv-surface);
+    transition: all var(--lv-transition);
+    box-sizing: border-box;
+    font-family: inherit;
+}
+
+.lv-input:focus,
+.lv-select:focus,
+.lv-textarea:focus {
+    outline: none;
+    border-color: var(--lv-primary);
+    box-shadow: var(--lv-shadow-focus);
+}
+
+.lv-input::placeholder,
+.lv-textarea::placeholder {
+    color: var(--lv-text-muted);
+}
+
+.lv-textarea {
+    resize: vertical;
+    min-height: 90px;
+    line-height: 1.5;
+}
+
+.lv-hint {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.75rem;
+    color: var(--lv-text-muted);
+}
+
+.lv-checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8125rem;
+    color: var(--lv-text);
+    cursor: pointer;
+}
+
+.lv-checkbox-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--lv-primary);
+    cursor: pointer;
+}
+
+.lv-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+/* Points Input */
+.lv-points-input {
+    max-width: 150px;
+}
+
+/* --- URL Preview --- */
+.lv-url-preview {
+    display: none;
+    margin-top: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--lv-surface-alt);
+    border: 1px solid var(--lv-border);
+    border-radius: var(--lv-radius-xs);
+    font-size: 0.8rem;
+    color: var(--lv-text-secondary);
+}
+
+.lv-url-preview.valid {
+    background: var(--lv-green-light);
+    border-color: #a7f3d0;
+    color: var(--lv-green);
+}
+
+.lv-url-preview.invalid {
+    background: var(--lv-red-light);
+    border-color: #fecaca;
+    color: var(--lv-red);
+}
+
+.lv-thumb-preview {
+    max-width: 220px;
+    height: auto;
+    border-radius: var(--lv-radius-sm);
+    margin-top: 0.5rem;
+    border: 1px solid var(--lv-border);
+    display: none;
+}
+
+/* --- Buttons --- */
+.lv-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 0.6rem 1.25rem;
+    border: none;
+    border-radius: var(--lv-radius-sm);
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all var(--lv-transition);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.lv-btn:hover {
+    transform: translateY(-1px);
+}
+
+.lv-btn:active {
+    transform: translateY(0);
+}
+
+.lv-btn-primary {
+    background: var(--lv-primary);
+    color: #fff;
+}
+
+.lv-btn-primary:hover {
+    background: var(--lv-primary-hover);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+}
+
+.lv-btn-green {
+    background: var(--lv-green);
+    color: #fff;
+}
+
+.lv-btn-green:hover {
+    background: var(--lv-green-hover);
+    box-shadow: 0 4px 12px rgba(5, 150, 105, 0.25);
+}
+
+.lv-btn-secondary {
+    background: var(--lv-surface-alt);
+    color: var(--lv-text-secondary);
+    border: 1.5px solid var(--lv-border);
+}
+
+.lv-btn-secondary:hover {
+    background: var(--lv-border);
+    color: var(--lv-text);
+}
+
+.lv-btn-sm {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+    border-radius: var(--lv-radius-xs);
+}
+
+.lv-btn-edit {
+    background: var(--lv-amber-light);
+    color: var(--lv-amber);
+    border: 1.5px solid #fde68a;
+}
+
+.lv-btn-edit:hover {
+    background: var(--lv-amber);
+    color: #fff;
+    border-color: var(--lv-amber);
+}
+
+.lv-btn-quiz {
+    background: var(--lv-green-light);
+    color: var(--lv-green);
+    border: 1.5px solid #a7f3d0;
+}
+
+.lv-btn-quiz:hover {
+    background: var(--lv-green);
+    color: #fff;
+    border-color: var(--lv-green);
+}
+
+.lv-btn-quiz-empty {
+    background: var(--lv-surface-alt);
+    color: var(--lv-text-secondary);
+    border: 1.5px solid var(--lv-border);
+}
+
+.lv-btn-quiz-empty:hover {
+    background: var(--lv-primary-light);
+    color: var(--lv-primary);
+    border-color: var(--lv-primary);
+}
+
+.lv-btn-toggle {
+    background: var(--lv-surface-alt);
+    color: var(--lv-text-secondary);
+    border: 1.5px solid var(--lv-border);
+}
+
+.lv-btn-toggle:hover {
+    background: var(--lv-blue-light);
+    color: var(--lv-blue);
+    border-color: #93c5fd;
+}
+
+.lv-btn-delete {
+    background: transparent;
+    color: var(--lv-red);
+    border: 1.5px solid var(--lv-red);
+}
+
+.lv-btn-delete:hover {
+    background: var(--lv-red);
+    color: #fff;
+}
+
+/* --- Video List --- */
+.lv-list-container {
+    max-height: 600px;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.lv-list-container::-webkit-scrollbar {
+    width: 4px;
+}
+
+.lv-list-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.lv-list-container::-webkit-scrollbar-thumb {
+    background: var(--lv-border);
+    border-radius: 4px;
+}
+
+/* --- Video Item --- */
+.lv-video-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    border: 1px solid var(--lv-border);
+    border-radius: var(--lv-radius-sm);
+    margin-bottom: 0.625rem;
+    background: var(--lv-surface);
+    transition: all var(--lv-transition);
+}
+
+.lv-video-item:hover {
+    border-color: var(--lv-border-hover);
+    box-shadow: var(--lv-shadow);
+}
+
+.lv-video-thumb {
+    width: 140px;
+    height: 90px;
+    border-radius: var(--lv-radius-sm);
+    object-fit: cover;
+    background: var(--lv-surface-alt);
+    flex-shrink: 0;
+    border: 1px solid var(--lv-border);
+}
+
+.lv-video-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.lv-video-body h4 {
+    margin: 0 0 4px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--lv-text);
+    line-height: 1.3;
+}
+
+.lv-video-desc {
+    margin: 0 0 0.5rem;
+    font-size: 0.8rem;
+    color: var(--lv-text-secondary);
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.lv-video-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 12px;
+    align-items: center;
+}
+
+/* --- Badge chip --- */
+.lv-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0.15rem 0.5rem;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.lv-badge.green {
+    background: var(--lv-green-light);
+    color: var(--lv-green);
+}
+
+.lv-badge.red {
+    background: var(--lv-red-light);
+    color: var(--lv-red);
+}
+
+.lv-badge.amber {
+    background: var(--lv-amber-light);
+    color: var(--lv-amber);
+}
+
+.lv-badge.blue {
+    background: var(--lv-blue-light);
+    color: var(--lv-blue);
+}
+
+.lv-badge.purple {
+    background: var(--lv-purple-light);
+    color: var(--lv-purple);
+}
+
+.lv-badge.muted {
+    background: var(--lv-surface-alt);
+    color: var(--lv-text-muted);
+}
+
+.lv-meta-date {
+    font-size: 0.75rem;
+    color: var(--lv-text-muted);
+}
+
+/* --- Video Actions --- */
+.lv-video-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+/* --- Empty State --- */
+.lv-empty {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: var(--lv-text-muted);
+    font-size: 0.875rem;
+}
+
+.lv-empty i {
+    font-size: 2.5rem;
+    margin-bottom: 0.75rem;
+    display: block;
+    opacity: 0.6;
+}
+
+.lv-empty p {
+    margin: 0;
+}
+
+/* --- Notifications --- */
+.lv-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 0.875rem 1.25rem;
+    border-radius: var(--lv-radius-sm);
+    box-shadow: var(--lv-shadow-lg);
+    z-index: 10001;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: #fff;
+    animation: lvSlideIn 0.3s ease-out;
+}
+
+.lv-notification.success {
+    background: var(--lv-green);
+}
+
+.lv-notification.error {
+    background: var(--lv-red);
+}
+
+/* --- Animations --- */
+@keyframes lvSlideIn {
+    from { transform: translateX(400px); opacity: 0; }
+    to   { transform: translateX(0);     opacity: 1; }
+}
+@keyframes lvSlideOut {
+    from { transform: translateX(0);     opacity: 1; }
+    to   { transform: translateX(400px); opacity: 0; }
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+    .lv-video-item {
+        flex-direction: column;
+    }
+    .lv-video-thumb {
+        width: 100%;
+        height: 160px;
+    }
+    .lv-video-actions {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    .lv-form-row {
+        grid-template-columns: 1fr;
+    }
+    .quiz-management-buttons {
+        margin-top: 0.5rem;
+    }
+    .lv-card-header .lv-count {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .lv-card {
+        padding: 1rem;
+    }
+    .lv-video-actions {
+        gap: 4px;
+    }
+    .lv-btn-sm {
+        padding: 0.35rem 0.6rem;
+        font-size: 0.75rem;
+    }
+}
   

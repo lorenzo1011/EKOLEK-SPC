@@ -8,10 +8,17 @@ For more information:
 https://docs.djangoproject.com/en/5.2/topics/settings/
 """
 
-from pathlib import Path
+import logging
 import os
-from decouple import config
 from datetime import timedelta
+from pathlib import Path
+
+import dj_database_url
+from decouple import config
+
+from eko import constants
+
+logger = logging.getLogger(__name__)
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -98,7 +105,7 @@ MIDDLEWARE = [
     'whitenoise.middleware.WhiteNoiseMiddleware',  # Added for Railway static files
     'eko.security_middleware.SecurityHeadersMiddleware',
     'eko.security_middleware.BruteForceProtectionMiddleware',
-    'eko.security_middleware.SQLInjectionDetectionMiddleware',
+    'eko.security_middleware.InputSanitizationMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'csp.middleware.CSPMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -136,10 +143,6 @@ WSGI_APPLICATION = 'eko.wsgi.application'
 # ==============================================================================
 # DATABASE CONFIGURATION
 # ==============================================================================
-
-# Support both Railway DATABASE_URL and individual settings
-import dj_database_url
-import os
 
 # Try to use DATABASE_URL first (Railway), fall back to individual settings
 database_url = os.environ.get('DATABASE_URL') or config('DATABASE_URL', default='')
@@ -183,7 +186,7 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
         'OPTIONS': {
-            'min_length': 12,
+            'min_length': constants.MIN_PASSWORD_LENGTH,
         }
     },
     {
@@ -219,10 +222,6 @@ STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 STATICFILES_DIRS = []
 
-# WhiteNoise configuration for production static file serving
-# Use CompressedStaticFilesStorage instead of Manifest to avoid missing files
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
-
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
@@ -246,7 +245,7 @@ if USE_GOOGLE_DRIVE:
             "BACKEND": "eko.google_drive_storage.GoogleDriveStorage",
         },
         "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
         },
     }
 else:
@@ -255,7 +254,7 @@ else:
             "BACKEND": "django.core.files.storage.FileSystemStorage",
         },
         "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+            "BACKEND": "whitenoise.storage.CompressedStaticFilesStorage",
         },
     }
 
@@ -297,79 +296,35 @@ SMS_API_TOKEN = config('SMS_API_TOKEN', default='')  # Safe default - empty stri
 SMS_API_TIMEOUT = config('SMS_API_TIMEOUT', default=10, cast=int)
 SMS_PROVIDER = config('SMS_PROVIDER', default=2, cast=int)
 
-# OTP Settings
-OTP_EXPIRY_MINUTES = config('OTP_EXPIRY_MINUTES', default=5, cast=int)
-OTP_MAX_ATTEMPTS = config('OTP_MAX_ATTEMPTS', default=3, cast=int)
-OTP_RESEND_COOLDOWN_SECONDS = config('OTP_RESEND_COOLDOWN_SECONDS', default=60, cast=int)
+# OTP Settings (defaults from eko.constants)
+OTP_EXPIRY_MINUTES = config('OTP_EXPIRY_MINUTES', default=constants.OTP_EXPIRY_MINUTES, cast=int)
+OTP_MAX_ATTEMPTS = config('OTP_MAX_ATTEMPTS', default=constants.OTP_MAX_ATTEMPTS, cast=int)
+OTP_RESEND_COOLDOWN_SECONDS = config('OTP_RESEND_COOLDOWN_SECONDS', default=constants.OTP_RESEND_COOLDOWN_SECONDS, cast=int)
 
 # ==============================================================================
-# PER-FEATURE OTP CONTROL (Production-Ready Architecture)
+# PER-FEATURE OTP CONTROL
 # ==============================================================================
-# Instead of a single global flag, we now have granular control per feature:
+# Granular control per feature:
 # - OTP_LOGIN_ENABLED: Require OTP for user login (web + mobile)
 # - OTP_REGISTER_ENABLED: Require OTP for new user registration
 # - OTP_RESET_PASSWORD_ENABLED: Require OTP for password reset
-#
-# RECOMMENDED SETTINGS:
-# Development: All False (faster testing)
-# Production: OTP_RESET_PASSWORD_ENABLED=True, others False (cleaner UX)
-#
-# WHY THIS APPROACH:
-# 1. No 500 errors from missing OTP session variables
-# 2. No dependency on SMS/Email APIs for login/registration
-# 3. Security still maintained for password reset (most critical)
-# 4. Easier to deploy and test
-# 5. Better user experience (no OTP friction for login)
 # ==============================================================================
 
-def safe_bool_config(key, default=False):
-    """
-    Safely read boolean config from environment or .env file
-    Prevents crashes from missing or malformed values
-    Accepts: 'True', 'true', '1', 'yes', 'on', True as enabled
-    """
-    try:
-        # Try Railway environment variable first
-        env_value = os.environ.get(key, None)
-        if env_value is not None:
-            if isinstance(env_value, str):
-                return env_value.lower() in ('true', '1', 'yes', 'on')
-            return bool(env_value)
-        
-        # Fallback to decouple config (for .env file)
-        return config(key, default=default, cast=bool)
-    except Exception as e:
-        # If anything fails, return safe default
-        logger.warning(f"Config error for {key}: {e}. Using default: {default}")
-        return default
-
 # Per-feature OTP flags
-OTP_LOGIN_ENABLED = safe_bool_config('OTP_LOGIN_ENABLED', default=False)
-OTP_REGISTER_ENABLED = safe_bool_config('OTP_REGISTER_ENABLED', default=False)
-OTP_RESET_PASSWORD_ENABLED = safe_bool_config('OTP_RESET_PASSWORD_ENABLED', default=True)
+OTP_LOGIN_ENABLED = config('OTP_LOGIN_ENABLED', default=False, cast=bool)
+OTP_REGISTER_ENABLED = config('OTP_REGISTER_ENABLED', default=False, cast=bool)
+OTP_RESET_PASSWORD_ENABLED = config('OTP_RESET_PASSWORD_ENABLED', default=True, cast=bool)
 
 # Legacy flag for backward compatibility (deprecated, use per-feature flags instead)
-# This is kept only for existing code that checks OTP_VERIFICATION_ENABLED
-# It returns True only if ANY feature has OTP enabled
 OTP_VERIFICATION_ENABLED = OTP_LOGIN_ENABLED or OTP_REGISTER_ENABLED or OTP_RESET_PASSWORD_ENABLED
 
-# Log OTP configuration on startup for debugging
-import logging
-logger = logging.getLogger(__name__)
-logger.info("="*70)
-logger.info("🔐 OTP CONFIGURATION (Per-Feature Control)")
-logger.info("="*70)
-logger.info(f"  📱 Login OTP:        {'ENABLED ✅' if OTP_LOGIN_ENABLED else 'DISABLED ❌'}")
-logger.info(f"  ✍️  Registration OTP: {'ENABLED ✅' if OTP_REGISTER_ENABLED else 'DISABLED ❌'}")
-logger.info(f"  🔑 Password Reset:   {'ENABLED ✅' if OTP_RESET_PASSWORD_ENABLED else 'DISABLED ❌'}")
-logger.info(f"  🔗 Legacy Flag:      {'ENABLED ✅' if OTP_VERIFICATION_ENABLED else 'DISABLED ❌'}")
-logger.info("="*70)
+logger.info(
+    "OTP config: login=%s, register=%s, password_reset=%s",
+    OTP_LOGIN_ENABLED, OTP_REGISTER_ENABLED, OTP_RESET_PASSWORD_ENABLED,
+)
 
-# Warn if SMS/Email credentials are missing but OTP is enabled for password reset
-if OTP_RESET_PASSWORD_ENABLED:
-    if not SMS_API_TOKEN and not config('SENDGRID_API_KEY', default=''):
-        logger.error("⚠️  CRITICAL: OTP enabled for password reset but no SMS or Email credentials found!")
-        logger.error("⚠️  Set SMS_API_TOKEN or SENDGRID_API_KEY in environment variables")
+if OTP_RESET_PASSWORD_ENABLED and not SMS_API_TOKEN and not config('SENDGRID_API_KEY', default=''):
+    logger.error("OTP enabled for password reset but no SMS or Email credentials found!")
 
 
 # ==============================================================================
@@ -403,7 +358,6 @@ else:
 
 # Essential CORS settings for mobile app
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = True  # ⚠️ CRITICAL FOR MOBILE APP - Allow all origins for mobile development
 
 CORS_ALLOW_HEADERS = [
     'accept',
@@ -475,10 +429,10 @@ SIMPLE_JWT = {
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 SESSION_COOKIE_NAME = 'ekolek_session'
-SESSION_COOKIE_AGE = 86400  # 24 hours
+SESSION_COOKIE_AGE = constants.SESSION_DURATION_SECONDS  # 24 hours
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 SESSION_SAVE_EVERY_REQUEST = True
-SESSION_COOKIE_HTTPONLY = False  # TEMPORARY: Allow JS access for debugging (like CSRF cookie)
+SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 SESSION_SERIALIZER = 'eko.session_serializer.UUIDJSONSerializer'
 # Note: We use a unified session for both user and admin to support simultaneous logins
@@ -536,14 +490,9 @@ SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
 if not DEBUG:
     # Railway handles SSL at proxy level
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    # SECURE_SSL_REDIRECT = True  # Disabled for Railway - causes redirect loop
     SECURE_HSTS_SECONDS = 31536000  # 1 year
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-    
-    # Additional security headers for production
-    SECURE_BROWSER_XSS_FILTER = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
 else:
     # Development: Relaxed security for mobile testing
     SECURE_SSL_REDIRECT = False
@@ -681,95 +630,4 @@ LOGGING = {
 
 # Create logs directory if it doesn't exist
 os.makedirs(os.path.join(BASE_DIR, 'logs'), exist_ok=True)
-
-
-# ==============================================================================
-# FLUTTER MOBILE APP INTEGRATION
-# ==============================================================================
-"""
-RAILWAY ENVIRONMENT VARIABLES FOR FLUTTER APP CONNECTION:
-
-Required Environment Variables on Railway:
-------------------------------------------
-1. DJANGO_DEBUG=False
-2. RAILWAY_PUBLIC_DOMAIN=your-app.up.railway.app
-3. ALLOWED_HOSTS=your-app.up.railway.app,*.railway.app
-4. CORS_ALLOWED_ORIGINS=https://your-app.up.railway.app
-5. CSRF_TRUSTED_ORIGINS=https://your-app.up.railway.app
-
-Flutter App API Endpoints:
---------------------------
-Base URL: https://e-kolek-production.up.railway.app
-
-Authentication:
-- POST /api/auth/login/          - Login with JWT
-- POST /api/auth/register/       - Register new user
-- POST /api/auth/refresh/        - Refresh JWT token
-- POST /api/auth/logout/         - Logout
-
-OTP Endpoints:
-- POST /api/otp/send/            - Send OTP via SMS
-- POST /api/otp/verify/          - Verify OTP code
-- POST /api/otp/email/send/      - Send OTP via Email
-- POST /api/otp/email/verify/    - Verify Email OTP
-
-User Endpoints:
-- GET  /api/user/profile/        - Get user profile
-- PUT  /api/user/profile/        - Update user profile
-- GET  /api/user/dashboard/      - Get dashboard data
-
-Rate Limiting (Configured):
----------------------------
-- OTP Send: 3 requests per hour
-- OTP Verify: 5 attempts per OTP
-- Cooldown: 15 minutes after limit exceeded
-
-Security Headers (Active):
---------------------------
-✅ CORS enabled for mobile app
-✅ CSRF protection with mobile support
-✅ JWT authentication
-✅ Rate limiting on OTP
-✅ HTTPS enforced in production
-✅ Secure cookies in production
-
-Flutter HTTP Client Setup:
---------------------------
-import 'package:http/http.dart' as http;
-
-final String baseUrl = 'https://e-kolek-production.up.railway.app';
-
-// Example: Login request
-Future<Map<String, dynamic>> login(String username, String password) async {
-  final response = await http.post(
-    Uri.parse('$baseUrl/api/auth/login/'),
-    headers: {'Content-Type': 'application/json'},
-    body: jsonEncode({
-      'username': username,
-      'password': password,
-    }),
-  );
-  
-  if (response.statusCode == 200) {
-    return jsonDecode(response.body);
-  } else {
-    throw Exception('Login failed');
-  }
-}
-
-Testing the Connection:
------------------------
-1. Test in browser: https://e-kolek-production.up.railway.app/api/
-2. Test with Postman/Insomnia
-3. Test with Flutter app (dev mode)
-4. Check Railway logs for errors
-
-Common Issues:
---------------
-1. CORS errors → Check CORS_ALLOWED_ORIGINS
-2. CSRF errors → Ensure CSRF token is included
-3. 404 errors → Check URL patterns
-4. 500 errors → Check Railway logs
-5. Connection timeout → Check Railway service status
-"""
 

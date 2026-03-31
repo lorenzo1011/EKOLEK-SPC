@@ -1,31 +1,52 @@
 /**
- * Admin Quiz Questions Styles
- * Styling for the quiz questions management page
+ * Admin Quiz Questions — Page-specific Overrides
+ * Extends the shared adminquiz.css design system
  */
 
-/* ==================== STATUS BADGES ==================== */
-.status-badge {
-    color: white;
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-}
-
-.video-status[data-active="true"], 
-.question-status[data-active="true"] {
-    background: #28a745;
-}
-
-.video-status[data-active="false"], 
-.question-status[data-active="false"] {
-    background: #dc3545;
-}
-
 /* ==================== TOGGLE BUTTON ANIMATIONS ==================== */
-.btn-toggle[data-active="true"] .bx {
+.qz-btn-toggle[data-active="true"] .bx {
     transform: rotate(0deg);
+    transition: transform var(--qz-transition);
 }
 
-.btn-toggle[data-active="false"] .bx {
+.qz-btn-toggle[data-active="false"] .bx {
     transform: rotate(180deg);
+    transition: transform var(--qz-transition);
+}
+
+/* ==================== MANAGEMENT BUTTONS ==================== */
+.quiz-management-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* ==================== FORM INPUT COMPAT ==================== */
+.form-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--qz-border);
+    border-radius: var(--qz-radius-sm);
+    font-size: 0.9rem;
+    color: var(--qz-text);
+    background: var(--qz-surface);
+    transition: all var(--qz-transition);
+    font-family: inherit;
+    box-sizing: border-box;
+}
+.form-input:focus {
+    outline: none;
+    border-color: var(--qz-primary);
+    box-shadow: var(--qz-shadow-focus);
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+.form-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--qz-text);
+    margin-bottom: 6px;
 }

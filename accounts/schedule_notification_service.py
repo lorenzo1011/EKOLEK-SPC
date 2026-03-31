@@ -38,12 +38,9 @@ def send_emails_in_background(user_emails, schedule_data, action):
     Send emails in a background thread so it doesn't block the schedule save.
     Uses Django's SMTP backend (now configured with Gmail on port 465 SSL).
     """
-    from django.core.mail import send_mail
-    
     success_count = 0
     failed_emails = []
     
-    print(f"\n[BACKGROUND] Sending schedule notification emails to {len(user_emails)} users...")
     logger.info(f"Background email sending started for {len(user_emails)} users")
     
     # Generate email content with beautiful HTML design
@@ -317,8 +314,6 @@ E-KOLEK Team
             continue
         
         try:
-            from django.core.mail import send_mail
-            
             # Send email using Django's send_mail (will use Resend backend)
             send_mail(
                 subject=subject,
@@ -330,18 +325,11 @@ E-KOLEK Team
             )
             
             success_count += 1
-            print(f"  [BACKGROUND] [OK] [{i}/{len(user_emails)}] Sent to {email}")
             logger.info(f"Background schedule email sent to {email}")
             
         except Exception as e:
-            print(f"  [BACKGROUND] [FAIL] [{i}/{len(user_emails)}] Failed: {email} - {str(e)}")
             logger.error(f"Failed to send background schedule email to {email}: {str(e)}")
             failed_emails.append(email)
-    
-    print(f"\n[BACKGROUND] COMPLETE:")
-    print(f"   Total: {len(user_emails)}")
-    print(f"   Sent: {success_count}")
-    print(f"   Failed: {len(failed_emails)}")
     
     logger.info(f"Background email sending completed | Success: {success_count}/{len(user_emails)}")
 
@@ -388,7 +376,7 @@ def send_schedule_notification(schedule, action='added'):
             # It's a time object, format it
             try:
                 return time_value.strftime('%I:%M %p')
-            except:
+            except Exception:
                 return str(time_value)
         
         schedule_data = {
@@ -402,12 +390,6 @@ def send_schedule_notification(schedule, action='added'):
         
         # ALWAYS use direct email sending for reliability
         # Send emails in BACKGROUND THREAD so schedule save is not blocked
-        print(f"\nEmail Method:")
-        print(f"  - Using: Background Thread (Asynchronous - Non-Blocking)")
-        
-        print(f"\nStarting background email thread...")
-        print(f"  - Schedule will be saved IMMEDIATELY")
-        print(f"  - Emails will send in the background")
         logger.info("Starting background email thread")
         
         # Start background thread for email sending
@@ -417,13 +399,6 @@ def send_schedule_notification(schedule, action='added'):
             daemon=True  # Thread will not prevent program exit
         )
         email_thread.start()
-        
-        print(f"\n{'='*70}")
-        print(f"SCHEDULE SAVED!")
-        print(f"  - Schedule has been saved to database")
-        print(f"  - {len(user_emails)} emails are being sent in background")
-        print(f"  - You can continue working immediately")
-        print(f"{'='*70}\n")
         
         logger.info(f"Email thread started | {len(user_emails)} emails queued for background sending")
 
@@ -438,11 +413,7 @@ def send_schedule_notification(schedule, action='added'):
     
     except Exception as e:
         error_msg = f"Schedule notification service error: {str(e)}"
-        print(f"\nERROR: {error_msg}")
-        logger.error(f"ERROR: {error_msg}")
-        import traceback
-        traceback.print_exc()
-        logger.error(traceback.format_exc())
+        logger.error(error_msg, exc_info=True)
         
         return {
             'success': False,

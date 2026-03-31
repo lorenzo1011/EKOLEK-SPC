@@ -1,24 +1,24 @@
 """
-Authentication views for login and logout
+Authentication views for login and logout.
 """
 
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.contrib.auth import authenticate, login, logout
-from django.views.decorators.cache import never_cache
-from django.views.decorators.http import require_http_methods
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
-from django.conf import settings
 import json
 import logging
 import re
 import uuid
 
+from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth import authenticate, login, logout
+from django.http import JsonResponse
+from django.shortcuts import redirect, render
+from django.views.decorators.cache import never_cache
+from django.views.decorators.http import require_http_methods
+
+from accounts import otp_service
 from accounts.models import Users
 from accounts.security import UserLoginSecurity
 from eko.security_utils import get_client_ip, log_security_event
-from accounts import otp_service
 
 logger = logging.getLogger(__name__)
 

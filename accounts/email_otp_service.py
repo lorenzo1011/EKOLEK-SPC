@@ -1,15 +1,18 @@
 """
-Email OTP Service for E-KOLEK System
-Handles sending and verifying OTP codes via email using Celery
+Email OTP Service for E-KOLEK System.
+
+Handles sending and verifying OTP codes via email using Celery.
 """
+
+import logging
 import random
 import string
-import logging
 import threading
 from datetime import datetime, timedelta
-from django.core.mail import send_mail
+
 from django.conf import settings
 from django.core.cache import cache
+from django.core.mail import send_mail
 
 logger = logging.getLogger(__name__)
 
@@ -28,10 +31,10 @@ OTP_VERIFICATION_ENABLED = getattr(settings, 'OTP_VERIFICATION_ENABLED', True)
 try:
     from accounts.tasks import send_otp_email_task
     CELERY_AVAILABLE = True
-    logger.info("✅ Celery available - using production email queue")
+    logger.info("Celery available - using production email queue")
 except ImportError:
     CELERY_AVAILABLE = False
-    logger.warning("⚠️ Celery not available - using fallback direct sending")
+    logger.warning("Celery not available - using fallback direct sending")
 
 
 def check_celery_worker_running():
@@ -54,7 +57,7 @@ def check_celery_worker_running():
         broker_url = getattr(settings, 'CELERY_BROKER_URL', None)
         if broker_url and ('redis://' in broker_url or 'rediss://' in broker_url):
             # Redis is configured, assume Celery worker is running
-            logger.info("✅ Celery configuration detected - using task queue for emails")
+            logger.info("Celery configuration detected - using task queue for emails")
             return True
     except Exception as e:
         logger.debug(f"Celery config check failed: {str(e)}")
@@ -74,14 +77,14 @@ def send_email_async(subject, message, from_email, recipient_list, html_message=
                 html_message=html_message,
                 fail_silently=False
             )
-            logger.info(f"✅ Email sent successfully to {recipient_list[0]}")
+            logger.info(f"Email sent successfully to {recipient_list[0]}")
         except Exception as e:
-            logger.error(f"❌ Failed to send email: {str(e)}")
+            logger.error(f"Failed to send email: {str(e)}")
     
     # Start email sending in background thread
     thread = threading.Thread(target=send, daemon=True)
     thread.start()
-    logger.info(f"📧 Email queued for sending to {recipient_list[0]}")
+    logger.info(f"Email queued for sending to {recipient_list[0]}")
 
 # OTP Configuration - Industry Standard Rate Limiting
 OTP_LENGTH = 6
@@ -430,17 +433,10 @@ E-KOLEK Team
         # Check if we should try Celery
         use_celery = CELERY_AVAILABLE and check_celery_worker_running()
         
-        print(f"\n{'='*80}")
-        print(f"[EMAIL OTP] Email: {email}")
-        print(f"[EMAIL OTP] CELERY_AVAILABLE: {CELERY_AVAILABLE}")
-        print(f"[EMAIL OTP] use_celery: {use_celery}")
-        print(f"{'='*80}\n")
-        
         if use_celery:
             # Production: Use Celery task queue (REQUIRED for Railway)
             # Railway blocks direct SMTP, but Celery tasks work!
-            logger.info(f"📧 Queuing email task via Celery for: {email}")
-            print(f"[EMAIL OTP] ✅ Using Celery task queue (Railway-compatible)")
+            logger.info(f"Queuing email task via Celery for: {email}")
             
             try:
                 task = send_otp_email_task.delay(
@@ -450,8 +446,7 @@ E-KOLEK Team
                     html_message=html_message
                 )
                 
-                logger.info(f"✅ Email task queued successfully | Task ID: {task.id}")
-                print(f"[EMAIL OTP] ✅ Task queued: {task.id}")
+                logger.info(f"Email task queued successfully | Task ID: {task.id}")
                 
                 return {
                     'success': True,
@@ -460,22 +455,15 @@ E-KOLEK Team
                 }
             except Exception as celery_error:
                 # Celery failed, fallback to direct sending
-                logger.error(f"❌ Celery task queue failed: {str(celery_error)}")
-                print(f"[EMAIL OTP] ❌ Celery failed: {celery_error}")
-                logger.info("🔄 Falling back to direct email sending (will likely fail on Railway)...")
+                logger.error(f"Celery task queue failed: {str(celery_error)}")
+
+                logger.info("Falling back to direct email sending (will likely fail on Railway)...")
         else:
-            logger.warning("⚠️ Celery not configured - using direct email sending (will fail on Railway)")
-            print(f"[EMAIL OTP] ⚠️ Using direct SMTP (will be blocked by Railway)")
+            logger.warning("Celery not configured - using direct email sending (will fail on Railway)")
         
         # Send email directly (synchronous) - fallback or when Celery unavailable
         try:
-            print(f"\n{'='*80}")
-            print(f"[EMAIL DEBUG] Attempting to send email to: {email}")
-            print(f"[EMAIL DEBUG] Subject: {subject}")
-            print(f"[EMAIL DEBUG] From: {from_email}")
-            print(f"{'='*80}\n")
-            
-            logger.info(f"📧 Sending email directly to: {email}")
+            logger.info(f"Sending email directly to: {email}")
             
             result = send_mail(
                 subject=subject,
@@ -486,32 +474,16 @@ E-KOLEK Team
                 fail_silently=False
             )
             
-            print(f"\n{'='*80}")
-            print(f"[EMAIL DEBUG] ✅ send_mail returned: {result}")
-            print(f"[EMAIL DEBUG] Email should be sent successfully")
-            print(f"{'='*80}\n")
-            
-            logger.info(f"✅ Email sent directly to {email}")
+            logger.info(f"Email sent directly to {email}")
             return {'success': True, 'message': 'OTP sent to your email'}
             
         except Exception as mail_error:
-            print(f"\n{'='*80}")
-            print(f"[EMAIL DEBUG] ❌ EXCEPTION CAUGHT!")
-            print(f"[EMAIL DEBUG] Error type: {type(mail_error).__name__}")
-            print(f"[EMAIL DEBUG] Error message: {str(mail_error)}")
-            print(f"{'='*80}\n")
-            
-            logger.error(f"❌ Failed to send email directly: {str(mail_error)}")
-            import traceback
-            logger.error(traceback.format_exc())
-            print(traceback.format_exc())
+            logger.error(f"Failed to send email directly: {str(mail_error)}", exc_info=True)
             
             return {'success': False, 'error': f'Failed to send email: {str(mail_error)}'}
     
     except Exception as e:
-        logger.error(f"Failed to send/queue email: {str(e)}")
-        import traceback
-        logger.error(traceback.format_exc())
+        logger.error(f"Failed to send/queue email: {str(e)}", exc_info=True)
         return {'success': False, 'error': f'Failed to send email: {str(e)}'}
 
 
@@ -607,15 +579,6 @@ def verify_otp(email, otp_code, purpose='verification'):
             'error_type': 'invalid_otp',
             'attempts_left': attempts_left
         }
-
-        cache.set(cache_key, cache_data, timeout=OTP_EXPIRY_MINUTES * 60)
-        
-        remaining_attempts = OTP_MAX_ATTEMPTS - cache_data['attempts']
-        if remaining_attempts > 0:
-            return {'success': False, 'error': f'Invalid OTP code. {remaining_attempts} attempts remaining.'}
-        else:
-            cache.delete(cache_key)
-            return {'success': False, 'error': 'Invalid OTP code. Maximum attempts exceeded.'}
 
 
 def clear_otp(email, purpose='verification'):

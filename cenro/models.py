@@ -1,6 +1,7 @@
+import uuid
+
 from django.db import models
 from django.utils import timezone
-import uuid
 
 # Models for CENRO app
 
@@ -389,10 +390,7 @@ class AdminNotification(models.Model):
         import logging
         logger = logging.getLogger(__name__)
         
-        logger.warning(f"="*80)
-        logger.warning(f"[NOTIFICATION] 🔔🔔🔔 CREATE_NEW_REGISTRATION_NOTIFICATION CALLED 🔔🔔🔔")
-        logger.warning(f"[NOTIFICATION] User: {user.username}")
-        logger.warning(f"="*80)
+        logger.info(f"[NOTIFICATION] create_new_registration_notification called for user: {user.username}")
         
         # Get user's barangay
         user_barangay = user.family.barangay
@@ -404,11 +402,6 @@ class AdminNotification(models.Model):
             status='approved',
             can_manage_users=True
         )
-        
-        logger.warning(f"[NOTIFICATION] 🔍 QUERY RESULTS:")
-        logger.warning(f"[NOTIFICATION] Total admins found: {admins_with_permission.count()}")
-        for admin in admins_with_permission:
-            logger.warning(f"[NOTIFICATION] Admin: {admin.username} | Role: {admin.role} | can_manage_users: {admin.can_manage_users} | status: {admin.status} | is_active: {admin.is_active}")
         
         logger.info(f"[NOTIFICATION] Found {admins_with_permission.count()} admins with user management permission")
         
@@ -431,14 +424,14 @@ class AdminNotification(models.Model):
                     related_user=user
                 )
                 notifications.append(notification)
-                logger.info(f"[NOTIFICATION] ✅ Added notification for admin: {admin.username}")
+                logger.info(f"[NOTIFICATION] Added notification for admin: {admin.username}")
         
         # Bulk create all notifications (one per admin)
         if notifications:
             cls.objects.bulk_create(notifications)
-            logger.info(f"[NOTIFICATION] ✅ Bulk created {len(notifications)} notifications")
+            logger.info(f"[NOTIFICATION] Bulk created {len(notifications)} notifications")
         else:
-            logger.warning(f"[NOTIFICATION] ⚠️ No notifications created - no matching admins found")
+            logger.warning(f"[NOTIFICATION] No notifications created - no matching admins found")
         
         return notifications
     

@@ -5,7 +5,6 @@ Handles user approval, editing, deletion, and QR code generation
 # Standard library
 import logging
 import time
-import traceback
 import uuid
 
 # Django
@@ -24,8 +23,6 @@ from accounts.models import (
 )
 from accounts.sms_service import send_approval_notification, send_rejection_notification
 from cenro.models import AdminActionHistory
-from game.models import Question, Choice, WasteCategory, WasteItem
-from learn.models import LearningVideo, VideoWatchHistory
 
 from ..admin_auth import admin_required, role_required, permission_required
 from .utils import generate_qr_code_base64
@@ -90,7 +87,6 @@ def adminuser(request):
     # Get statistics for the dashboard - only count approved users and their families
     approved_users_count = approved_users.count()
     total_users = approved_users_count  # Only count approved users
-    from accounts.models import Family
     
     # Calculate family count based on barangay restrictions
     families_query = Family.objects.filter(members__status='approved')
@@ -149,9 +145,6 @@ def view_single_idcard(request, user_id):
 @permission_required('can_manage_users')
 @require_POST
 def edit_user(request):
-    from django.db import IntegrityError
-    from django.http import JsonResponse
-    
     try:
         user_id = request.POST.get('user_id')
         logger.debug(f"Editing user with ID: {user_id}")
@@ -288,8 +281,7 @@ def edit_user(request):
         
     except IntegrityError as e:
         logger.debug(f"IntegrityError in edit_user: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        logger.error("IntegrityError in edit_user", exc_info=True)
         
         # Parse the error to determine which field caused the issue
         error_msg = str(e)
@@ -314,8 +306,7 @@ def edit_user(request):
         
     except Exception as e:
         logger.debug(f"Error in edit_user: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        logger.error("Unexpected error in edit_user", exc_info=True)
         return JsonResponse({
             'success': False,
             'field': 'general',
@@ -390,8 +381,7 @@ def delete_user(request):
         
     except Exception as e:
         logger.debug(f"Error in delete_user: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        logger.error("Error in delete_user", exc_info=True)
     
     return redirect('cenro:adminuser') 
 
@@ -476,8 +466,7 @@ def approve_user(request):
         logger.debug(f"Error in approve_user: {str(e)}")
         logger.error(f"Error in approve_user: {str(e)}")
         messages.error(request, f'Error approving user: {str(e)}')
-        import traceback
-        traceback.print_exc()
+        logger.error("Error in approve_user", exc_info=True)
     
     return redirect('cenro:adminuser')
 
@@ -583,8 +572,7 @@ def reject_user(request):
         logger.debug(f"Error in reject_user: {str(e)}")
         logger.error(f"Error in reject_user: {str(e)}")
         messages.error(request, f'Error rejecting user: {str(e)}')
-        import traceback
-        traceback.print_exc()
+        logger.error("Error in reject_user", exc_info=True)
     
     return redirect('cenro:adminuser')
 

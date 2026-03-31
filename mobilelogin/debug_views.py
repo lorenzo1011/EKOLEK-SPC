@@ -2,14 +2,20 @@
 Debug and testing views for mobile API
 Provides diagnostic endpoints for development and troubleshooting
 """
+# Standard library
 import logging
+
+# Django
 from django.utils import timezone
-from rest_framework.decorators import api_view, authentication_classes, permission_classes
-from rest_framework_simplejwt.authentication import JWTAuthentication
+
+# Django REST Framework
 from rest_framework.authentication import TokenAuthentication
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.authtoken.models import Token
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
+# Local apps
 from accounts.models import Users
 
 

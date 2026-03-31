@@ -1,30 +1,32 @@
 """
-Secure API views with proper validation and protection
+Secure API views with proper validation and protection.
 """
 
-from django.shortcuts import render, get_object_or_404, redirect
-from django.http import JsonResponse
-from django.views.decorators.http import require_POST, require_http_methods
-from django.contrib.auth.decorators import login_required
-from django.views.decorators.cache import never_cache
-from django.views.decorators.csrf import csrf_exempt
-from django_ratelimit.decorators import ratelimit
-from django.core.exceptions import ValidationError
-from django.db import transaction
-from django.utils import timezone
 import json
 import logging
 
-logger = logging.getLogger(__name__)
+from django.contrib.auth.decorators import login_required
+from django.db import transaction
+from django.http import JsonResponse
+from django.utils import timezone
+from django.views.decorators.cache import never_cache
+from django.views.decorators.http import require_POST, require_http_methods
+from django_ratelimit.decorators import ratelimit
 
-from accounts.models import Users, WasteType, WasteTransaction, Family
-from game.models import Question, Choice  # Import Question and Choice models for quiz questions
-from cenro.admin_auth import admin_required  # Import custom admin authentication
+from accounts.models import Family, Notification, Users, WasteTransaction, WasteType
+from cenro.admin_auth import admin_required
 from eko.security_utils import (
-    validate_user_input, validate_uuid, validate_points_amount, 
-    validate_weight, safe_get_object_or_404, sanitize_query_params,
-    log_security_event, get_client_ip
+    get_client_ip,
+    log_security_event,
+    safe_get_object_or_404,
+    validate_points_amount,
+    validate_user_input,
+    validate_uuid,
+    validate_weight,
 )
+from game.models import Choice, Question
+
+logger = logging.getLogger(__name__)
 
 
 @ratelimit(key='ip', rate='10/m', method='POST')
@@ -85,7 +87,6 @@ def secure_save_waste_transaction(request):
             family.save(update_fields=['total_family_points'])
 
             # Create notification for waste transaction
-            from accounts.models import Notification
             Notification.objects.create(
                 user=user,
                 type='waste',
@@ -203,8 +204,7 @@ def secure_get_user_by_family_code(request):
 
 @ratelimit(key='ip', rate='5/m', method='POST')
 @require_POST
-@require_POST  # Only allow POST requests for adding questions
-@admin_required  # Use custom admin authentication
+@admin_required
 @never_cache
 def secure_add_question(request):
     """
@@ -212,16 +212,6 @@ def secure_add_question(request):
     """
     if getattr(request, 'limited', False):
         return JsonResponse({'error': 'Rate limit exceeded'}, status=429)
-    
-    # Admin authentication is handled by @admin_required decorator
-    # No need to check is_staff or is_superuser since we're using custom admin system
-    
-    # Debug logging
-    logger.info(f"secure_add_question called by admin: {getattr(request, 'admin_user', 'Unknown')}")
-    logger.info(f"POST data keys: {list(request.POST.keys())}")
-    logger.info(f"Content-Type: {request.META.get('CONTENT_TYPE', 'Unknown')}")
-    logger.info(f"CSRF token in POST: {'csrfmiddlewaretoken' in request.POST}")
-    logger.info(f"X-CSRFToken header: {request.META.get('HTTP_X_CSRFTOKEN', 'Not present')}")
     
     try:
         with transaction.atomic():

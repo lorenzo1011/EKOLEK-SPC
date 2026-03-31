@@ -1,15 +1,15 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
+import logging
+
 from django.contrib import messages
-from django.utils import timezone
-from django.views.decorators.csrf import csrf_protect
+from django.core.paginator import Paginator
 from django.db import transaction
 from django.http import JsonResponse
-from django.core.paginator import Paginator
-from accounts.models import Family, Barangay
-from cenro.models import AdminUser, AdminActionHistory
-import logging
+from django.shortcuts import redirect, render
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_protect
+
+from accounts.models import Barangay, Family
+from cenro.models import AdminActionHistory, AdminUser
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ def admin_required(view_func):
         logger.info(f"Session exists: {request.session.exists(request.session.session_key)}")
         
         if not request.session.get('admin_user_id'):
-            logger.error(f"❌ ADMIN_USER_ID NOT FOUND IN SESSION")
+            logger.error("ADMIN_USER_ID NOT FOUND IN SESSION")
             # Check if this is an AJAX request
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
                 return JsonResponse({'success': False, 'error': 'Please log in to access the admin panel.'}, status=401)
@@ -51,16 +51,16 @@ def admin_required(view_func):
                 id=admin_user_id_from_session,
                 is_active=True
             )
-            logger.info(f"✓ AdminUser found: {admin_user.username}")
+            logger.info(f"AdminUser found: {admin_user.username}")
             request.admin_user = admin_user
         except AdminUser.DoesNotExist:
-            logger.error(f"❌ AdminUser.DoesNotExist - ID in session: {request.session.get('admin_user_id')}")
-            logger.error(f"Trying to find any AdminUser with this ID...")
+            logger.error("AdminUser.DoesNotExist - ID in session: %s", request.session.get('admin_user_id'))
+            logger.error("Trying to find any AdminUser with this ID...")
             try:
                 user_any = AdminUser.objects.get(id=request.session['admin_user_id'])
-                logger.error(f"Found user but is_active={user_any.is_active}")
-            except:
-                logger.error(f"No AdminUser exists with ID: {request.session['admin_user_id']}")
+                logger.error("Found user but is_active=%s", user_any.is_active)
+            except Exception:
+                logger.error("No AdminUser exists with ID: %s", request.session['admin_user_id'])
             
             # Clear only admin session data, preserve user authentication
             request.session.pop('admin_user_id', None)
@@ -182,8 +182,7 @@ def admin_login(request):
                     from cenro.admin_utils import log_admin_action
                     log_admin_action(admin_user, None, 'login', f'Successful login with role: {admin_user.role}', request)
                     
-                    with open('security.log', 'a') as log_file:
-                        log_file.write(f"[{timezone.now()}] Successful admin login: {username} ({admin_user.role})\n")
+                    logger.warning(f"[SECURITY] Successful admin login: {username} ({admin_user.role})")
                     
                     # Redirect based on role
                     if admin_user.role == 'super_admin':
@@ -222,9 +221,7 @@ def admin_login(request):
                         AdminNotification.create_admin_locked_notification(admin_user)
                         
                         messages.error(request, 'Too many failed login attempts. Your account has been temporarily locked. Check your email for details.')
-                        # Log account lock
-                        with open('security.log', 'a') as log_file:
-                            log_file.write(f"[{timezone.now()}] Account locked due to failed attempts: {username}\n")
+                        logger.warning(f"[SECURITY] Account locked due to failed attempts: {username}")
                     else:
                         # Show remaining attempts
                         messages.error(request, f'Invalid password. {remaining_attempts} attempt{"s" if remaining_attempts != 1 else ""} remaining before account lock.')
@@ -344,9 +341,7 @@ def admin_create(request):
                     barangay_detail = f" with barangays: {', '.join([b.name for b in barangays_to_assign])}" if selected_barangays and role == 'operations_manager' else ""
                     log_admin_action(current_admin, admin_user, 'create_admin', f'Admin account created with role: {role}{barangay_detail}', request)
                     
-                    # Log the creation for security tracking
-                    with open('security.log', 'a') as log_file:
-                        log_file.write(f"[{timezone.now()}] Admin account created: {username} ({role}) by {current_admin.username} - Email: {email}\n")
+                    logger.warning(f"[SECURITY] Admin account created: {username} ({role}) by {current_admin.username} - Email: {email}")
                     
                     return redirect('cenro:admin_management')
                     
@@ -519,9 +514,7 @@ def admin_management(request):
                 # Log the suspension
                 from cenro.admin_utils import log_admin_action
                 log_admin_action(request.admin_user, target_admin, 'suspend_admin', f'Reason: {suspension_reason}', request)
-                
-                with open('security.log', 'a') as log_file:
-                    log_file.write(f"[{timezone.now()}] Admin suspended: {target_admin.username} by {request.admin_user.username} - Reason: {suspension_reason}\n")
+                logger.warning(f"[SECURITY] Admin suspended: {target_admin.username} by {request.admin_user.username} - Reason: {suspension_reason}")
                 
                 return redirect('cenro:admin_management')
             
@@ -542,9 +535,7 @@ def admin_management(request):
                 # Log the reactivation
                 from cenro.admin_utils import log_admin_action
                 log_admin_action(request.admin_user, target_admin, 'reactivate_admin', 'Admin account reactivated', request)
-                
-                with open('security.log', 'a') as log_file:
-                    log_file.write(f"[{timezone.now()}] Admin reactivated: {target_admin.username} by {request.admin_user.username}\n")
+                logger.warning(f"[SECURITY] Admin reactivated: {target_admin.username} by {request.admin_user.username}")
                 
                 return redirect('cenro:admin_management')
             
@@ -569,9 +560,7 @@ def admin_management(request):
                 # Log the unsuspension
                 from cenro.admin_utils import log_admin_action
                 log_admin_action(request.admin_user, target_admin, 'unsuspend_admin', 'Admin account unsuspended', request)
-                
-                with open('security.log', 'a') as log_file:
-                    log_file.write(f"[{timezone.now()}] Admin unsuspended: {target_admin.username} by {request.admin_user.username}\n")
+                logger.warning(f"[SECURITY] Admin unsuspended: {target_admin.username} by {request.admin_user.username}")
                 
                 return redirect('cenro:admin_management')
             
@@ -587,9 +576,7 @@ def admin_management(request):
                 # Log the unlock
                 from cenro.admin_utils import log_admin_action
                 log_admin_action(request.admin_user, target_admin, 'unlock_admin', 'Admin account unlocked', request)
-                
-                with open('security.log', 'a') as log_file:
-                    log_file.write(f"[{timezone.now()}] Admin account unlocked: {target_admin.username} by {request.admin_user.username}\n")
+                logger.warning(f"[SECURITY] Admin account unlocked: {target_admin.username} by {request.admin_user.username}")
                 
                 return redirect('cenro:admin_management')
             
@@ -625,9 +612,7 @@ def admin_management(request):
                 # Log the change
                 from cenro.admin_utils import log_admin_action
                 log_admin_action(request.admin_user, target_admin, 'edit_barangays', f'Barangay assignments updated: {barangay_info}', request)
-                
-                with open('security.log', 'a') as log_file:
-                    log_file.write(f"[{timezone.now()}] Barangay assignments updated for {target_admin.username} by {request.admin_user.username}: {barangay_info}\n")
+                logger.warning(f"[SECURITY] Barangay assignments updated for {target_admin.username} by {request.admin_user.username}: {barangay_info}")
             
             elif action == 'reset_password':
                 # Generate secure temporary password
@@ -666,9 +651,7 @@ def admin_management(request):
                 else:
                     log_details += f" | Email failed to send to {target_admin.email}"
                 
-                # Log to security.log
-                with open('security.log', 'a') as log_file:
-                    log_file.write(f"[{timezone.now()}] Password reset for {target_admin.username} by {request.admin_user.username}. {log_details}\n")
+                logger.warning(f"[SECURITY] Password reset for {target_admin.username} by {request.admin_user.username}. {log_details}")
                 
                 # Log using utility function (creates database record)
                 log_admin_action(request.admin_user, target_admin, 'password_reset', log_details, request)
@@ -744,9 +727,7 @@ def admin_management(request):
                 # Log the edit action
                 from cenro.admin_utils import log_admin_action
                 log_admin_action(request.admin_user, target_admin, 'edit_admin', change_details, request)
-                
-                with open('security.log', 'a') as log_file:
-                    log_file.write(f"[{timezone.now()}] Admin edited: {target_admin.username} by {request.admin_user.username} - Changes: {change_details}\n")
+                logger.warning(f"[SECURITY] Admin edited: {target_admin.username} by {request.admin_user.username} - Changes: {change_details}")
                 
                 if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                     return JsonResponse({
@@ -790,8 +771,7 @@ def admin_management(request):
                     request
                 )
                 
-                with open('security.log', 'a') as log_file:
-                    log_file.write(f"[{timezone.now()}] Admin deleted: {deleted_username} ({deleted_role}) by {request.admin_user.username} - Reason: {deletion_reason}\n")
+                logger.warning(f"[SECURITY] Admin deleted: {deleted_username} ({deleted_role}) by {request.admin_user.username} - Reason: {deletion_reason}")
                 
                 # Perform soft delete (deactivate) instead of hard delete to maintain referential integrity
                 target_admin.is_active = False
@@ -828,9 +808,6 @@ def admin_management(request):
     # Get admin action history
     admin_history_queryset = AdminActionHistory.objects.select_related('admin_user', 'target_admin').all()
     
-    # Debug: Print count
-    print(f"DEBUG: Total AdminActionHistory records: {admin_history_queryset.count()}")
-    
     # Apply filters if provided
     action_filter = request.GET.get('action_filter')
     admin_filter = request.GET.get('admin_filter')
@@ -849,10 +826,6 @@ def admin_management(request):
     page = request.GET.get('page', 1)
     paginator = Paginator(admin_history_queryset, 20)  # 20 records per page
     admin_history = paginator.get_page(page)
-    
-    # Debug: Print history data being passed
-    print(f"DEBUG: admin_history count: {len(admin_history)}")
-    print(f"DEBUG: admin_history object_list: {list(admin_history.object_list)}")
     
     # Get all admins for filter dropdown
     all_admins = AdminUser.objects.filter(is_active=True).order_by('full_name')

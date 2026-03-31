@@ -3,14 +3,19 @@ Game Configuration API Views for Mobile App
 Provides endpoints for Flutter app to fetch game cooldown configurations
 """
 
-from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.authentication import TokenAuthentication
-from rest_framework.response import Response
-from rest_framework import status
-from game.models import GameConfiguration
+# Standard library
 import logging
+
+# Django REST Framework
+from rest_framework import status
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
+# Local apps
+from game.models import GameConfiguration
 
 logger = logging.getLogger(__name__)
 

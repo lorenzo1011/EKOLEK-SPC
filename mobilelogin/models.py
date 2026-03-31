@@ -3,9 +3,10 @@ Models for mobile login app
 Handles biometric device registration and authentication
 """
 import uuid
+
 from django.db import models
-from django.conf import settings
 from django.utils import timezone
+
 from accounts.models import Users
 
 

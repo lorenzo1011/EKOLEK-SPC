@@ -1,11 +1,11 @@
 """
-Admin Security Middleware for enhanced security features
+Admin Security Middleware for enhanced security features.
 """
-from django.shortcuts import redirect
-from django.contrib import messages
-from django.utils import timezone
-from cenro.models import AdminUser
+
 import logging
+
+from django.contrib import messages
+from django.shortcuts import redirect
 
 logger = logging.getLogger(__name__)
 

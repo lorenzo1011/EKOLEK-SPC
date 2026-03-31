@@ -1,4 +1,3 @@
-from accounts.permissions import get_admin_context
 
 class AdminContextMiddleware:
     """
