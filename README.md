@@ -120,6 +120,56 @@ e-kolek/
 
 See `TRANSFER_GUIDE.md` for detailed troubleshooting information.
 
+## Railway Deployment (Production)
+
+This project is designed to run on Railway with separate services:
+
+1. **Web service** (Django + Gunicorn)
+2. **Worker service** (Celery worker)
+3. **Beat service** (Celery beat scheduler)
+4. **PostgreSQL plugin**
+5. **Redis plugin**
+
+### Service Start Commands
+
+- Web: `bash start.sh`
+- Worker: `celery -A eko worker --loglevel=info --concurrency=2 --max-tasks-per-child=50`
+- Beat: `celery -A eko beat --loglevel=info`
+
+### Required Environment Variables
+
+- `DJANGO_SECRET_KEY`
+- `DJANGO_DEBUG=False`
+- `DATABASE_URL` (from Railway PostgreSQL)
+- `REDIS_URL` (from Railway Redis)
+- `ALLOWED_HOSTS` (include your Railway public domain)
+- `RAILWAY_PUBLIC_DOMAIN` (example: `web-production-caa9eb.up.railway.app`)
+- `SITE_URL` (example: `https://web-production-caa9eb.up.railway.app`)
+- `CORS_ALLOWED_ORIGINS`
+- `CSRF_TRUSTED_ORIGINS`
+
+### Optional Production Variables
+
+- `SENDGRID_API_KEY`
+- `DEFAULT_FROM_EMAIL`
+- `SMS_ENABLED`
+- `SMS_API_TOKEN`
+- `USE_GOOGLE_DRIVE`
+- `GOOGLE_DRIVE_OAUTH_REFRESH_TOKEN`
+- `GOOGLE_DRIVE_OAUTH_CLIENT_ID`
+- `GOOGLE_DRIVE_OAUTH_CLIENT_SECRET`
+- `GOOGLE_DRIVE_FOLDER_ID`
+
+### Verify Deployment
+
+After deployment, run and check:
+
+1. `python manage.py check --deploy`
+2. Login / registration flow
+3. OTP delivery
+4. Celery task execution
+5. Image upload and retrieval (Google Drive)
+
 ## Support
 
 For issues and questions, please check the documentation or contact the development team.

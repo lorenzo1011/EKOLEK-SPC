@@ -1,6 +1,6 @@
 #!/bin/bash
-# Railway Startup Script - Runs Web + Celery Worker
-# This script starts both Django web server and Celery worker in the same container
+# Railway Startup Script - Web service only
+# Celery worker and beat should run as separate Railway services.
 
 echo "════════════════════════════════════════════════════════════"
 echo "🚀 E-KOLEK Railway Startup"
@@ -16,36 +16,6 @@ python manage.py migrate --noinput
 # Collect static files
 echo "📂 Collecting static files..."
 python manage.py collectstatic --noinput
-
-# Check if Redis is available
-echo "🔍 Checking Redis connection..."
-if python -c "import redis; r = redis.from_url('$REDIS_URL'); r.ping(); print('✅ Redis connected')" 2>/dev/null; then
-    echo "✅ Redis is available - Starting Celery worker..."
-    
-    # Start Celery worker in background (NO DETACH - logs visible immediately)
-    celery -A eko worker \
-        --loglevel=info \
-        --concurrency=2 \
-        --max-tasks-per-child=50 \
-        --pidfile=/tmp/celery-worker.pid &
-    
-    # Save Celery PID
-    CELERY_PID=$!
-    echo "✅ Celery worker started (PID: $CELERY_PID)"
-    
-    # Wait for worker to be ready
-    sleep 5
-    
-    # Check if worker is still running
-    if kill -0 $CELERY_PID 2>/dev/null; then
-        echo "✅ Celery worker is running and ready"
-    else
-        echo "❌ Celery worker failed to start!"
-    fi
-else
-    echo "⚠️  Redis not available - Celery worker disabled"
-    echo "📧 Email OTP will use direct SMTP fallback"
-fi
 
 # Start Gunicorn web server
 echo "🌐 Starting Gunicorn web server..."

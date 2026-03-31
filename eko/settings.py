@@ -441,7 +441,7 @@ SESSION_COOKIE_PATH = '/'
 SESSION_COOKIE_DOMAIN = None  # Explicitly set to None for current domain
 
 if not DEBUG:
-    SESSION_COOKIE_SECURE = True  # Requires HTTPS in production (Railway has HTTPS)
+    SESSION_COOKIE_SECURE = config('SESSION_COOKIE_SECURE', default=True, cast=bool)
 
 
 # ==============================================================================
@@ -456,7 +456,7 @@ CSRF_HEADER_NAME = 'HTTP_X_CSRFTOKEN'
 CSRF_COOKIE_PATH = '/'
 
 if not DEBUG:
-    CSRF_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', default=True, cast=bool)
     
     # Get configured trusted origins from environment
     csrf_origins = config('CSRF_TRUSTED_ORIGINS', default='').split(',')
@@ -490,9 +490,10 @@ SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin'
 if not DEBUG:
     # Railway handles SSL at proxy level
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SECURE_HSTS_SECONDS = 31536000  # 1 year
-    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    SECURE_HSTS_PRELOAD = True
+    SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=True, cast=bool)
+    SECURE_HSTS_SECONDS = config('SECURE_HSTS_SECONDS', default=31536000, cast=int)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = config('SECURE_HSTS_INCLUDE_SUBDOMAINS', default=True, cast=bool)
+    SECURE_HSTS_PRELOAD = config('SECURE_HSTS_PRELOAD', default=True, cast=bool)
 else:
     # Development: Relaxed security for mobile testing
     SECURE_SSL_REDIRECT = False
