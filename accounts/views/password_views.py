@@ -4,6 +4,7 @@ Password reset views (forgot password flow).
 
 import logging
 
+from django.conf import settings
 from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import redirect, render
@@ -60,6 +61,13 @@ def forgot_password(request):
     pre_filled_username = request.session.get('last_attempted_username', '')
     
     if request.method == 'POST':
+        if not getattr(settings, 'OTP_RESET_PASSWORD_ENABLED', False):
+            messages.error(
+                request,
+                'Password reset via OTP is currently disabled. Please contact support.',
+            )
+            return render(request, 'forgot_password.html', {'pre_filled_username': pre_filled_username})
+
         identifier = request.POST.get('identifier', '').strip()
         otp_method = request.POST.get('otp_method', 'sms')  # 'sms' or 'email'
         
@@ -155,6 +163,11 @@ def forgot_password_verify(request):
     Forgot password verification - Step 2: User enters OTP code
     """
     # Check if password reset session exists
+    if not getattr(settings, 'OTP_RESET_PASSWORD_ENABLED', False):
+        messages.error(request, 'Password reset via OTP is currently disabled.')
+        safe_session_clear_password_reset(request)
+        return redirect('forgot_password')
+
     user_id = request.session.get('password_reset_user_id')
     method = request.session.get('password_reset_method')
     contact = request.session.get('password_reset_contact')
@@ -211,6 +224,12 @@ def forgot_password_resend(request):
     """
     if request.method != 'POST':
         return JsonResponse({'error': 'Invalid method'}, status=405)
+
+    if not getattr(settings, 'OTP_RESET_PASSWORD_ENABLED', False):
+        return JsonResponse(
+            {'success': False, 'error': 'Password reset via OTP is currently disabled.'},
+            status=400,
+        )
     
     # Check if password reset session exists
     user_id = request.session.get('password_reset_user_id')

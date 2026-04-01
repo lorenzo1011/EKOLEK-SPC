@@ -13,12 +13,17 @@ logger = logging.getLogger(__name__)
 # ==============================================================================
 # PER-FEATURE OTP FLAGS (Production-Safe Configuration)
 # ==============================================================================
-OTP_LOGIN_ENABLED = getattr(settings, 'OTP_LOGIN_ENABLED', False)
-OTP_REGISTER_ENABLED = getattr(settings, 'OTP_REGISTER_ENABLED', False)
-OTP_RESET_PASSWORD_ENABLED = getattr(settings, 'OTP_RESET_PASSWORD_ENABLED', True)
+OTP_ENABLED = getattr(settings, 'OTP_ENABLED', getattr(settings, 'ENABLE_OTP', True))
+OTP_LOGIN_ENABLED = OTP_ENABLED and getattr(settings, 'OTP_LOGIN_ENABLED', False)
+OTP_REGISTER_ENABLED = OTP_ENABLED and getattr(settings, 'OTP_REGISTER_ENABLED', False)
+OTP_RESET_PASSWORD_ENABLED = OTP_ENABLED and getattr(settings, 'OTP_RESET_PASSWORD_ENABLED', True)
 
 # Legacy flag for backward compatibility
-OTP_VERIFICATION_ENABLED = getattr(settings, 'OTP_VERIFICATION_ENABLED', True)
+OTP_VERIFICATION_ENABLED = getattr(
+    settings,
+    'OTP_VERIFICATION_ENABLED',
+    OTP_LOGIN_ENABLED or OTP_REGISTER_ENABLED,
+)
 
 # Load API token and URL from Django settings with SAFE DEFAULTS
 SMS_API_TOKEN = getattr(settings, 'SMS_API_TOKEN', '')
@@ -37,9 +42,37 @@ if OTP_RESET_PASSWORD_ENABLED and not SMS_API_TOKEN:
 # ========================================
 OTP_FAILED_LOGIN_LIMIT = 3
 OTP_FAILED_LOGIN_WINDOW_MINUTES = 60
-OTP_MAX_VERIFY_ATTEMPTS = 5
 OTP_COOLDOWN_MINUTES = 15
-OTP_EXPIRY_MINUTES = 5
+
+
+def _safe_positive_int(value, default):
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return default
+    return parsed if parsed > 0 else default
+
+
+# Read from Django settings so env values control runtime behavior.
+OTP_MAX_VERIFY_ATTEMPTS = _safe_positive_int(
+    getattr(settings, 'OTP_MAX_ATTEMPTS', 5),
+    5,
+)
+OTP_EXPIRY_MINUTES = _safe_positive_int(
+    getattr(settings, 'OTP_EXPIRY_MINUTES', 5),
+    5,
+)
+
+
+def _otp_enabled_for_purpose(purpose):
+    """Return True only when OTP is enabled for the requested flow."""
+    if purpose == 'login':
+        return OTP_LOGIN_ENABLED
+    if purpose in {'registration', 'verify', 'verification'}:
+        return OTP_REGISTER_ENABLED
+    if purpose == 'password_reset':
+        return OTP_RESET_PASSWORD_ENABLED
+    return OTP_VERIFICATION_ENABLED
 
 
 def _check_send_rate_limit(phone_number):
@@ -468,17 +501,12 @@ def send_otp(phone_number, message=None, purpose='login'):
         }
     }
     """
-    # BYPASS MODE: Only bypass for login/registration, NOT for password_reset
-    if not OTP_VERIFICATION_ENABLED and purpose in ['login', 'registration']:
-        logger.info(f"[OTP BYPASS] OTP verification disabled for {purpose} - skipping SMS send")
+    if not _otp_enabled_for_purpose(purpose):
+        logger.info(f"[OTP DISABLED] SMS OTP send blocked for purpose={purpose}")
         return {
-            'success': True,
-            'message': f'OTP verification disabled for {purpose} - bypass mode active',
-            'bypass_mode': True,
-            'data': {
-                'otp_code': '000000',
-                'phone_number': phone_number
-            }
+            'success': False,
+            'error': f'OTP is disabled for {purpose} flow.',
+            'error_type': 'otp_disabled',
         }
 
     if not phone_number:
@@ -582,14 +610,12 @@ def verify_otp(phone_number, otp_code, purpose='login'):
         "message": "OTP verified successfully"
     }
     """
-    # BYPASS MODE: Only bypass for login/registration, NOT for password_reset
-    if not OTP_VERIFICATION_ENABLED and purpose in ['login', 'registration']:
-        logger.info(f"[OTP BYPASS] OTP verification disabled for {purpose} - auto-approving")
+    if not _otp_enabled_for_purpose(purpose):
+        logger.info(f"[OTP DISABLED] SMS OTP verify blocked for purpose={purpose}")
         return {
-            'success': True,
-            'status': 'success',
-            'message': f'OTP verification disabled for {purpose} - bypass mode active',
-            'bypass_mode': True
+            'success': False,
+            'error': f'OTP is disabled for {purpose} flow.',
+            'error_type': 'otp_disabled',
         }
 
     if not phone_number or not otp_code:

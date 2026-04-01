@@ -20,12 +20,17 @@ logger = logging.getLogger(__name__)
 # PER-FEATURE OTP FLAGS (Production-Safe Configuration)
 # ==============================================================================
 # Read per-feature flags from settings
-OTP_LOGIN_ENABLED = getattr(settings, 'OTP_LOGIN_ENABLED', False)
-OTP_REGISTER_ENABLED = getattr(settings, 'OTP_REGISTER_ENABLED', False)
-OTP_RESET_PASSWORD_ENABLED = getattr(settings, 'OTP_RESET_PASSWORD_ENABLED', True)
+OTP_ENABLED = getattr(settings, 'OTP_ENABLED', getattr(settings, 'ENABLE_OTP', True))
+OTP_LOGIN_ENABLED = OTP_ENABLED and getattr(settings, 'OTP_LOGIN_ENABLED', False)
+OTP_REGISTER_ENABLED = OTP_ENABLED and getattr(settings, 'OTP_REGISTER_ENABLED', False)
+OTP_RESET_PASSWORD_ENABLED = OTP_ENABLED and getattr(settings, 'OTP_RESET_PASSWORD_ENABLED', True)
 
 # Legacy flag for backward compatibility
-OTP_VERIFICATION_ENABLED = getattr(settings, 'OTP_VERIFICATION_ENABLED', True)
+OTP_VERIFICATION_ENABLED = getattr(
+    settings,
+    'OTP_VERIFICATION_ENABLED',
+    OTP_LOGIN_ENABLED or OTP_REGISTER_ENABLED,
+)
 
 # Import Celery task
 try:
@@ -88,12 +93,33 @@ def send_email_async(subject, message, from_email, recipient_list, html_message=
 
 # OTP Configuration - Industry Standard Rate Limiting
 OTP_LENGTH = 6
-OTP_EXPIRY_MINUTES = 5
-OTP_MAX_ATTEMPTS = 3  # Legacy - now using global rate limit
+
+
+def _safe_positive_int(value, default):
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return default
+    return parsed if parsed > 0 else default
+
+
+OTP_EXPIRY_MINUTES = _safe_positive_int(getattr(settings, 'OTP_EXPIRY_MINUTES', 5), 5)
+OTP_MAX_ATTEMPTS = _safe_positive_int(getattr(settings, 'OTP_MAX_ATTEMPTS', 3), 3)
 OTP_SEND_LIMIT = 3  # Max OTP sends per hour
 OTP_SEND_WINDOW_MINUTES = 60  # Time window for send limit
-OTP_MAX_VERIFY_ATTEMPTS = 5  # Max verification attempts per OTP
+OTP_MAX_VERIFY_ATTEMPTS = OTP_MAX_ATTEMPTS  # Max verification attempts per OTP
 OTP_COOLDOWN_MINUTES = 15  # Lockout period after exceeding limits
+
+
+def _otp_enabled_for_purpose(purpose):
+    """Return True only when OTP is enabled for the requested flow."""
+    if purpose == 'login':
+        return OTP_LOGIN_ENABLED
+    if purpose in {'registration', 'verify', 'verification'}:
+        return OTP_REGISTER_ENABLED
+    if purpose == 'password_reset':
+        return OTP_RESET_PASSWORD_ENABLED
+    return OTP_VERIFICATION_ENABLED
 
 
 def _check_send_rate_limit(email):
@@ -273,17 +299,12 @@ def send_otp(email, purpose='verification'):
     logger.info(f"=== EMAIL OTP SERVICE: send_otp called ===")
     logger.info(f"Email: {email}, Purpose: {purpose}")
     
-    # BYPASS MODE: Only bypass for login/registration, NOT for password_reset
-    if not OTP_VERIFICATION_ENABLED and purpose != 'password_reset':
-        logger.info(f"[OTP BYPASS] OTP verification disabled for {purpose} - skipping email send")
+    if not _otp_enabled_for_purpose(purpose):
+        logger.info(f"[OTP DISABLED] Email OTP send blocked for purpose={purpose}")
         return {
-            'success': True,
-            'message': f'OTP verification disabled for {purpose} - bypass mode active',
-            'bypass_mode': True,
-            'data': {
-                'otp_code': '000000',
-                'email': email
-            }
+            'success': False,
+            'error': f'OTP is disabled for {purpose} flow.',
+            'error_type': 'otp_disabled',
         }
     
     if not email:
@@ -506,14 +527,12 @@ def verify_otp(email, otp_code, purpose='verification'):
     logger.info(f"=== EMAIL OTP SERVICE: verify_otp called ===")
     logger.info(f"Email: {email}, OTP: {otp_code}")
     
-    # BYPASS MODE: Only bypass for login/registration, NOT for password_reset
-    if not OTP_VERIFICATION_ENABLED and purpose != 'password_reset':
-        logger.info(f"[OTP BYPASS] OTP verification disabled for {purpose} - auto-approving")
+    if not _otp_enabled_for_purpose(purpose):
+        logger.info(f"[OTP DISABLED] Email OTP verify blocked for purpose={purpose}")
         return {
-            'success': True,
-            'status': 'success',
-            'message': f'OTP verification disabled for {purpose} - bypass mode active',
-            'bypass_mode': True
+            'success': False,
+            'error': f'OTP is disabled for {purpose} flow.',
+            'error_type': 'otp_disabled',
         }
     
     if not email or not otp_code:

@@ -327,16 +327,27 @@ OTP_RESEND_COOLDOWN_SECONDS = config('OTP_RESEND_COOLDOWN_SECONDS', default=cons
 # ==============================================================================
 
 # Per-feature OTP flags
-OTP_LOGIN_ENABLED = config('OTP_LOGIN_ENABLED', default=False, cast=bool)
-OTP_REGISTER_ENABLED = config('OTP_REGISTER_ENABLED', default=False, cast=bool)
-OTP_RESET_PASSWORD_ENABLED = config('OTP_RESET_PASSWORD_ENABLED', default=True, cast=bool)
+# Global OTP switch (supports either OTP_ENABLED or ENABLE_OTP env var)
+OTP_ENABLED = config(
+    'OTP_ENABLED',
+    default=config('ENABLE_OTP', default=True, cast=bool),
+    cast=bool,
+)
+ENABLE_OTP = OTP_ENABLED
 
-# Legacy flag for backward compatibility (deprecated, use per-feature flags instead)
-OTP_VERIFICATION_ENABLED = OTP_LOGIN_ENABLED or OTP_REGISTER_ENABLED or OTP_RESET_PASSWORD_ENABLED
+OTP_LOGIN_ENABLED = OTP_ENABLED and config('OTP_LOGIN_ENABLED', default=False, cast=bool)
+OTP_REGISTER_ENABLED = OTP_ENABLED and config('OTP_REGISTER_ENABLED', default=False, cast=bool)
+OTP_RESET_PASSWORD_ENABLED = OTP_ENABLED and config('OTP_RESET_PASSWORD_ENABLED', default=True, cast=bool)
+
+# Legacy flag for backward compatibility with login/registration flows only.
+# Password reset has its own dedicated flag (OTP_RESET_PASSWORD_ENABLED).
+OTP_VERIFICATION_ENABLED = OTP_ENABLED and (
+    OTP_LOGIN_ENABLED or OTP_REGISTER_ENABLED
+)
 
 logger.info(
-    "OTP config: login=%s, register=%s, password_reset=%s",
-    OTP_LOGIN_ENABLED, OTP_REGISTER_ENABLED, OTP_RESET_PASSWORD_ENABLED,
+    "OTP config: enabled=%s, login=%s, register=%s, password_reset=%s",
+    OTP_ENABLED, OTP_LOGIN_ENABLED, OTP_REGISTER_ENABLED, OTP_RESET_PASSWORD_ENABLED,
 )
 
 if OTP_RESET_PASSWORD_ENABLED and not SMS_API_TOKEN and not config('SENDGRID_API_KEY', default=''):

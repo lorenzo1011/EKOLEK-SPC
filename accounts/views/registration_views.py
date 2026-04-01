@@ -24,7 +24,7 @@ OTP_REGISTER_ENABLED = getattr(settings, 'OTP_REGISTER_ENABLED', False)
 OTP_RESET_PASSWORD_ENABLED = getattr(settings, 'OTP_RESET_PASSWORD_ENABLED', True)
 
 # Legacy flag (kept for backward compatibility)
-OTP_VERIFICATION_ENABLED = getattr(settings, 'OTP_VERIFICATION_ENABLED', True)
+OTP_VERIFICATION_ENABLED = getattr(settings, 'OTP_VERIFICATION_ENABLED', OTP_REGISTER_ENABLED)
 
 
 def register(request):
@@ -194,7 +194,7 @@ def register_family(request):
         'barangays': barangays,
         'registration_type': 'family',
         'today': date.today(),
-        'otp_enabled': OTP_VERIFICATION_ENABLED
+        'otp_enabled': OTP_REGISTER_ENABLED
     })
 
 
@@ -203,8 +203,8 @@ def register_member(request):
     if request.method == 'POST':
         form = FamilyMemberRegistrationForm(request.POST)
         
-        # Check if OTP verification is disabled - if so, skip OTP checks
-        if not OTP_VERIFICATION_ENABLED:
+        # Check if registration OTP is disabled - if so, skip OTP checks
+        if not OTP_REGISTER_ENABLED:
             logger.info("[OTP BYPASS] OTP verification disabled - skipping OTP checks for member registration")
             
             if form.is_valid():
@@ -215,7 +215,7 @@ def register_member(request):
                         'form': form,
                         'registration_type': 'member',
                         'today': date.today(),
-                        'otp_enabled': OTP_VERIFICATION_ENABLED
+                        'otp_enabled': OTP_REGISTER_ENABLED
                     })
                 
                 # OTP bypassed, proceed with registration
@@ -262,7 +262,7 @@ def register_member(request):
                 'form': form,
                 'registration_type': 'member',
                 'today': date.today(),
-                'otp_enabled': OTP_VERIFICATION_ENABLED
+                'otp_enabled': OTP_REGISTER_ENABLED
             })
         
         if not email_otp_verified or verified_email != form_email:
@@ -271,7 +271,7 @@ def register_member(request):
                 'form': form,
                 'registration_type': 'member',
                 'today': date.today(),
-                'otp_enabled': OTP_VERIFICATION_ENABLED
+                'otp_enabled': OTP_REGISTER_ENABLED
             })
         
         if form.is_valid():
@@ -282,7 +282,7 @@ def register_member(request):
                     'form': form,
                     'registration_type': 'member',
                     'today': date.today(),
-                    'otp_enabled': OTP_VERIFICATION_ENABLED
+                    'otp_enabled': OTP_REGISTER_ENABLED
                 })
             
             # Both OTP verified, proceed with registration
@@ -328,5 +328,5 @@ def register_member(request):
         'form': form,
         'registration_type': 'member',
         'today': date.today(),
-        'otp_enabled': OTP_VERIFICATION_ENABLED
+        'otp_enabled': OTP_REGISTER_ENABLED
     })
