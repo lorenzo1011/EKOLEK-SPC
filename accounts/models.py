@@ -565,14 +565,17 @@ class Reward(models.Model):
         if not self.image:
             return None
 
+        name = self.image.name
+
+        # Support Drive-backed records even when USE_GOOGLE_DRIVE is misconfigured.
+        # Existing production rows store plain Drive file IDs in the image field.
+        if "/" not in name and len(name) > 15 and name.replace('_', '').replace('-', '').isalnum():
+            return f"https://lh3.googleusercontent.com/d/{name}"
+
         if getattr(settings, 'USE_GOOGLE_DRIVE', False):
-            name = self.image.name
             if name.startswith('reward_images/'):
                 # Local file path
                 return f"{settings.MEDIA_URL}{name}"
-            # Check if it looks like a Google Drive file ID
-            if len(name) > 15 and name.replace('_', '').replace('-', '').isalnum():
-                return f"https://lh3.googleusercontent.com/d/{name}"
             return f"{settings.MEDIA_URL}{name}"
 
         # Local storage

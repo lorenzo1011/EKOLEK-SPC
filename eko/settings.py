@@ -245,6 +245,11 @@ if USE_GOOGLE_DRIVE:
     
     # Folder where files will be uploaded
     GOOGLE_DRIVE_FOLDER_ID = config('GOOGLE_DRIVE_FOLDER_ID')
+    GOOGLE_DRIVE_ALLOW_LOCAL_FALLBACK = config(
+        'GOOGLE_DRIVE_ALLOW_LOCAL_FALLBACK',
+        default=False,
+        cast=bool,
+    )
     
     STORAGES = {
         "default": {
@@ -255,6 +260,11 @@ if USE_GOOGLE_DRIVE:
         },
     }
 else:
+    GOOGLE_DRIVE_ALLOW_LOCAL_FALLBACK = config(
+        'GOOGLE_DRIVE_ALLOW_LOCAL_FALLBACK',
+        default=False,
+        cast=bool,
+    )
     STORAGES = {
         "default": {
             "BACKEND": "django.core.files.storage.FileSystemStorage",

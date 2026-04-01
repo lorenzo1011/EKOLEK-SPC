@@ -164,7 +164,10 @@ class GoogleDriveStorage(Storage):
             
         except Exception as e:
             logger.error(f"Error uploading file to Google Drive: {e}")
-            # Instead of raising, fall back to local storage
+            # Avoid silent broken images on Railway: local filesystem is ephemeral.
+            if not getattr(settings, 'GOOGLE_DRIVE_ALLOW_LOCAL_FALLBACK', False):
+                raise
+
             from django.core.files.storage import FileSystemStorage
 
             local_storage = FileSystemStorage()
