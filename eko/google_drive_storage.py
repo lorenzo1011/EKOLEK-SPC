@@ -20,6 +20,20 @@ logger = logging.getLogger(__name__)
 
 GDRIVE_IMAGE_URL_TEMPLATE = "https://lh3.googleusercontent.com/d/{file_id}"
 
+
+def _normalize_service_account_info(credentials_dict):
+    """Normalize service-account payloads that come from env vars."""
+    if not isinstance(credentials_dict, dict):
+        raise ValueError("Service-account credentials must be a JSON object")
+
+    normalized = dict(credentials_dict)
+    private_key = normalized.get('private_key')
+    if isinstance(private_key, str):
+        # Railway env input often stores escaped newlines in a single-line JSON value.
+        normalized['private_key'] = private_key.replace('\\r\\n', '\n').replace('\\n', '\n')
+
+    return normalized
+
 @deconstructible
 class GoogleDriveStorage(Storage):
     """
@@ -37,6 +51,7 @@ class GoogleDriveStorage(Storage):
         
         self.folder_id = folder_id or getattr(settings, 'GOOGLE_DRIVE_FOLDER_ID', None)
         self._service = None
+        self._auth_mode = None
         
         logger.info(f"GoogleDriveStorage initialized | OAuth: {bool(self.oauth_refresh_token)} | Folder: {self.folder_id}")
         
@@ -63,6 +78,7 @@ class GoogleDriveStorage(Storage):
                         logger.info("Refreshing OAuth access token...")
                         credentials.refresh(Request())
                         logger.info("OAuth credentials refreshed successfully")
+                        self._auth_mode = 'oauth_refresh_token'
                     except Exception as e:
                         logger.error("OAuth authentication failed: %s", e)
                         credentials = None
@@ -72,11 +88,15 @@ class GoogleDriveStorage(Storage):
                     logger.info("Falling back to service account credentials")
                     try:
                         credentials_dict = json.loads(self.credentials_json)
+                        credentials_dict = _normalize_service_account_info(credentials_dict)
                         
                         credentials = Credentials.from_service_account_info(
                             credentials_dict,
                             scopes=['https://www.googleapis.com/auth/drive.file']
                         )
+                        # Validate JWT signing early so upload failures are explicit.
+                        credentials.refresh(Request())
+                        self._auth_mode = 'service_account_json'
                         logger.info("Service account credentials created")
                     except Exception as e:
                         logger.error("Service account authentication failed: %s", e)
@@ -85,17 +105,27 @@ class GoogleDriveStorage(Storage):
                 # FALLBACK: Try credentials file
                 if credentials is None and self.credentials_file and os.path.exists(self.credentials_file):
                     logger.info("Using credentials file: %s", self.credentials_file)
-                    credentials = Credentials.from_service_account_file(
-                        self.credentials_file,
-                        scopes=['https://www.googleapis.com/auth/drive.file']
-                    )
+                    try:
+                        credentials = Credentials.from_service_account_file(
+                            self.credentials_file,
+                            scopes=['https://www.googleapis.com/auth/drive.file']
+                        )
+                        credentials.refresh(Request())
+                        self._auth_mode = 'service_account_file'
+                    except Exception as e:
+                        logger.error("Credentials-file authentication failed: %s", e)
+                        credentials = None
                 
                 if credentials is None:
-                    raise Exception("No valid Google Drive credentials found")
+                    raise Exception(
+                        "No valid Google Drive credentials found. "
+                        "Set OAuth vars (GOOGLE_DRIVE_OAUTH_CLIENT_ID, GOOGLE_DRIVE_OAUTH_CLIENT_SECRET, "
+                        "GOOGLE_DRIVE_OAUTH_REFRESH_TOKEN) or provide a valid GOOGLE_DRIVE_CREDENTIALS_JSON."
+                    )
                 
                 # Build the service
                 self._service = build('drive', 'v3', credentials=credentials)
-                logger.info("Google Drive service initialized successfully")
+                logger.info("Google Drive service initialized successfully (mode=%s)", self._auth_mode)
             except Exception as e:
                 logger.error(f"Error initializing Google Drive service: {e}")
                 raise
