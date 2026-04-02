@@ -220,6 +220,7 @@ def login_page(request):
     return render(request, 'login.html', context)
 
 
+@never_cache
 def logout_view(request):
     """
     Logout USER from the system - Production Ready

@@ -13,6 +13,7 @@ from django.db.models import Sum
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
+from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_protect, ensure_csrf_cookie
 
 from accounts.models import Family, GarbageSchedule, Notification, Reward, Users
@@ -52,6 +53,7 @@ def terms_of_service(request):
 
 
 @login_required(login_url='login_page')
+@never_cache
 @ensure_csrf_cookie
 def userdashboard(request):
     """Para User dashboard"""
@@ -181,6 +183,7 @@ def userdashboard(request):
 
 
 @login_required
+@never_cache
 @csrf_protect
 def mark_notifications_viewed(request):
     """
@@ -212,6 +215,7 @@ def mark_notifications_viewed(request):
 
 
 @login_required
+@never_cache
 def get_unread_count(request):
     """
     API endpoint to get the count of unread notifications
@@ -270,6 +274,7 @@ def generate_user_qr_code(user):
 
 
 @login_required
+@never_cache
 def download_qr_code(request):
     """
     Generate and download user's QR code as PNG file.

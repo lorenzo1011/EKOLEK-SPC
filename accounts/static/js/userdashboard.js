@@ -325,3 +325,15 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     `;
     document.head.appendChild(style);
+
+    // Ensure dashboard is revalidated when restored from browser back/forward cache.
+    // This prevents stale authenticated content from appearing after a successful logout.
+    window.addEventListener('pageshow', function(event) {
+      const navEntries = performance.getEntriesByType('navigation');
+      const navigationType = navEntries && navEntries.length > 0 ? navEntries[0].type : '';
+      const isHistoryNavigation = event.persisted || navigationType === 'back_forward';
+
+      if (isHistoryNavigation) {
+        window.location.reload();
+      }
+    });

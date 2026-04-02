@@ -635,28 +635,37 @@
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
-      width: 3rem;
-      height: 3rem;
-      border-radius: 9999px;
-      border: 1px solid rgba(226, 232, 240, 0.34);
-      background: rgba(15, 23, 42, 0.6);
-      color: #ffffff;
+      width: auto;
+      height: auto;
+      padding: 0.28rem;
+      border-radius: 0;
+      border: none;
+      background: transparent;
+      color: rgba(241, 245, 249, 0.92);
       display: inline-flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       z-index: 5;
-      transition: all 0.24s ease;
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      box-shadow: 0 10px 22px rgba(2, 6, 23, 0.35);
+      transition: color 0.24s ease, transform 0.24s ease, background-color 0.24s ease, text-shadow 0.24s ease, opacity 0.24s ease;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      box-shadow: none;
+      opacity: 0.88;
+    }
+
+    .carousel-control i {
+      font-size: 1.56rem;
+      line-height: 1;
     }
 
     .carousel-control:hover {
-      background: rgba(21, 128, 61, 0.9);
-      border-color: rgba(187, 247, 208, 0.95);
+      background: radial-gradient(circle, rgba(34, 197, 94, 0.16) 0%, rgba(34, 197, 94, 0.09) 60%, rgba(34, 197, 94, 0) 100%);
+      color: rgba(187, 247, 208, 0.98);
+      border-radius: 9999px;
       transform: translateY(-50%) scale(1.05);
-      box-shadow: 0 14px 26px rgba(21, 128, 61, 0.34);
+      text-shadow: 0 0 8px rgba(34, 197, 94, 0.22);
+      opacity: 1;
     }
 
     .carousel-control:focus-visible {
@@ -838,9 +847,12 @@
       }
 
       .carousel-control {
-        width: 2.35rem;
-        height: 2.35rem;
+        padding: 0.18rem;
         font-size: 0.82rem;
+      }
+
+      .carousel-control i {
+        font-size: 1.2rem;
       }
 
       .carousel-control-prev {
@@ -1776,6 +1788,18 @@
       header .flex {
         flex-wrap: nowrap;
         gap: 0.5rem;
+        padding-bottom: 0.22rem;
+      }
+
+      /* Reduce visible gap between sticky header and hero */
+      header + section.hero {
+        margin-top: 0;
+        padding-top: 0.18rem;
+      }
+
+      section.hero {
+        margin-top: 0;
+        padding: 0.18rem 0.85rem 2rem;
       }
 
       .logo-container {
@@ -1857,6 +1881,20 @@
         padding-right: 2rem;
       }
 
+      header .flex {
+        padding-bottom: 0.34rem;
+      }
+
+      header + section.hero {
+        margin-top: 0;
+        padding-top: 0.45rem;
+      }
+
+      section.hero {
+        margin-top: 0;
+        padding: 0.45rem 1.2rem 2.1rem;
+      }
+
       /* Navigation */
       nav {
         gap: 1rem;
@@ -1878,6 +1916,12 @@
 
       .hero-text h2 {
         font-size: 2.5rem;
+      }
+
+      .hero-text p {
+        margin-left: auto;
+        margin-right: auto;
+        text-align: center;
       }
 
       .hero-buttons {
@@ -1940,7 +1984,8 @@
     /* Landscape mode for phones */
     @media (max-height: 600px) and (orientation: landscape) {
       section.hero {
-        padding: 2rem 1.5rem;
+        margin-top: 0;
+        padding: 0.4rem 1.5rem 1.6rem;
       }
 
       .hero-text h2 {
