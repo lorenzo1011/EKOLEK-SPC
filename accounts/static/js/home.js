@@ -22,7 +22,7 @@
 
     // Redirect to registration page after brief delay for UX
     setTimeout(() => {
-      window.location.href = '/accounts/register/';
+      window.location.href = '/register/';
     }, 200);
   }
 

@@ -79,6 +79,7 @@
    Reward Table — Fixed-height row design
    ========================================== */
 .reward-table-wrapper {
+    position: relative;
     overflow-x: auto;
     overflow-y: auto;
     max-height: 540px;
@@ -233,7 +234,13 @@
 }
 
 .reward-table .cell-location {
-    overflow: hidden;
+    overflow: visible;
+    position: relative;
+    z-index: 5;
+}
+
+.reward-table tbody tr:hover .cell-location {
+    z-index: 20;
 }
 
 .reward-table .cell-desc {
@@ -821,6 +828,15 @@
     transition: all 0.2s;
 }
 
+.barangay-badge-count .bx-chevron-down {
+    transition: transform 0.2s ease;
+}
+
+.barangay-badge-count:focus-visible {
+    outline: 3px solid rgba(59, 130, 246, 0.35);
+    outline-offset: 2px;
+}
+
 .barangay-badge-count:hover {
     background: linear-gradient(135deg, #fde68a 0%, #fcd34d 100%);
     box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
@@ -830,7 +846,12 @@
 /* Barangay Dropdown */
 .barangay-dropdown-wrapper {
     position: relative;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+}
+
+.barangay-dropdown-wrapper.is-open .barangay-badge-count .bx-chevron-down {
+    transform: rotate(180deg);
 }
 
 .barangay-dropdown-menu {
@@ -844,16 +865,45 @@
     border: 2px solid #e5e7eb;
     border-radius: 12px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
-    z-index: 1000;
+    z-index: 2000;
     margin-top: 8px;
-    overflow: hidden;
+    max-height: 220px;
+    overflow-y: auto;
+    overflow-x: hidden;
     animation: dropdownFadeIn 0.2s ease-out;
+}
+
+.barangay-dropdown-menu.is-open {
+    display: block;
+}
+
+.barangay-dropdown-menu.align-right {
+    left: auto;
+    right: 0;
+}
+
+.barangay-dropdown-wrapper.drop-up .barangay-dropdown-menu {
+    top: auto;
+    bottom: calc(100% + 8px);
+    margin-top: 0;
+    animation: dropdownFadeInUp 0.2s ease-out;
 }
 
 @keyframes dropdownFadeIn {
     from {
         opacity: 0;
         transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes dropdownFadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
     }
     to {
         opacity: 1;
@@ -884,6 +934,23 @@
 .barangay-dropdown-item i {
     color: #667eea;
     font-size: 1.1rem;
+}
+
+.barangay-dropdown-menu::-webkit-scrollbar {
+    width: 6px;
+}
+
+.barangay-dropdown-menu::-webkit-scrollbar-track {
+    background: #f9fafb;
+}
+
+.barangay-dropdown-menu::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 999px;
+}
+
+.barangay-dropdown-menu::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
 }
 
 /* Scrollbar styling for barangay list */

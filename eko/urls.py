@@ -11,6 +11,7 @@ urlpatterns = [
     # Mobile uses JWT auth, web uses session/CSRF
     path('', include('mobilelogin.urls')),  # Mobile API endpoints with JWT
     path('', include('accounts.urls')),     # Web dashboard with session auth
+    path('accounts/', include('accounts.urls')),  # Legacy prefixed routes compatibility
     path('', include('cenro.urls', namespace='cenro')),
     path('', include('game.urls')),
     path('', include('learn.urls')),

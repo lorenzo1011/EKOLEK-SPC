@@ -851,27 +851,86 @@ function updateSelectedCount(modal) {
 }
 
 // Function to toggle barangay dropdown in table
-function toggleBarangayDropdown(element) {
-  const dropdown = element.nextElementSibling;
-  const isOpen = dropdown.style.display === 'block';
-  
-  // Close all other dropdowns
-  document.querySelectorAll('.barangay-dropdown-menu').forEach(menu => {
-    menu.style.display = 'none';
+function closeBarangayDropdowns() {
+  document.querySelectorAll('.barangay-dropdown-wrapper').forEach(wrapper => {
+    wrapper.classList.remove('is-open', 'drop-up');
   });
-  
-  // Toggle current dropdown
-  if (!isOpen) {
-    dropdown.style.display = 'block';
+
+  document.querySelectorAll('.barangay-dropdown-menu').forEach(menu => {
+    menu.classList.remove('is-open', 'align-right');
+  });
+
+  document.querySelectorAll('.barangay-badge-count').forEach(trigger => {
+    trigger.setAttribute('aria-expanded', 'false');
+  });
+}
+
+function positionBarangayDropdown(wrapper, dropdown) {
+  const scrollContainer = wrapper.closest('.reward-table-wrapper');
+  if (!scrollContainer) return;
+
+  wrapper.classList.remove('drop-up');
+  dropdown.classList.remove('align-right');
+
+  const containerRect = scrollContainer.getBoundingClientRect();
+  const menuRect = dropdown.getBoundingClientRect();
+
+  if (menuRect.bottom > containerRect.bottom - 8) {
+    wrapper.classList.add('drop-up');
+  }
+
+  const adjustedRect = dropdown.getBoundingClientRect();
+  if (adjustedRect.right > containerRect.right - 8) {
+    dropdown.classList.add('align-right');
+  }
+}
+
+function toggleBarangayDropdown(element) {
+  const wrapper = element.closest('.barangay-dropdown-wrapper');
+  const dropdown = wrapper ? wrapper.querySelector('.barangay-dropdown-menu') : null;
+  if (!wrapper || !dropdown) return;
+
+  const shouldOpen = !dropdown.classList.contains('is-open');
+  closeBarangayDropdowns();
+
+  if (shouldOpen) {
+    wrapper.classList.add('is-open');
+    dropdown.classList.add('is-open');
+    element.setAttribute('aria-expanded', 'true');
+
+    requestAnimationFrame(() => {
+      positionBarangayDropdown(wrapper, dropdown);
+    });
   }
 }
 
 // Close dropdown when clicking outside
 document.addEventListener('click', function(event) {
   if (!event.target.closest('.barangay-dropdown-wrapper')) {
-    document.querySelectorAll('.barangay-dropdown-menu').forEach(menu => {
-      menu.style.display = 'none';
+    closeBarangayDropdowns();
+  }
+});
+
+window.addEventListener('resize', closeBarangayDropdowns);
+
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('.barangay-badge-count').forEach(trigger => {
+    trigger.setAttribute('role', 'button');
+    trigger.setAttribute('tabindex', '0');
+    trigger.setAttribute('aria-haspopup', 'true');
+    trigger.setAttribute('aria-expanded', 'false');
+
+    trigger.addEventListener('keydown', function(event) {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        toggleBarangayDropdown(this);
+      }
     });
+  });
+
+  const rewardsTableWrapper = document.querySelector('.reward-table-wrapper');
+  if (rewardsTableWrapper) {
+    rewardsTableWrapper.addEventListener('scroll', closeBarangayDropdowns, { passive: true });
   }
 });
 
