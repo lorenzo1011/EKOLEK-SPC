@@ -412,9 +412,9 @@
 .modal-actions .btn-secondary,
 .reward-modal-actions .btn-secondary,
 .user-modal-actions .btn-secondary {
-  background: #f3f4f6;
-  border: 2px solid #e5e7eb;
-  color: #6b7280;
+  background: rgba(248, 250, 252, 0.95);
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  color: #334155;
 }
 
 .btn-cancel:hover,
@@ -423,10 +423,10 @@
 .modal-actions .btn-secondary:hover,
 .reward-modal-actions .btn-secondary:hover,
 .user-modal-actions .btn-secondary:hover {
-  background: #e5e7eb !important;
-  border-color: #d1d5db !important;
+  background: #f1f5f9 !important;
+  border-color: rgba(100, 116, 139, 0.5) !important;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.12);
 }
 
 .btn-primary,
@@ -435,10 +435,10 @@
 .modal-actions .btn-primary,
 .reward-modal-actions .btn-primary,
 .user-modal-actions .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 55%, #0f766e 100%);
   color: white;
   border: none;
-  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 10px 20px rgba(21, 128, 61, 0.24);
 }
 
 .btn-primary:hover,
@@ -448,7 +448,7 @@
 .reward-modal-actions .btn-primary:hover,
 .user-modal-actions .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5) !important;
+  box-shadow: 0 14px 24px rgba(15, 118, 110, 0.28) !important;
 }
 
 .btn-danger,
@@ -477,10 +477,10 @@
 .modal-actions .btn-success,
 .reward-modal-actions .btn-success,
 .user-modal-actions .btn-success {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 55%, #15803d 100%);
   color: white;
   border: none;
-  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 10px 20px rgba(21, 128, 61, 0.24);
 }
 
 .btn-success:hover,
@@ -488,7 +488,7 @@
 .reward-modal-actions .btn-success:hover,
 .user-modal-actions .btn-success:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.5) !important;
+  box-shadow: 0 14px 24px rgba(21, 128, 61, 0.3) !important;
 }
 
 .btn-warning,

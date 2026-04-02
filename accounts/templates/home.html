@@ -7,11 +7,14 @@
   <meta name="csrf-token" content="{{ csrf_token }}">
   <title>E-KOLEK - Sustainable Waste Management</title>
   <link rel="icon" type="image/png" href="{% static 'image/clogo.png' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap" rel="stylesheet">
   <link
     rel="stylesheet"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
   />
-  <link rel="stylesheet" href="{% static 'css/home.css' %}?v=3.3.0">
+  <link rel="stylesheet" href="{% static 'css/home.css' %}?v=3.8.0">
   
 </head>
 <body>
@@ -123,6 +126,75 @@
   </div>
 </section>
 
+<!-- Impact Carousel Section -->
+<section class="impact-carousel-section" aria-labelledby="impact-carousel-heading">
+  <div class="impact-carousel-container">
+    <p class="impact-carousel-kicker">COMMUNITY SPOTLIGHT</p>
+    <h2 id="impact-carousel-heading" class="impact-carousel-title">Inside the E-KOLEK Experience</h2>
+    <p class="impact-carousel-lead">Real moments from field deployments, citizen participation, and city-level collaboration.</p>
+
+    <div class="impact-carousel" data-carousel>
+      <div class="impact-carousel-meta" aria-hidden="true">
+        <span class="impact-carousel-chip">Verified Project Moments</span>
+        <span class="impact-carousel-counter" data-carousel-counter>01 / 05</span>
+      </div>
+
+      <div class="impact-carousel-frame">
+        <button class="carousel-control carousel-control-prev" type="button" aria-label="Previous slide" data-carousel-prev>
+          <i class="fas fa-chevron-left" aria-hidden="true"></i>
+        </button>
+
+        <div class="impact-carousel-viewport" aria-live="polite">
+          <div class="impact-carousel-track" data-carousel-track>
+            <article class="impact-slide is-active" data-slide data-slide-title="CENRO Partnership and Launch" data-slide-text="Building trust through close coordination with CENRO and local stakeholders.">
+              <img src="{% static 'image/1.png' %}" alt="E-KOLEK app interface showcasing rewards and eco-tracking" loading="lazy">
+            </article>
+            <article class="impact-slide" data-slide data-slide-title="Collaborative Impact with CENRO" data-slide-text="Through our partnership with CENRO, the project achieved effective implementation, community participation, and stronger environmental awareness.">
+              <img src="{% static 'image/3.png' %}" alt="E-KOLEK and CENRO collaboration in community waste management" loading="lazy">
+            </article>
+            <article class="impact-slide" data-slide data-slide-title="First User Experience" data-slide-text="Residents access rewards, schedules, games, and learning tools directly from their phones.">
+              <img src="{% static 'image/6.png' %}" alt="E-KOLEK educational and engagement tools on mobile" loading="lazy">
+            </article>
+            <article class="impact-slide" data-slide data-slide-title="Successful Launch through Community Seminar" data-slide-text="The seminar served as a key milestone in introducing E-KOLEK, fostering awareness, engagement, and adoption within the community.">
+              <img src="{% static 'image/4.png' %}" alt="E-KOLEK official launch seminar promoting sustainability and community engagement" loading="lazy">
+            </article>
+            <article class="impact-slide" data-slide data-slide-title="Stronger Community Participation" data-slide-text="Reward-driven participation creates lasting behavior change and stronger local collaboration.">
+              <img src="{% static 'image/7.png' %}" alt="E-KOLEK community and incentive experience snapshot" loading="lazy">
+            </article>
+          </div>
+        </div>
+
+        <button class="carousel-control carousel-control-next" type="button" aria-label="Next slide" data-carousel-next>
+          <i class="fas fa-chevron-right" aria-hidden="true"></i>
+        </button>
+      </div>
+
+      <div class="impact-carousel-caption" data-carousel-caption>
+        <h3 class="impact-carousel-caption-title" data-carousel-caption-title>CENRO Partnership and Launch</h3>
+        <p class="impact-carousel-caption-text" data-carousel-caption-text>Building trust through close coordination with CENRO and local stakeholders.</p>
+      </div>
+
+      <div class="impact-carousel-footer">
+        <div class="impact-carousel-progress" aria-hidden="true">
+          <span class="impact-carousel-progress-bar" data-carousel-progress style="width: 20%;"></span>
+        </div>
+
+        <div class="impact-carousel-dots" data-carousel-dots>
+          <button class="impact-carousel-dot is-active" type="button" aria-label="Go to slide 1" aria-current="true" data-slide-to="0"></button>
+          <button class="impact-carousel-dot" type="button" aria-label="Go to slide 2" data-slide-to="1"></button>
+          <button class="impact-carousel-dot" type="button" aria-label="Go to slide 3" data-slide-to="2"></button>
+          <button class="impact-carousel-dot" type="button" aria-label="Go to slide 4" data-slide-to="3"></button>
+          <button class="impact-carousel-dot" type="button" aria-label="Go to slide 5" data-slide-to="4"></button>
+        </div>
+      </div>
+    </div>
+
+    <p class="impact-carousel-copy">
+      E-KOLEK is an innovative platform that transforms waste management into an engaging, incentive-driven experience, encouraging users to adopt sustainable habits through rewards, education, and gamification.
+    </p>
+  </div>
+</section>
+
 <!-- Mobile App Promotion Section -->
 <section class="mobile-app-promo">
   <div class="app-promo-container">
@@ -210,20 +282,57 @@
         </a>
       </div> -->
 
-      <div class="app-stats">
-        <div class="stat-item">
-          <div class="stat-number">{{ active_users|default:"100" }}+</div>
-          <div class="stat-label">Active Users</div>
+      <div class="app-purpose-board" aria-label="E-KOLEK community workflow and impact">
+        <h3 class="app-purpose-title">Built for Real Community Waste Action</h3>
+        <p class="app-purpose-subtitle">From collection day to rewards, E-KOLEK makes proper segregation easy to track, verify, and sustain.</p>
+
+        <div class="app-purpose-steps">
+          <article class="purpose-step">
+            <div class="purpose-step-icon" aria-hidden="true"><i class="fas fa-qrcode"></i></div>
+            <div class="purpose-step-content">
+              <h4>Scan Household QR</h4>
+              <p>Identify and verify each family account during collection.</p>
+            </div>
+          </article>
+
+          <article class="purpose-step">
+            <div class="purpose-step-icon" aria-hidden="true"><i class="fas fa-recycle"></i></div>
+            <div class="purpose-step-content">
+              <h4>Practice Proper Waste Segregation</h4>
+              <p>Sort waste into biodegradable, recyclable, residual, and hazardous categories for proper processing.</p>
+            </div>
+          </article>
+
+          <article class="purpose-step">
+            <div class="purpose-step-icon" aria-hidden="true"><i class="fas fa-coins"></i></div>
+            <div class="purpose-step-content">
+              <h4>Award Points Instantly</h4>
+              <p>Turn eco-actions into rewards that motivate consistency.</p>
+            </div>
+          </article>
+
+          <article class="purpose-step">
+            <div class="purpose-step-icon" aria-hidden="true"><i class="fas fa-gift"></i></div>
+            <div class="purpose-step-content">
+              <h4>Redeem Useful Items</h4>
+              <p>Exchange points for practical rewards that support families.</p>
+            </div>
+          </article>
         </div>
-        <div class="stat-divider"></div>
-        <div class="stat-item">
-          <div class="stat-number">{{ app_rating|default:"4.8" }}★</div>
-          <div class="stat-label">App Rating</div>
-        </div>
-        <div class="stat-divider"></div>
-        <div class="stat-item">
-          <div class="stat-number">{% if total_points > 999 %}{{ total_points|floatformat:0|slice:"-3:" }}K+{% else %}{{ total_points|default:"0" }}+{% endif %}</div>
-          <div class="stat-label">Points Earned</div>
+
+        <div class="app-purpose-metrics">
+          <div class="purpose-metric">
+            <div class="purpose-metric-value">{{ active_users|default:"100" }}+</div>
+            <div class="purpose-metric-label">Families actively participating</div>
+          </div>
+          <div class="purpose-metric">
+            <div class="purpose-metric-value">{% if total_points > 999 %}{{ total_points|floatformat:0|slice:"-3:" }}K+{% else %}{{ total_points|default:"0" }}+{% endif %}</div>
+            <div class="purpose-metric-label">Points earned from eco-actions</div>
+          </div>
+          <div class="purpose-metric">
+            <div class="purpose-metric-value">{{ app_rating|default:"4.8" }}★</div>
+            <div class="purpose-metric-label">Community app feedback</div>
+          </div>
         </div>
       </div>
     </div>
@@ -304,7 +413,7 @@
 </script>
 
 <script src="{% static 'js/app_common.js' %}"></script>
-<script src="{% static 'js/home.js' %}"></script>
+<script src="{% static 'js/home.js' %}?v=1.3.0"></script>
 
 
 </body>

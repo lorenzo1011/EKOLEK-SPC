@@ -160,12 +160,12 @@ body > * {
    ======================================== */
 
 header {
-  background: #1a5f4f;
+  background: linear-gradient(135deg, #14532d 0%, #166534 55%, #0f766e 100%);
   padding: 0.875rem 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.16);
   position: fixed;
   top: 0;
   left: 0;
@@ -174,7 +174,7 @@ header {
   gap: 0.75rem;
   flex-wrap: nowrap;
   backdrop-filter: blur(10px);
-  background: rgba(26, 95, 79, 0.98);
+  background: linear-gradient(135deg, rgba(20, 83, 45, 0.96) 0%, rgba(22, 101, 52, 0.96) 55%, rgba(15, 118, 110, 0.96) 100%);
 }
 
 @media (max-width: 639px) {
@@ -3420,14 +3420,14 @@ section {
 }
 
 .btn-primary {
-  background: var(--gradient-primary);
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 55%, #0f766e 100%);
   color: white;
-  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+  box-shadow: 0 10px 22px rgba(21, 128, 61, 0.24);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+  box-shadow: 0 14px 28px rgba(15, 118, 110, 0.28);
 }
 
 .btn-primary:active {
@@ -3435,15 +3435,17 @@ section {
 }
 
 .btn-secondary {
-  background: white;
-  color: var(--gray-700);
-  border-color: var(--gray-300);
+  background: rgba(255, 255, 255, 0.92);
+  color: #1f2937;
+  border-color: rgba(148, 163, 184, 0.5);
+  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08);
 }
 
 .btn-secondary:hover {
-  background: var(--gray-50);
-  border-color: var(--gray-400);
+  background: #f8fafc;
+  border-color: rgba(100, 116, 139, 0.55);
   transform: translateY(-2px);
+  box-shadow: 0 12px 22px rgba(15, 23, 42, 0.12);
 }
 
 .btn-secondary:active {
