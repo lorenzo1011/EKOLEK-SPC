@@ -24,6 +24,35 @@
   }
 
   /**
+   * Assign data-label attributes to table cells using header text.
+   * This powers the responsive card view on smaller screens.
+   */
+  function assignDataLabelsToUserTables() {
+    const tables = document.querySelectorAll('.user-table');
+
+    tables.forEach(table => {
+      const headers = Array.from(table.querySelectorAll('thead th')).map(th => th.textContent.trim());
+      if (!headers.length) {
+        return;
+      }
+
+      table.querySelectorAll('tbody tr').forEach(row => {
+        const cells = row.querySelectorAll('td');
+
+        cells.forEach((cell, index) => {
+          if (cell.hasAttribute('colspan')) {
+            cell.removeAttribute('data-label');
+            return;
+          }
+
+          const label = headers[index] || 'Field';
+          cell.setAttribute('data-label', label);
+        });
+      });
+    });
+  }
+
+  /**
    * Validate phone number format (11 digits starting with 09)
    */
   function validatePhoneNumber(phoneInput) {
@@ -180,6 +209,8 @@
  * Auto-hide admin messages after 3 seconds
  */
 document.addEventListener('DOMContentLoaded', function() {
+  assignDataLabelsToUserTables();
+
   // Initialize tab persistence
   if (window.TabPersistence) {
     window.TabPersistence.init({

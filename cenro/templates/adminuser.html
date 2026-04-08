@@ -103,7 +103,7 @@
           <div class="user-header">
             <h3>Pending User Approvals</h3>
             <div class="user-icons">
-              <input type="text" id="pendingSearchInput" placeholder="Search pending users..." style="padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; width: 280px; font-size: 0.9rem; margin-right: 10px;">
+              <input type="text" id="pendingSearchInput" class="search-input" placeholder="Search pending users...">
               <i class='bx bx-filter'></i>
             </div>
           </div>      <div class="user-table-wrapper">
@@ -166,7 +166,7 @@
                 <span class="user-status" style="background-color: #f59e0b;">Pending</span>
               </td>
               <td>{{ user.created_at|date:"M d, Y" }}</td>
-              <td>
+              <td class="action-cell">
                 <form id="approveUserForm_{{ user.id }}" method="post" action="{% url 'cenro:approve_user' %}" style="display:inline;" onsubmit="return showConfirmation(event, 'approve', 'User', 'approveUserForm_{{ user.id }}');">
                   {% csrf_token %}
                   <input type="hidden" name="user_id" value="{{ user.id }}">
@@ -198,7 +198,7 @@
           <div class="user-header">
             <h3>Approved Users</h3>
             <div class="user-icons">
-              <input type="text" id="approvedSearchInput" placeholder="Search approved users..." style="padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 8px; width: 280px; font-size: 0.9rem; margin-right: 10px;">
+              <input type="text" id="approvedSearchInput" class="search-input" placeholder="Search approved users...">
               <i class='bx bx-filter'></i>
             </div>
           </div>      <div class="user-table-wrapper">
@@ -261,7 +261,7 @@
                 <span class="user-status" style="background-color: #10b981;">Approved</span>
               </td>
               <td>{{ user.total_points|smart_points }}</td>
-              <td>
+              <td class="action-cell">
                 <a href="{% url 'cenro:view_single_idcard' user.id %}" title="View ID Card" target="_blank" style="background:none;border:none;cursor:pointer;">
                   <i class='bx bx-id-card' style="color:#6366f1;font-size:1.2rem;"></i>
                 </a>

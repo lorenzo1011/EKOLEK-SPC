@@ -42,8 +42,9 @@ DEBUG = config('DJANGO_DEBUG', default=False, cast=bool)
 
 # Allowed hosts configuration
 # Support Railway deployment + Flutter mobile app
+DEFAULT_RAILWAY_DOMAIN = 'ekolek-spc-production.up.railway.app'
 RAILWAY_STATIC_URL = config('RAILWAY_STATIC_URL', default='')
-RAILWAY_PUBLIC_DOMAIN = config('RAILWAY_PUBLIC_DOMAIN', default='')
+RAILWAY_PUBLIC_DOMAIN = config('RAILWAY_PUBLIC_DOMAIN', default=DEFAULT_RAILWAY_DOMAIN)
 
 if DEBUG:
     ALLOWED_HOSTS = ['*']  # Allow all hosts in debug mode for development
@@ -55,18 +56,19 @@ else:
     if RAILWAY_PUBLIC_DOMAIN:
         allowed_hosts.append(RAILWAY_PUBLIC_DOMAIN)
     
-    # Add common Railway patterns
+    # Ensure the active Railway production domain is always allowed.
     allowed_hosts.extend([
-        '*.railway.app',
-        '*.railway.internal',
-        'e-kolek-production.up.railway.app',
+        DEFAULT_RAILWAY_DOMAIN,
     ])
     
     # Remove empty strings and deduplicate
     ALLOWED_HOSTS = list(set(filter(None, allowed_hosts)))
 
 # Site URL configuration
-SITE_URL = config('SITE_URL', default='http://localhost:8000')
+SITE_URL = config(
+    'SITE_URL',
+    default='http://localhost:8000' if DEBUG else f'https://{RAILWAY_PUBLIC_DOMAIN}',
+)
 
 # Custom user model
 AUTH_USER_MODEL = 'accounts.Users'
@@ -376,7 +378,7 @@ else:
     
     # Add common production URLs
     cors_origins.extend([
-        'https://e-kolek-production.up.railway.app',
+        f'https://{DEFAULT_RAILWAY_DOMAIN}',
         'https://ekolek.app',  # If you have a custom domain
     ])
     
@@ -494,7 +496,7 @@ if not DEBUG:
     
     # Add common production URLs
     csrf_origins.extend([
-        'https://e-kolek-production.up.railway.app',
+        f'https://{DEFAULT_RAILWAY_DOMAIN}',
         'https://ekolek.app',  # If you have a custom domain
     ])
     

@@ -21,8 +21,8 @@
   --amber-bg:      #fffbeb;
   --red:           #dc2626;
   --red-bg:        #fef2f2;
-  --blue:          #2563eb;
-  --blue-bg:       #eff6ff;
+  --analytics-blue:          #2563eb;
+  --analytics-blue-bg:       #eff6ff;
   --purple:        #7c3aed;
   --purple-bg:     #f5f3ff;
   --radius-sm:     6px;
@@ -76,7 +76,7 @@
   font-size: 1.35rem;
   color: #fff;
 }
-.stat-card.info    .stat-icon { background: var(--blue);   }
+.stat-card.info    .stat-icon { background: var(--analytics-blue);   }
 .stat-card.success .stat-icon { background: var(--green);  }
 .stat-card.warning .stat-icon { background: var(--amber);  }
 .stat-card.danger  .stat-icon { background: var(--red);    }
@@ -133,7 +133,7 @@
   color: #fff;
 }
 .insight-dot.green { background: var(--green); }
-.insight-dot.blue  { background: var(--blue);  }
+.insight-dot.blue  { background: var(--analytics-blue);  }
 
 .insight-text  { flex: 1; min-width: 0; }
 .insight-label { font-size: .72rem; font-weight: 600; text-transform: uppercase; letter-spacing: .3px; color: var(--text-muted); margin: 0; }
@@ -280,7 +280,7 @@
    ============================================================ */
 .comparison-section {
   background: var(--bg-card);
-  border: 1px solid var(--blue);
+  border: 1px solid var(--analytics-blue);
   border-radius: var(--radius);
   padding: 22px;
   margin-bottom: 24px;
@@ -296,9 +296,9 @@
   font-size: .9rem; font-weight: 700; color: var(--text-primary); margin: 0;
   display: flex; align-items: center; gap: 8px;
 }
-.comparison-header h3 i { color: var(--blue); }
+.comparison-header h3 i { color: var(--analytics-blue); }
 .comparison-badge {
-  background: var(--blue); color: #fff; padding: 4px 12px;
+  background: var(--analytics-blue); color: #fff; padding: 4px 12px;
   border-radius: 20px; font-size: .76rem; font-weight: 600;
 }
 .comparison-grid {
@@ -420,7 +420,7 @@
   flex-shrink: 0; font-size: 1.15rem; color: #fff;
 }
 .mi-icon.green  { background: var(--green);  }
-.mi-icon.blue   { background: var(--blue);   }
+.mi-icon.blue   { background: var(--analytics-blue);   }
 .mi-icon.amber  { background: var(--amber);  }
 .mi-icon.purple { background: var(--purple); }
 .mi-body { flex: 1; min-width: 0; }
@@ -538,7 +538,7 @@
   padding: 3px 10px; border-radius: 4px;
   font-size: .74rem; font-weight: 600; display: inline-block;
 }
-.badge-info    { background: var(--blue-bg);  color: var(--blue);  }
+.badge-info    { background: var(--analytics-blue-bg);  color: var(--analytics-blue);  }
 .badge-success { background: var(--green-bg); color: var(--green); }
 .badge-warning { background: var(--amber-bg); color: var(--amber); }
 .badge-rank {
